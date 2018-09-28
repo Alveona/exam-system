@@ -2,3 +2,4 @@ backend/v-env
 node_modules/
 backend/exam_backend/.idea
 backend/exam_backend/exam_backend/__pycache__
+backend/exam_backend/exam/__pycache__

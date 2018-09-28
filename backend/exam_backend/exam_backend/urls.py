@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^token-verify/', verify_jwt_token),
     url(r'^token-refresh/', refresh_jwt_token),
     path('api/', include(register_urlpatterns)),
+    path('api/', include('exam.urls')),
 ]
