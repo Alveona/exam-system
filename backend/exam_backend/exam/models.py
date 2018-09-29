@@ -8,7 +8,7 @@ class Question(models.Model):
     text = models.TextField(null=True)
     answer_type = models.IntegerField(null=True, verbose_name='Тип вопроса')
     # answer_type: 1 - textbox / 2 - radio / 3 - checkbox
-    image = models.ImageField(upload_to='images/', null=True, verbose_name='Изображение')
+    image = models.ImageField(upload_to='questions/', null=True, verbose_name='Изображение')
     # audio = <...>.AudioField (https://github.com/areski/django-audiofield)
     difficulty = models.IntegerField(null=True, verbose_name='Сложность')
     comment = models.CharField(max_length=255, blank=True)
@@ -20,11 +20,11 @@ class Question(models.Model):
 class Course(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='images/', blank=True, null=True, verbose_name='Изображение')
+    image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
     questions_number = models.IntegerField(null=True)  # зачем это нужно?
     # вместо UserCourse юзаем many-to-many с дополнительным классом информации о юзере
-    user = models.ManyToManyField(settings.AUTH_USER_MODEL, through='Relation')
+    user = models.ManyToManyField(settings.AUTH_USER_MODEL, through='UserCourseRelation')
 
     def __str__(self):
         return '%s' % (self.name)
@@ -35,7 +35,7 @@ class Answer(models.Model):
     text = models.TextField(blank=True, null=True)
     correct = models.BooleanField(default=False)
     weight = models.IntegerField(blank=True, null=True)
-    image = models.ImageField(upload_to='images/', null=True, verbose_name='Изображение')
+    image = models.ImageField(upload_to='answers/', null=True, verbose_name='Изображение')
 
     def __str__(self):
         return '%s' % (self.text)
@@ -65,7 +65,7 @@ class SessionAnswer(models.Model):  # erased after question finished (i.e. writt
 # док по intermediate models:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships
 
-class Relation(models.Model):  # дополнительный класс для определения отношений, т.к. мы не юзаем relation-tables
+class UserCourseRelation(models.Model):  # дополнительный класс для определения отношений, т.к. мы не юзаем relation-tables
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE, )  # явное указание связи с джанго-юзером
     course = models.ForeignKey(Course, on_delete=models.CASCADE, )  # явное указание связи с курсом

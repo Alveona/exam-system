@@ -19,3 +19,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
             queryset = Question.objects.all()
             return queryset
         return Question.objects.all().filter(user=user)
+
+class AnswerViewSet(viewsets.ModelViewSet):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get', 'post', 'put']

@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include, url
 from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token, refresh_jwt_token
+from django.conf.urls.static import static
+from django.conf import settings
 
 register_urlpatterns = [
     path('accounts/', include('rest_registration.api.urls')),
@@ -29,4 +31,4 @@ urlpatterns = [
     url(r'^token-refresh/', refresh_jwt_token),
     path('api/', include(register_urlpatterns)),
     path('api/', include('exam.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
