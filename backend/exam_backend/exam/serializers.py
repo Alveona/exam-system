@@ -21,6 +21,11 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = '__all__'
 
+class QuestionListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        field = ('title', 'text', 'answer_type')
+
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
