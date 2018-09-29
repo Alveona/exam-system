@@ -1,36 +1,36 @@
 import Axios from 'axios'
 import router from '@/router'
 
-const TestingSystemAPI = 'http://localhost:3001'
+const TestingSystemAPI = 'http://10.0.1.5:8000'
 
 export default {
   user: { authenticated: false },
 
   authenticate (context, credentials, redirect) {
-    Axios.post(`${TestingSystemAPI}/api/v1/auth`, credentials)
+    Axios.post(`${TestingSystemAPI}/token-auth/`, credentials)
         .then(({data}) => {
           context.$cookie.set('token', data.token, '1D')
-          context.$cookie.set('user_id', data.user._id, '1D')
+          //context.$cookie.set('user_id', data.user._id, '1D')
           context.validLogin = true
 
           this.user.authenticated = true
 
           if (redirect) router.push(redirect)
-        }).catch(({response: {data}}) => {
+        }).catch(error => {
           context.snackbar = true
-          context.message = data.message
+          context.message = 'Неверный логин или пароль'
         })
   },
 
   signup (context, credentials, redirect) {
-    Axios.post(`${TestingSystemAPI}/api/v1/signup`, credentials)
+    Axios.post(`${TestingSystemAPI}/api/accounts/register/`, credentials)
         .then(() => {
           context.validSignUp = true
 
           this.authenticate(context, credentials, redirect)
-        }).catch(({response: {data}}) => {
+        }).catch(error => {
           context.snackbar = true
-          context.message = data.message
+          context.message = 'Не удалось зарегистрироваться'
         })
   },
 
@@ -48,6 +48,6 @@ export default {
   },
 
   getAuthenticationHeader (context) {
-    return `Bearer ${context.$cookie.get('token')}`
+    return `JWT ${context.$cookie.get('token')}`
   }
 }

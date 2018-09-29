@@ -5,16 +5,16 @@ import * as Auth from '@/components/pages/Authentication'
 // Pages
 import Main from '@/components/pages/Main'
 import Authentication from '@/components/pages/Authentication/Authentication'
+import AddedTests from '@/components/pages/AddedTests'
+import QuestionsManagment from '@/components/pages/QuestionsManagment'
+import TestsManagment from '@/components/pages/TestsManagment'
+import Stats from '@/components/pages/Stats'
+import UserGuide from '@/components/pages/UserGuide'
 
-// Global components
-import Header from '@/components/Header'
-import List from '@/components/List/List'
-import Create from '@/components/pages/Create'
+//Boxes
+import AddedQuestion from '@/components/boxes/AddedQuestion'
 
-// Register components
-Vue.component('app-header', Header)
-Vue.component('list', List)
-Vue.component('create', Create)
+Vue.component('added-question', AddedQuestion)
 
 Vue.use(Router)
 
@@ -23,10 +23,27 @@ const router = new Router({
     {
       path: '/',
       name: 'Main',
-      components: {
-        default: Main
-      }
-    },
+      component: Main,
+      children: [{
+      	path: '',
+      	component: AddedTests
+      },{
+      	path: 'addedtests',
+      	component: AddedTests
+      },{
+      	path: 'questions',
+      	component: QuestionsManagment
+      },{
+      	path: 'tests',
+      	component: TestsManagment
+      },{
+      	path: 'stats',
+      	component: Stats
+      },{
+      	path: 'guide',
+      	component: UserGuide
+      }]
+  	},
     {
       path: '/login',
       name: 'Authentication',

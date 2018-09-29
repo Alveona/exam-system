@@ -7,7 +7,7 @@
     </div>
     <div class="l-auth">
       <v-form v-model="validLogin">
-        <v-text-field label="Username"
+        <v-text-field label="Логин"
                       v-model="credentials.username"
                       prepend-icon="account_box"
                       :rules="rules"
@@ -15,7 +15,7 @@
                       color="light-blue lighten-1">
         </v-text-field>
 
-        <v-text-field label="Password"
+        <v-text-field label="Пароль"
                       v-model="credentials.password"
                       prepend-icon="lock"
                       :rules="rules"
@@ -26,14 +26,14 @@
                       required>
         </v-text-field>
 
-        <v-btn block flat color="light-blue lighten-1" @click.native="signUpVisible = true">Create account</v-btn>
-        <v-btn block color="light-blue lighten-1" @click.native="submitAuthentication()">Login</v-btn>
+        <v-btn block flat color="light-blue lighten-1" @click.native="signUpVisible = true">Создать аккаунт</v-btn>
+        <v-btn block color="light-blue lighten-1" @click.native="submitAuthentication()">Войти</v-btn>
       </v-form>
     </div>
 
     <div class="l-signup" v-if="signUpVisible">
       <v-form v-model="validSignUp">
-        <v-text-field label="Username"
+        <v-text-field label="Логин"
                       v-model="newUser.username"
                       prepend-icon="account_box"
                       :rules="rules"
@@ -41,7 +41,7 @@
                       color="light-blue lighten-1">
         </v-text-field>
 
-        <v-text-field label="Password"
+        <v-text-field label="Пароль"
                       v-model="newUser.password"
                       prepend-icon="lock"
                       :rules="rules"
@@ -52,7 +52,7 @@
                       required>
         </v-text-field>
 
-        <v-btn block color="light-blue lighten-1" @click.native="submitSignUp()">Sign Up</v-btn>
+        <v-btn block color="light-blue lighten-1" @click.native="submitSignUp()">Зарегистрироваться</v-btn>
       </v-form>
     </div>
 
@@ -77,7 +77,7 @@
         loginPasswordVisible: false,
         signUpPasswordVisible: false,
         timeout: 6000,
-        rules: [ (value) => !!value || 'This field is required' ],
+        rules: [ (value) => !!value || 'Это обязательное поле' ],
         credentials: {
           username: '',
           password: ''
