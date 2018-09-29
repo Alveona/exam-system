@@ -25,3 +25,16 @@ class AnswerViewSet(viewsets.ModelViewSet):
     serializer_class = AnswerSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['get', 'post', 'put']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Answer.objects.all()
+            return queryset
+        return Answer.objects.all().filter(question__user=user)
+
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get', 'post', 'put']

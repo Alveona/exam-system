@@ -23,8 +23,7 @@ class Course(models.Model):
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
     questions_number = models.IntegerField(null=True)  # зачем это нужно?
-    # вместо UserCourse юзаем many-to-many с дополнительным классом информации о юзере
-    user = models.ManyToManyField(settings.AUTH_USER_MODEL, through='UserCourseRelation')
+    user = models.ManyToManyField(settings.AUTH_USER_MODEL, through='UserCourseRelation') # нестандартная таблица отношений
 
     def __str__(self):
         return '%s' % (self.name)
@@ -65,7 +64,7 @@ class SessionAnswer(models.Model):  # erased after question finished (i.e. writt
 # док по intermediate models:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships
 
-class UserCourseRelation(models.Model):  # дополнительный класс для определения отношений, т.к. мы не юзаем relation-tables
+class UserCourseRelation(models.Model):  # relation-table с доп. параметрами
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE, )  # явное указание связи с джанго-юзером
     course = models.ForeignKey(Course, on_delete=models.CASCADE, )  # явное указание связи с курсом

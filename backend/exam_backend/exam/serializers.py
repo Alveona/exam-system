@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Question, Course, Answer
+from .models import Question, Course, Answer, UserCourseRelation
 
 class QuestionSerializer(serializers.ModelSerializer):
 
@@ -24,6 +24,14 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CourseSerializer(serializers.ModelSerializer):
+    '''def create(self, validated_data):
+        user_relation = UserCourseRelation(user = self.context['request'].user, access = 1)
+        course = Course(name = validated_data['name'], description = validated_data['description'],
+                        image = validated_data['image'], questions_number = validated_data['questions_number'])
+        course.questions.add(validated_data['questions'][0])
+        course.user.add(user_relation)
+        course.save()
+        return course'''
     class Meta:
         model = Course
         fields = '__all__'

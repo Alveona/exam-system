@@ -25,8 +25,10 @@ SECRET_KEY = 'o7bf)lh&=qoyb2got@6)c4acc63ek0)vnk2#ey=d)l3zk5l&qr'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["10.0.1.5"]
 
+#CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = DEBUG
 
 # Application definition
 
@@ -41,6 +43,8 @@ INSTALLED_APPS = [
     'rest_registration',
     'exam',
 ]
+if DEBUG is True:
+     INSTALLED_APPS += ('corsheaders', )
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,7 +54,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
+
+CORS_ORIGIN_WHITELIST = (
+    'localhost:8000',
+    '10.0.1.5:8000'
+)
 
 ROOT_URLCONF = 'exam_backend.urls'
 
@@ -105,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    #DEFAULT_PERMISSION_CLASSES': (
+     #   'rest_framework.permissions.IsAuthenticated',
+    #),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -117,6 +128,10 @@ REST_FRAMEWORK = {
 
 REST_REGISTRATION = {
     'REGISTER_VERIFICATION_ENABLED': False,
+
+    'USER_VERIFICATION_FLAG_FIELD': None,
+
+    'REGISTER_SERIALIZER_PASSWORD_CONFIRM': False,
 
     'RESET_PASSWORD_VERIFICATION_URL': 'https://frontend-url/reset-password/', # TODO
 
