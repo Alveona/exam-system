@@ -22,7 +22,7 @@ class Question(models.Model):
     # audio = <...>.AudioField (https://github.com/areski/django-audiofield)
     difficulty = models.IntegerField(null=True, verbose_name='Сложность')
     comment = models.CharField(max_length=255, blank=True)
-    questions_number = models.IntegerField(null = True)
+    answers_number = models.IntegerField(null = True)
     audio = models.FileField(upload_to='questions_audio/', null = True)
 
     def __str__(self):

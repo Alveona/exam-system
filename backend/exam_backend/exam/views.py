@@ -9,12 +9,22 @@ from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer,
 
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
+
     serializer_class = QuestionSerializer
     #serializer = QuestionSerializer()
     permission_classes = (IsAuthenticated, )
     http_method_names = ['get', 'post', 'put']
 
     def get_queryset(self):
+        if self.request.method == "GET":
+            queryset = Question.objects.all().filter(id = self.request.query_params.get('id'),
+                                                     user = self.request.user)
+            return queryset
+        if self.request.method == "DELETE":
+            Answer.objects.all().filter(question = self.request.query_params.get('id'),
+                                        user = self.request.user).delete()
+            Question.objects.all().filter(id = self.request.query_params.get('id'),
+                                          user = self.request.user).delete()
         user = self.request.user
         if user.is_superuser:
             queryset = Question.objects.all()
@@ -38,9 +48,15 @@ class AnswerViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = (IsAuthenticated, )
-    http_method_names = ['get', 'post', 'put']
+    http_method_names = ['get', 'post', 'put', 'delete', ]
 
     def get_queryset(self):
+        if self.request.method == "GET":
+            queryset = Answer.objects.all().filter(question = self.request.query_params.get('id'),
+                                                     question__user = self.request.user)
+            return queryset
+        if self.request.method == "DELETE":
+            print('object deleted')
         user = self.request.user
         if user.is_superuser:
             queryset = Answer.objects.all()
