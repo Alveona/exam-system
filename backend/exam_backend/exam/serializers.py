@@ -23,6 +23,10 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'
+        lookup_field = 'id'
+        extra_kwargs = {
+            'url': {'lookup_field': 'id'}
+        }
 
 '''
 class QuestionIdSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Question, Answer, Course
@@ -13,23 +13,31 @@ class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = QuestionSerializer
     #serializer = QuestionSerializer()
     permission_classes = (IsAuthenticated, )
-    http_method_names = ['get', 'post', 'put']
+    http_method_names = ['get', 'post', 'put', 'delete']
+    lookup_field = 'id'
 
     def get_queryset(self):
+        user = self.request.user
         if self.request.method == "GET":
             queryset = Question.objects.all().filter(id = self.request.query_params.get('id'),
-                                                     user = self.request.user)
+                                                     user = user)
             return queryset
-        if self.request.method == "DELETE":
-            Answer.objects.all().filter(question = self.request.query_params.get('id'),
-                                        user = self.request.user).delete()
-            Question.objects.all().filter(id = self.request.query_params.get('id'),
-                                          user = self.request.user).delete()
-        user = self.request.user
         if user.is_superuser:
             queryset = Question.objects.all()
             return queryset
         return Question.objects.all().filter(user=user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        #print(instance.id)
+        queryset = Answer.objects.all().filter(question = instance.id).delete()
+        #print(queryset)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
