@@ -74,16 +74,7 @@
     <v-content>
       <router-view></router-view>
     </v-content>
-    <v-btn
-      fab
-      bottom
-      right
-      color="pink"
-      dark
-      fixed
-    >
-      <v-icon>add</v-icon>
-    </v-btn>
+    
 </main>
 </template>
 

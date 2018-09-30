@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Alveona/exam-system#readme",
   "dependencies": {
     "vue": "^2.5.17",
-    "vue-cli": "^2.9.6"
+    "vue-cli": "^2.9.6",
+    "vuelidate": "^0.7.4"
   }
 }

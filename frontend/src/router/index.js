@@ -10,6 +10,7 @@ import QuestionsManagment from '@/components/pages/QuestionsManagment'
 import TestsManagment from '@/components/pages/TestsManagment'
 import Stats from '@/components/pages/Stats'
 import UserGuide from '@/components/pages/UserGuide'
+import AddQuestion from '@/components/pages/AddQuestion'
 
 //Boxes
 import AddedQuestion from '@/components/boxes/AddedQuestion'
@@ -32,7 +33,13 @@ const router = new Router({
       	component: AddedTests
       },{
       	path: 'questions',
-      	component: QuestionsManagment
+      	component: QuestionsManagment,
+      },{
+      	path: 'questions/add',
+      	component: AddQuestion,
+      },{
+      	path: 'questions/edit',
+      	component: QuestionsManagment,
       },{
       	path: 'tests',
       	component: TestsManagment

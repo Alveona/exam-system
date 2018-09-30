@@ -16,8 +16,8 @@
             <v-btn icon @click="show = !show">
               <v-icon>{{ show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
             </v-btn>
-            <v-btn flat><v-icon>edit</v-icon></v-btn>
-            <v-btn flat><v-icon>delete</v-icon></v-btn>
+            <v-btn icon><v-icon>edit</v-icon></v-btn>
+            <v-btn icon><v-icon>delete</v-icon></v-btn>
           </v-card-actions>
   
           <v-slide-y-transition>

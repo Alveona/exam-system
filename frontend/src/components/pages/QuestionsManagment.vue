@@ -1,6 +1,6 @@
 <template>	
 	<div>
-		<v-btn round color="success" dark>
+		<v-btn round color="success" @click.native="changePage('/questions/add')" dark>
 			<v-icon size="32px">
 				add
 			</v-icon>
@@ -22,7 +22,7 @@
 
 <script>
   	import Axios from 'axios'
-
+	import router from '@/router'
   	import AddedQuestion from '@/components/boxes/AddedQuestion'
 	import Authentication from '@/components/pages/Authentication'
 
@@ -50,7 +50,7 @@
 		          console.log(error)
 		        })
 			},
-			
+
 		      dataParser (targetedArray, ...options) {
 		        let parsedData = []
 		        targetedArray.forEach(item => {
@@ -60,6 +60,9 @@
 		        })
 		        return parsedData
 		      },
+			changePage(link){
+				router.push(link)
+			}
 		},
 	    mounted () {
 	      this.getAddedQuestions()
