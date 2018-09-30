@@ -30,6 +30,8 @@ ALLOWED_HOSTS = ["10.0.1.5"]
 #CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 
+#AUTH_USER_MODEL = 'exam.MyUser'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -62,6 +64,14 @@ CORS_ORIGIN_WHITELIST = (
     'localhost:8000',
     '10.0.1.5:8000'
 )
+CORS_ALLOW_METHODS = (
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS'
+    )
 
 ROOT_URLCONF = 'exam_backend.urls'
 
@@ -90,7 +100,7 @@ WSGI_APPLICATION = 'exam_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'exam_db',
+        'NAME': 'exam0_db',
         'USER': 'root',
         'PASSWORD': 'x4D9VxLpgE',
     }
@@ -158,8 +168,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'static', 'images')
-MEDIA_URL = '/images/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'static', 'media')
+MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
