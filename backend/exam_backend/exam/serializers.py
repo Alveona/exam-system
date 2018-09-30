@@ -37,7 +37,7 @@ class QuestionIdSerializer(serializers.ModelSerializer):
 class QuestionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        field = ('title', 'text', 'answer_type')
+        fields = ('title', 'text', 'answer_type', )
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:

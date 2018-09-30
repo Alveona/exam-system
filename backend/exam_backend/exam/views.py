@@ -13,7 +13,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = QuestionSerializer
     #serializer = QuestionSerializer()
     permission_classes = (IsAuthenticated, )
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ['get', 'post', 'put', 'delete', 'patch']
     lookup_field = 'id'
 
     def get_queryset(self):
@@ -54,7 +54,7 @@ class AnswerViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
     permission_classes = (IsAuthenticated, )
-    http_method_names = ['get', 'post', 'put', 'delete', ]
+    http_method_names = ['get', 'post', 'put', 'delete', 'patch']
 
     def get_queryset(self):
         if self.request.method == "GET":
