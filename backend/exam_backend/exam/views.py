@@ -29,9 +29,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        #print(instance.id)
-        queryset = Answer.objects.all().filter(question = instance.id).delete()
-        #print(queryset)
+        Answer.objects.all().filter(question = instance.id).delete()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -70,6 +68,14 @@ class AnswerViewSet(viewsets.ModelViewSet):
             queryset = Answer.objects.all()
             return queryset
         return Answer.objects.all().filter(question__user=user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
