@@ -1,6 +1,16 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    activity = models.CharField(max_length=255, null = True) # job or university
+    image = models.ImageField(upload_to='users/', null=True)
+    phone = models.CharField(max_length=16, null=True)
+    group = models.CharField(max_length=255, null=True)
+
+    #class Meta:
+        #db_table = 'auth_user'
 
 class Question(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
@@ -12,6 +22,8 @@ class Question(models.Model):
     # audio = <...>.AudioField (https://github.com/areski/django-audiofield)
     difficulty = models.IntegerField(null=True, verbose_name='Сложность')
     comment = models.CharField(max_length=255, blank=True)
+    questions_number = models.IntegerField(null = True)
+    audio = models.FileField(upload_to='questions_audio/', null = True)
 
     def __str__(self):
         return '%s' % (self.title)
@@ -35,6 +47,9 @@ class Answer(models.Model):
     correct = models.BooleanField(default=False)
     weight = models.IntegerField(blank=True, null=True)
     image = models.ImageField(upload_to='answers/', null=True, verbose_name='Изображение')
+    audio = models.FileField(upload_to='answers_audio/', null = True)
+    hint = models.CharField(max_length=255, null = True)
+    priority = models.IntegerField(null = True)
 
     def __str__(self):
         return '%s' % (self.text)

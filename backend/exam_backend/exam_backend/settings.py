@@ -30,6 +30,8 @@ ALLOWED_HOSTS = ["10.0.1.5"]
 #CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 
+#AUTH_USER_MODEL = 'exam.MyUser'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -90,7 +92,7 @@ WSGI_APPLICATION = 'exam_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'exam_db',
+        'NAME': 'exam0_db',
         'USER': 'root',
         'PASSWORD': 'x4D9VxLpgE',
     }
