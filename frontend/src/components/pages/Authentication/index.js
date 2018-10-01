@@ -1,7 +1,8 @@
 import Axios from 'axios'
 import router from '@/router'
+import connection from '@/router/connection'
 
-const TestingSystemAPI = 'http://10.0.1.5:8000'
+const TestingSystemAPI = connection.server
 
 export default {
   user: { authenticated: false },

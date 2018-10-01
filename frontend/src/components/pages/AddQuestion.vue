@@ -5,46 +5,51 @@
 				<h4 class="display-1">Добавление нового вопроса</h4>
 				<v-flex xs12>
 		            <v-text-field
-		              label="Краткое название (будет видно только вам)*"
+		              label="Краткое название (будет видно только вам)"
 		              required
-              			clearable
+              		  clearable
+              		  :rules="rules"
+              		  box
 		            ></v-text-field>
 		        </v-flex>
 		        <v-flex xs12>
 			        <v-textarea
 			            name="input-7-1"
-			            label="Формулировка вопроса*"
-			            value=""
+			            label="Формулировка вопроса"
 			            hint="Не более 2000 символов"
-			              required
+          		  		:rules="rules"
+			            required
               			clearable
+              			box
 			          ></v-textarea>
 		        </v-flex>
 
-		          <v-flex xs12 sm6 md3>
+		          <v-flex xs12 sm6 xl3>
 	        			<v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field type='number' 
 			            :disabled="!enabledAttempts"
 			            label="Количество попыток"
               			clearable
+              			box
 			            ></v-text-field>
 				      </v-layout>
 		          </v-flex>
 
-		          <v-flex xs12 sm6 md3>
+		          <v-flex xs12 sm6 xl3>
         			<v-layout align-center>
 			          	<v-checkbox v-model="enabledTimer" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field type='number' 
 			            :disabled="!enabledTimer"
 			            label="Таймер на вопрос"
               			clearable
+              			box
 			            hint="В секундах"
 			            ></v-text-field>
 			        </v-layout>
 			      </v-flex>
 
-		          <v-flex xs12 sm6 md3>
+		          <v-flex xs12 sm6 xl3>
         			<v-layout align-center>
 			          	<v-checkbox v-model="enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
 			            <file-input 
@@ -58,11 +63,11 @@
 			        </v-layout>
 			      </v-flex>
 
-				  <v-flex xs12 sm6 md3>
+				  <v-flex xs12 sm6 xl3>
         			<v-layout align-center>
 			          	<v-checkbox v-model="enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
 			            <file-input 
-			            style="postion:relative;top:-10px"
+			            class="fileBtn"
 	                    accept="audio/*"
 	                    ref="fileInput"
                         @input="getUploadedAudio"
@@ -84,6 +89,7 @@
 	                v-model="difficulty"
 	                class="mt-0"
 	                type="number"
+	                box
 	              ></v-text-field>
 	            </v-flex>
 
@@ -94,11 +100,21 @@
 		            :items="answerTypes"
 		            item-value="id"
 		            item-text="val"
-		           > </v-select>
+			        label="Тип ответа"
+      		  		:rules="rules"
+		            box
+		            required
+		           ></v-select>
 		        </v-flex>
 				<add-answers 
 					:currentType="currentType"
+					:countAnswers="countAnswers"
 				></add-answers>
+				<v-flex xs12>
+					<v-btn round color="success" @click.native="changePage('/questions/add')" dark large>
+						 Добавить вопрос
+					</v-btn>
+				</v-flex>
 			</v-layout>
 		</v-container>
 	</v-form>
@@ -108,8 +124,9 @@
     import axios from 'axios'
     import FileInput from '@/components/other/FileLoader.vue'
     import AddAnswers from '@/components/boxes/AddAnswers.vue'
+	import connection from '@/router/connection'
 
-	const TestingSystemAPI = 'http://10.0.1.5:8000'
+	const TestingSystemAPI = connection.server
 
 	export default {
         components: {FileInput, AddAnswers},
@@ -124,11 +141,13 @@
       			difficulty: 0,
       			selectedType: [],
       			currentType: 1,
+				countAnswers: 1,
       			answerTypes: [
 	      			{ id: 1, val: 'Ввод значения'}, 
 	      			{ id: 2, val : 'Выбор одного варианта'}, 
 	      			{ id: 3, val : 'Выбор нескольких вариантов'}
       			],
+        		rules: [ (value) => !!value || 'Это обязательное поле' ],
 
                 image: '',
                 imageTitle: '',
@@ -159,20 +178,24 @@
                  formData.set('audioDescription', this.audioDescription)
 
                  axios.post(`${TestingSystemAPI}/api/questions/`, formData)
-                       .then(response => {
-                            // Any Code
-                        })
-                       .catch(error => {
-                            // Any Code
-                        })
+	               .then(response => {
+	                    // Any Code
+	                })
+	               .catch(error => {
+	                    // Any Code
+	                })
             }
+       },
+       watch: {
+       		currentType: function(val){
+       			if (val == 1)
+       				this.countAnswers = 1
+       			else if (val == 2 || val == 3)
+       				this.countAnswers = 2
+       		}
        }
 	}
 </script>
 
 <style>
-.fileBtn{
-	position:relative;
-	top:-25px;
-}
 </style>

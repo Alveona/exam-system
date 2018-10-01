@@ -15,6 +15,7 @@ Vue.config.productionTip = false
 
 Authentication.checkAuthentication()
 
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

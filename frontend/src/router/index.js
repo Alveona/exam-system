@@ -18,8 +18,10 @@ import AddedQuestion from '@/components/boxes/AddedQuestion'
 Vue.component('added-question', AddedQuestion)
 
 Vue.use(Router)
+history.pushState('', document.title, window.location.pathname)
 
 const router = new Router({
+  mode: 'history',
   routes: [
     {
       path: '/',

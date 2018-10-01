@@ -25,8 +25,9 @@
 	import router from '@/router'
   	import AddedQuestion from '@/components/boxes/AddedQuestion'
 	import Authentication from '@/components/pages/Authentication'
+	import connection from '@/router/connection'
 
-	const TestingSystemAPI = 'http://10.0.1.5:8000'
+	const TestingSystemAPI = connection.server
 	export default{
 		data() {
 			return {
@@ -51,7 +52,7 @@
 		        })
 			},
 
-		      dataParser (targetedArray, ...options) {
+		    dataParser (targetedArray, ...options) {
 		        let parsedData = []
 		        targetedArray.forEach(item => {
 		          let parsedItem = {}

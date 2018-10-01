@@ -1,8 +1,8 @@
 <template>
     <div>
-        <div>
+        <div v-if="(fileUrl) && (accept=='image/*')">
             <img
-                    v-if="accept=='image/*'"
+                    
                     :src="fileUrl"
                     ref="fileUrl"
                     height="150"
