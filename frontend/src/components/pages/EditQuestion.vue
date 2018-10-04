@@ -2,7 +2,7 @@
 	<v-form @submit.prevent="onSubmit">
 		<v-container>
 			<v-layout row wrap>
-				<h4 class="display-1">Добавление нового вопроса</h4>
+				<h4 class="display-1">Редактирование вопроса</h4>
 				<v-flex xs12>
 		            <v-text-field
 		              label="Краткое название (будет видно только вам)"
@@ -111,7 +111,7 @@
 				></add-answers>
 				<v-flex xs12>
 					<v-btn round color="success" dark large>
-						 Добавить вопрос
+						 Сохранить вопрос
 					</v-btn>
 				</v-flex>
 			</v-layout>
@@ -183,6 +183,20 @@
 	               .catch(error => {
 	                    // Any Code
 	                })
+            },
+            getQuestionData()
+            {
+            	Axios.get(`${TestingSystemAPI}/api/questions/`, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        }).then(({data}) => {
+		          this.tests = data
+		        }).catch(error => {
+		          this.snackbar = true
+		          this.message = 'Не удалось получить список тестов'
+
+		          console.log(error)
+		        })
             }
        },
        watch: {
@@ -192,6 +206,9 @@
        			else if (val == 2 || val == 3)
        				this.countAnswers = 2
        		}
+       },
+       mounted() {
+       		this.getQuestionData()
        }
 	}
 </script>

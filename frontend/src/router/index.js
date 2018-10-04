@@ -11,6 +11,9 @@ import TestsManagment from '@/components/pages/TestsManagment'
 import Stats from '@/components/pages/Stats'
 import UserGuide from '@/components/pages/UserGuide'
 import AddQuestion from '@/components/pages/AddQuestion'
+import EditQuestion from '@/components/pages/EditQuestion'
+import AddTest from '@/components/pages/AddTest'
+import EditTest from '@/components/pages/EditTest'
 
 //Boxes
 import AddedQuestion from '@/components/boxes/AddedQuestion'
@@ -18,7 +21,6 @@ import AddedQuestion from '@/components/boxes/AddedQuestion'
 Vue.component('added-question', AddedQuestion)
 
 Vue.use(Router)
-history.pushState('', document.title, window.location.pathname)
 
 const router = new Router({
   mode: 'history',
@@ -41,10 +43,16 @@ const router = new Router({
       	component: AddQuestion,
       },{
       	path: 'questions/edit',
-      	component: QuestionsManagment,
+      	component: EditQuestion,
       },{
       	path: 'tests',
       	component: TestsManagment
+      },{
+      	path: 'tests/add',
+      	component: AddTest
+      },{
+      	path: 'tests/edit',
+      	component: EditTest
       },{
       	path: 'stats',
       	component: Stats

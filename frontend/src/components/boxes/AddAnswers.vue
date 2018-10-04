@@ -76,7 +76,7 @@
 	        </v-flex>
 			
 			<h4 v-if="currentType != 1" class="title">Ответы: </h4>
-			<v-radio-group v-model="oneAnswerRadios" :mandatory="false">
+			<v-radio-group v-model="oneAnswerRadios">
 
 			<add-answer 
 				v-for="answer in countAnswers"

@@ -1,23 +1,27 @@
 <template>	
-	<div>
-		<v-btn round color="success" @click.native="changePage('/questions/add')" dark>
+	<v-layout row wrap>
+		<v-flex xs12>
+		<v-btn round color="success" to="/tests/add" dark>
 			<v-icon size="32px">
 				add
 			</v-icon>
 		 Добавить новый вопрос</v-btn>
+		</v-flex>
+		<v-flex xs12>
 		<added-question
 		v-for="question in questions"
 			:title="question.title"
-			:text="question.text"
-			:type="question.answer_type"
+			:text="question.body"
+			:type="2"
 		></added-question>
+	</v-flex>
     <v-snackbar :timeout="timeout"
                 bottom="bottom"
                 color="red lighten-1"
                 v-model="snackbar">
       {{ message }}
     </v-snackbar>
-	</div>
+	</v-layout>
 </template>
 
 <script>
@@ -28,6 +32,7 @@
 	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server
+
 	export default{
 		data() {
 			return {
@@ -39,35 +44,23 @@
 		},
 		methods: {
 			getAddedQuestions() {
-				Axios.get(`${TestingSystemAPI}/api/questions/`, {
-		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				//Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
+				Axios.get('https://jsonplaceholder.typicode.com/posts', {
+		          //headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
-		          this.questions = this.dataParser(data, 'id', 'title', 'text', 'answer_type')
+		          this.questions = data
 		        }).catch(error => {
 		          this.snackbar = true
 		          this.message = 'Не удалось получить список вопросов'
 
 		          console.log(error)
 		        })
-			},
-
-		    dataParser (targetedArray, ...options) {
-		        let parsedData = []
-		        targetedArray.forEach(item => {
-		          let parsedItem = {}
-		          options.forEach(option => (parsedItem[option] = item[option]))
-		          parsedData.push(parsedItem)
-		        })
-		        return parsedData
-		      },
-			changePage(link){
-				router.push(link)
 			}
 		},
 	    mounted () {
 	      this.getAddedQuestions()
-	    },
+	    }
 	}
 </script>
 
