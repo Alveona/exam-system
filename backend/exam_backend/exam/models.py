@@ -3,23 +3,20 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     activity = models.CharField(max_length=255, null = True) # job or university
     image = models.ImageField(upload_to='users/', null=True)
     phone = models.CharField(max_length=16, null=True)
     group = models.CharField(max_length=255, null=True)
-
-    #class Meta:
-        #db_table = 'auth_user'
+    username = models.CharField(max_length=255, default='')
+    password = models.CharField(max_length=255, default='')
 
 class Question(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=255, null=True)
     text = models.TextField(null=True)
     answer_type = models.IntegerField(null=True, verbose_name='Тип вопроса')
-    # answer_type: 1 - textbox / 2 - radio / 3 - checkbox
     image = models.ImageField(upload_to='questions/', null=True, verbose_name='Изображение')
-    # audio = <...>.AudioField (https://github.com/areski/django-audiofield)
     difficulty = models.IntegerField(null=True, verbose_name='Сложность')
     comment = models.CharField(max_length=255, blank=True)
     answers_number = models.IntegerField(null = True)
@@ -34,7 +31,7 @@ class Course(models.Model):
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
-    questions_number = models.IntegerField(null=True)  # зачем это нужно?
+    questions_number = models.IntegerField(null=True)
     user = models.ManyToManyField(settings.AUTH_USER_MODEL, through='UserCourseRelation') # нестандартная таблица отношений
 
     def __str__(self):
