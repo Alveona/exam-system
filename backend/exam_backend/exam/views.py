@@ -3,9 +3,25 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Question, Answer, Course
+from .models import Question, Answer, Course, Profile
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
-    QuestionListSerializer
+    QuestionListSerializer, ProfileSerializer
+
+class ProfileViewSet(viewsets.ModelViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get', 'patch', 'delete']
+    def get_queryset(self):
+        user = self.request.user
+        if self.request.method == "GET":
+            queryset = Profile.objects.all().filter(user = user)
+            return queryset
+
+class RegisterViewSet(viewsets.ModelViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    http_method_names = ['post']
 
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()

@@ -3,12 +3,13 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     activity = models.CharField(max_length=255, null = True) # job or university
     image = models.ImageField(upload_to='users/', null=True)
     phone = models.CharField(max_length=16, null=True)
     group = models.CharField(max_length=255, null=True)
-
+    username = models.CharField(max_length=255, default='')
+    password = models.CharField(max_length=255, default='')
 
 class Question(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
