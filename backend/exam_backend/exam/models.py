@@ -9,8 +9,8 @@ class Profile(models.Model):
     image = models.ImageField(upload_to='users/', null=True)
     phone = models.CharField(max_length=16, null=True)
     group = models.CharField(max_length=255, null=True)
-    username = models.CharField(max_length=255, default='')  # is meant to be empty
-    password = models.CharField(max_length=255, default='')  # is meant to be empty
+    #username = models.CharField(max_length=255, default='')  # is meant to be empty
+    #password = models.CharField(max_length=255, default='')  # is meant to be empty
 
 
 class Question(models.Model):

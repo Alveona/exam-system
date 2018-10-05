@@ -98,3 +98,6 @@ class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['get', 'post', 'put']
+
+    def get_queryset(self):
+        pass # TODO

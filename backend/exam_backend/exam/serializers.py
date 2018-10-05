@@ -12,11 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     def create(self, validated_data):
-        #print(validated_data)
-        users = User.objects.all().filter(username = validated_data['username'])
+        #print(self.context['request'].data['data1'])
+        users = User.objects.all().filter(username = self.context['request'].data['username'])
         if not users:
-            user = User.objects.create_user(username=validated_data['username'],
-                                            password=validated_data['password'])
+            user = User.objects.create_user(username = self.context['request'].data['username'],
+                                            password = self.context['request'].data['password'])
         else:
             return serializers.ValidationError('Username is already taken')
         profile = Profile(user=user)
@@ -87,6 +87,8 @@ class CourseSerializer(serializers.ModelSerializer):
         course.save()
         return course
 
+    def update(self, instance, validated_data):
+        pass
     class Meta:
         model = Course
         fields = '__all__'
