@@ -33,11 +33,13 @@ class Question(models.Model):
 class Course(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    author = models.CharField(max_length=255, null=True)
+    token = models.CharField(max_length=255, null=True)
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
     questions_number = models.IntegerField(null=True)
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
-                                  through='UserCourseRelation')  # нестандартная таблица отношений
+                                  through='UserCourseRelation', related_name='user')  # нестандартная таблица отношений
     perfect_mark = models.IntegerField(null=True)  # percentage
     good_mark = models.IntegerField(null=True)
     satisfactory_mark = models.IntegerField(null=True)

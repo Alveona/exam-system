@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Question, Answer, Course, Profile
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
-    QuestionListSerializer, ProfileSerializer
+    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, UserCourseRelation
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -97,7 +97,53 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, )
-    http_method_names = ['get', 'post', 'put']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
-        pass # TODO
+        if self.request.method == "GET":
+            queryset = Course.objects.all().filter(token = self.request.query_params.get('token'))
+            return queryset
+
+class CourseCreatedViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseCreatedSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        if self.request.method == "GET":
+            queryset = Course.objects.all().filter(user = self.request.user)
+            #print(queryset)
+            if not queryset:
+                return queryset
+            for course in queryset:
+                queryset_access = UserCourseRelation.objects.all().filter(course = course,
+                                                                          user = self.request.user, access = 1)
+                #print(queryset_access)
+                if not queryset_access:
+                    queryset = queryset.exclude(id = course.id)
+            return queryset
+
+
+class CourseAddedViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseCreatedSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        if self.request.method == "GET":
+            queryset = Course.objects.all().filter(user=self.request.user)
+            #print(queryset)
+            if not queryset:
+                return queryset
+            for course in queryset:
+
+                queryset_access = UserCourseRelation.objects.all().filter(course=course,
+                                                                          user=self.request.user, access=0)
+                #print(queryset_access)
+                #print(queryset)
+                if not queryset_access:
+                    queryset = queryset.exclude(id = course.id)
+                    #print(queryset)
+            return queryset

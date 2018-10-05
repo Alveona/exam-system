@@ -38,7 +38,9 @@ class QuestionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         question = Question(user=self.context['request'].user, title=validated_data['title'],
                             text=validated_data['text'], answer_type=validated_data['answer_type'],
-                            answers_number=validated_data['answers_number'])
+                            answers_number=validated_data['answers_number'],
+                            attempts_number=validated_data['attempts_number'])
+
         if 'difficulty' in validated_data:
             question.difficulty = validated_data['difficulty']
         if 'comment' in validated_data:
@@ -70,7 +72,10 @@ class AnswerSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         course = Course(name=validated_data['name'], description=validated_data['description'],
-                        questions_number=validated_data['questions_number'])
+                        questions_number=validated_data['questions_number'],
+                        token = validated_data['token'], perfect_mark = validated_data['perfect_mark'],
+                        good_mark=validated_data['good_mark'],
+                        satisfactory_mark = validated_data['satisfactory_mark'],)
         course.save()
         for question in validated_data['questions']:
             course.questions.add(question)
@@ -88,7 +93,24 @@ class CourseSerializer(serializers.ModelSerializer):
         return course
 
     def update(self, instance, validated_data):
-        pass
+        pass # TODO
     class Meta:
         model = Course
         fields = '__all__'
+
+class RelationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserCourseRelation
+        fields = '__all__'
+
+class CourseCreatedSerializer(serializers.ModelSerializer):
+    #user = RelationSerializer(read_only=True)
+    class Meta:
+        model = Course
+        fields = ('token', 'name', 'author', 'user', 'description', 'image')
+
+class CourseAddedSerializer(serializers.ModelSerializer):
+    #user = RelationSerializer(read_only=True)
+    class Meta:
+        model = Course
+        fields = ('token', 'name', 'user', 'description', 'image')
