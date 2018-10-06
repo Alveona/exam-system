@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Question, Course, Answer, UserCourseRelation, Profile
+import secrets # used to do a safe random choice of questions
+from .models import Question, Course, Answer, UserCourseRelation, Profile, CourseSession, \
+    SessionQuestion, SessionAnswer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -78,7 +80,8 @@ class CourseSerializer(serializers.ModelSerializer):
                         questions_number=validated_data['questions_number'],
                         token = validated_data['token'], perfect_mark = validated_data['perfect_mark'],
                         good_mark=validated_data['good_mark'],
-                        satisfactory_mark = validated_data['satisfactory_mark'],)
+                        satisfactory_mark = validated_data['satisfactory_mark'],
+                        attempts = validated_data['attempts'])
         course.save()
         for question in validated_data['questions']:
             course.questions.add(question)
@@ -98,6 +101,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         pass # TODO
     class Meta:
+        # TODO RETURN 'SUBSCRIBED' FIELD IN JSON
         model = Course
         fields = '__all__'
 
@@ -108,7 +112,7 @@ class RelationSerializer(serializers.ModelSerializer):
         relation = UserCourseRelation(user = self.context['request'].user,
                                       course = course, access = 0)
         relation.save()
-        return relation
+        return relation # TODO CHECK WHAT HAPPENS IF DELETE RETURN STATEMENT (WILL THERE NO RESPONSE IN POST?)
 
     class Meta:
         model = UserCourseRelation
@@ -128,3 +132,49 @@ class CourseAddedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ('token', 'name', 'user', 'description', 'image')
+
+
+class SessionSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        course = Course.objects.all().get(token = self.context['request'].data['token'])
+        #print(course)
+        not_finished_session = CourseSession.objects.all().filter(course = course,
+                                user = self.context['request'].user, finished = False)
+        print('not finished session: ', end='')
+        print(not_finished_session)
+        if not_finished_session:
+            return not_finished_session # TODO CONTINUE THE COURSE
+        else:
+            sessions = CourseSession.objects.all().filter(course = course,
+                                    user = self.context['request'].user, finished = True)
+            print('existing sessions: ', end='')
+            print(sessions)
+
+            attempts = [attempt_number for attempt_number in [session for session in sessions]]
+            if attempts:
+                number_of_attempts = max(attempts)
+            else:
+                number_of_attempts = 0
+            print('number of attempts: ', end='')
+            print(number_of_attempts)
+
+            #if number_of_attempts >= course.attempts:
+               # pass # TODO EXCEPTION
+            #else:
+            session = CourseSession(course = course, attempt_number = number_of_attempts + 1,
+                                user = self.context['request'].user, finished = False)
+            session.save()
+            # TODO CREATE SESSION_QUESTION FOR FIRST QUESTION
+            list_of_questions = course.questions
+            print(course.questions)
+            session_q = SessionQuestion(question = secrets.choice(list_of_questions),
+                                        session = session, order_number = 1,
+                                        result = 0, attempts_number = 0,
+                                        finished = False)
+            print('s_q: ', end='')
+            print(session_q)
+            # TODO CREATE SESSION_ANSWER FOR FIRST QUESTION (== FILL QUESTION WITH ANSWERS)
+        return session
+    class Meta:
+        model = CourseSession
+        fields = '__all__'

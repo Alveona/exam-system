@@ -38,6 +38,7 @@ class Course(models.Model):
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
     questions_number = models.IntegerField(null=True)
+    attempts = models.IntegerField(null=True)
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                   through='UserCourseRelation', related_name='user')  # нестандартная таблица отношений
     perfect_mark = models.IntegerField(null=True)  # percentage
@@ -65,7 +66,7 @@ class Answer(models.Model):
 class CourseSession(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
-    attempts_number = models.IntegerField(null=True)  # attempts of current course
+    attempt_number = models.IntegerField(null=True)  # attempts of current course
     finished = models.BooleanField(default=False)  # 1 is for finished
 
 
@@ -74,7 +75,7 @@ class SessionQuestion(models.Model):
     session = models.ForeignKey(CourseSession, on_delete=models.CASCADE, null=True)
     order_number = models.IntegerField(null=True)
     result = models.IntegerField(null=True)
-    attempts_number = models.IntegerField(null=True)  # attempts of current answer
+    attempts_number = models.IntegerField(null=True)  # attempts of current question
     finished = models.BooleanField(default=False)  # 1 is for finished
 
 

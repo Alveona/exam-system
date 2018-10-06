@@ -3,9 +3,10 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Question, Answer, Course, Profile, UserCourseRelation
+from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
-    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer
+    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
+    SessionSerializer
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -155,3 +156,9 @@ class RelationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return None
+
+class SessionViewSet(viewsets.ModelViewSet):
+    queryset = CourseSession.objects.all()
+    serializer_class = SessionSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['post']
