@@ -136,14 +136,23 @@ class CourseAddedSerializer(serializers.ModelSerializer):
 
 class SessionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
+
+        # DEBUG :
+        ''''''''''''
+        CourseSession.objects.all().delete()
+        SessionQuestion.objects.all().delete()
+        ''''''''''''
+
+
+
         course = Course.objects.all().get(token = self.context['request'].data['token'])
-        #print(course)
+        #print(course.questions)
         not_finished_session = CourseSession.objects.all().filter(course = course,
                                 user = self.context['request'].user, finished = False)
         print('not finished session: ', end='')
         print(not_finished_session)
         if not_finished_session:
-            return not_finished_session # TODO CONTINUE THE COURSE
+            return not_finished_session
         else:
             sessions = CourseSession.objects.all().filter(course = course,
                                     user = self.context['request'].user, finished = True)
@@ -158,22 +167,22 @@ class SessionSerializer(serializers.ModelSerializer):
             print('number of attempts: ', end='')
             print(number_of_attempts)
 
-            #if number_of_attempts >= course.attempts:
-               # pass # TODO EXCEPTION
-            #else:
-            session = CourseSession(course = course, attempt_number = number_of_attempts + 1,
-                                user = self.context['request'].user, finished = False)
-            session.save()
-            # TODO CREATE SESSION_QUESTION FOR FIRST QUESTION
-            list_of_questions = course.questions
-            print(course.questions)
-            session_q = SessionQuestion(question = secrets.choice(list_of_questions),
-                                        session = session, order_number = 1,
-                                        result = 0, attempts_number = 0,
-                                        finished = False)
-            print('s_q: ', end='')
-            print(session_q)
-            # TODO CREATE SESSION_ANSWER FOR FIRST QUESTION (== FILL QUESTION WITH ANSWERS)
+            if number_of_attempts >= course.attempts:
+                pass # TODO EXCEPTION
+            else:
+                session = CourseSession(course = course, attempt_number = number_of_attempts + 1,
+                                    user = self.context['request'].user, finished = False)
+                session.save()
+                list_of_questions = course.questions.all()
+                print(list_of_questions)
+                session_q = SessionQuestion(question = secrets.choice(list_of_questions),
+                                            session = session, order_number = 1,
+                                            result = 0, attempts_number = 0,
+                                            finished = False)
+                print('s_q: ', end='')
+                print(session_q)
+                session_q.save()
+                # TODO CREATE SESSION_ANSWER FOR FIRST QUESTION (== FILL QUESTION WITH ANSWERS)
         return session
     class Meta:
         model = CourseSession

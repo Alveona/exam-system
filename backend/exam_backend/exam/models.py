@@ -78,6 +78,9 @@ class SessionQuestion(models.Model):
     attempts_number = models.IntegerField(null=True)  # attempts of current question
     finished = models.BooleanField(default=False)  # 1 is for finished
 
+    def __str__(self):
+        return '%s' % (self.question)
+
 
 class SessionAnswer(models.Model):  # erased after question finished (i.e. written smth in SessionQuestion.Result
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True)
