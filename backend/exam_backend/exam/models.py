@@ -9,8 +9,8 @@ class Profile(models.Model):
     image = models.ImageField(upload_to='users/', null=True)
     phone = models.CharField(max_length=16, null=True)
     group = models.CharField(max_length=255, null=True)
-    username = models.CharField(max_length=255, default='')  # is meant to be empty
-    password = models.CharField(max_length=255, default='')  # is meant to be empty
+    #username = models.CharField(max_length=255, default='')  # is meant to be empty
+    #password = models.CharField(max_length=255, default='')  # is meant to be empty
 
 
 class Question(models.Model):
@@ -33,11 +33,14 @@ class Question(models.Model):
 class Course(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    author = models.CharField(max_length=255, null=True)
+    token = models.CharField(max_length=255)
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
     questions_number = models.IntegerField(null=True)
+    attempts = models.IntegerField(null=True)
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
-                                  through='UserCourseRelation')  # нестандартная таблица отношений
+                                  through='UserCourseRelation', related_name='user')  # нестандартная таблица отношений
     perfect_mark = models.IntegerField(null=True)  # percentage
     good_mark = models.IntegerField(null=True)
     satisfactory_mark = models.IntegerField(null=True)
@@ -63,7 +66,7 @@ class Answer(models.Model):
 class CourseSession(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
-    attempts_number = models.IntegerField(null=True)  # attempts of current course
+    attempt_number = models.IntegerField(null=True)  # attempts of current course
     finished = models.BooleanField(default=False)  # 1 is for finished
 
 
@@ -72,7 +75,7 @@ class SessionQuestion(models.Model):
     session = models.ForeignKey(CourseSession, on_delete=models.CASCADE, null=True)
     order_number = models.IntegerField(null=True)
     result = models.IntegerField(null=True)
-    attempts_number = models.IntegerField(null=True)  # attempts of current answer
+    attempts_number = models.IntegerField(null=True)  # attempts of current question
     finished = models.BooleanField(default=False)  # 1 is for finished
 
 
