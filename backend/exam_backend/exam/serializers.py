@@ -37,10 +37,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         question = Question(user=self.context['request'].user, title=validated_data['title'],
-                            text=validated_data['text'], answer_type=validated_data['answer_type'],
-                            answers_number=validated_data['answers_number'],
-                            attempts_number=validated_data['attempts_number'])
-
+                            text=validated_data['text'], answer_type=validated_data['answer_type'])
+        if 'timer' in validated_data:
+            question.timer = validated_data['timer']
+        if 'attempts_number' in validated_data:
+            question.attempts_number = validated_data['attempts_number']
+        if 'answers_number' in validated_data:
+            question.answers_number = validated_data['answers_number']
         if 'difficulty' in validated_data:
             question.difficulty = validated_data['difficulty']
         if 'comment' in validated_data:
@@ -60,7 +63,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 class QuestionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ('title', 'text', 'answer_type',)
+        fields = ('id', 'title', 'text', 'answer_type',)
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -99,9 +102,20 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RelationSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        course = Course.objects.all().get(token = self.context['request'].data['token'])
+        print(course)
+        relation = UserCourseRelation(user = self.context['request'].user,
+                                      course = course, access = 0)
+        relation.save()
+        return relation
+
     class Meta:
         model = UserCourseRelation
         fields = '__all__'
+        extra_kwargs = {'user': {'required': False}, 'course': {'required': False}}
+        validators = []  # Remove a default "unique together" constraint.
+
 
 class CourseCreatedSerializer(serializers.ModelSerializer):
     #user = RelationSerializer(read_only=True)

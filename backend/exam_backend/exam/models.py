@@ -34,7 +34,7 @@ class Course(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=255, null=True)
-    token = models.CharField(max_length=255, null=True)
+    token = models.CharField(max_length=255)
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
     questions_number = models.IntegerField(null=True)

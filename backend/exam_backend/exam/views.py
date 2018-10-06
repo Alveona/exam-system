@@ -3,9 +3,9 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Question, Answer, Course, Profile
+from .models import Question, Answer, Course, Profile, UserCourseRelation
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
-    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, UserCourseRelation
+    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -112,7 +112,7 @@ class CourseCreatedViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.method == "GET":
-            queryset = Course.objects.all().filter(user = self.request.user)
+            queryset = Course.objects.all().filter(user = self.request.user).distinct()
             #print(queryset)
             if not queryset:
                 return queryset
@@ -133,17 +133,25 @@ class CourseAddedViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.method == "GET":
-            queryset = Course.objects.all().filter(user=self.request.user)
+            queryset = Course.objects.all().filter(user=self.request.user).distinct()
             #print(queryset)
+            ids = []
             if not queryset:
                 return queryset
             for course in queryset:
-
-                queryset_access = UserCourseRelation.objects.all().filter(course=course,
-                                                                          user=self.request.user, access=0)
+                queryset_access = UserCourseRelation.objects.all().filter(access = 0, course=course,
+                                                                          user=self.request.user)
                 #print(queryset_access)
-                #print(queryset)
                 if not queryset_access:
                     queryset = queryset.exclude(id = course.id)
-                    #print(queryset)
             return queryset
+
+
+class RelationViewSet(viewsets.ModelViewSet):
+    queryset = UserCourseRelation.objects.all()
+    serializer_class = RelationSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['post']
+
+    def get_queryset(self):
+        return None
