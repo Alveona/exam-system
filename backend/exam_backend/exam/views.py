@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
-    SessionSerializer
+    SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -177,3 +177,30 @@ class SessionViewSet(viewsets.ModelViewSet):
     serializer_class = SessionSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['post']
+
+class SessionQuestionViewSet(viewsets.ModelViewSet):
+    queryset = SessionQuestion.objects.all()
+    serializer_class = SessionQuestionSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        session = CourseSession.objects.all().get(user = self.request.user, course__token =
+                self.request.query_params.get('token'), finished = False)
+        print(session)
+        question = SessionQuestion.objects.all().filter(session = session, finished = False)
+        print(question)
+        return question
+
+class SessionAnswerViewSet(viewsets.ModelViewSet):
+    queryset = SessionAnswer.objects.all()
+    serializer_class = SessionAnswerSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        question = SessionQuestion.objects.all().get(id = self.request.query_params.get('id'))
+        answers = SessionAnswer.objects.all().filter(sessionQuestion = question)
+
+
+

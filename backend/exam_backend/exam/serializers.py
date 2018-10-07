@@ -69,6 +69,11 @@ class QuestionListSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'text', 'answer_type',)
 
 
+class AnswerInCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ('text', 'weight', 'image', 'priority')
+
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
@@ -84,7 +89,8 @@ class CourseSerializer(serializers.ModelSerializer):
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
                         token = validated_data['token'],
-                        attempts = validated_data['attempts'])
+                        attempts = validated_data['attempts'],
+                        author = validated_data['author'])
         course.perfect_mark = self.context['request'].data['perfect_mark']
         course.good_mark = self.context['request'].data['good_mark']
         course.satisfactory_mark = self.context['request'].data['satisfactory_mark']
@@ -104,7 +110,7 @@ class CourseSerializer(serializers.ModelSerializer):
         course.save()
         return course
 
-    def update(self, instance, validated_data):
+    def partial_update(self, instance, validated_data):
         pass # TODO
     class Meta:
         # TODO RETURN 'SUBSCRIBED' FIELD IN JSON
@@ -154,13 +160,18 @@ class CourseAddedSerializer(serializers.ModelSerializer):
 
 
 class SessionSerializer(serializers.ModelSerializer):
+    '''perfect_mark = serializers.SerializerMethodField()
+    good_mark = serializers.SerializerMethodField()
+    satisfactory_mark = serializers.SerializerMethodField()
+    session_questions = serializers.SerializerMethodField() '''# TODO STATS
+
     def create(self, validated_data):
 
         # DEBUG :
         ''''''''''''
-        #CourseSession.objects.all().delete()
-        #SessionQuestion.objects.all().delete()
-        #SessionAnswer.objects.all().delete()
+        CourseSession.objects.all().delete()
+        SessionQuestion.objects.all().delete()
+        SessionAnswer.objects.all().delete()
         ''''''''''''
 
 
@@ -216,4 +227,24 @@ class SessionSerializer(serializers.ModelSerializer):
         return session
     class Meta:
         model = CourseSession
+        fields = '__all__'
+
+class SessionQuestionSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=True)
+    class Meta:
+        model = SessionQuestion
+        fields = '__all__'
+
+class SessionAnswerSerializer(serializers.ModelSerializer):
+    answer = AnswerInCourseSerializer(read_only=True)
+    hint = serializers.SerializerMethodField()
+    audio_hint = serializers.SerializerMethodField()
+
+    def create(self, validated_data):
+        pass #TODO POST ON SESSION_ANSWER
+
+    #def get_hint(self, obj):
+
+    class Meta:
+        model = SessionAnswer
         fields = '__all__'
