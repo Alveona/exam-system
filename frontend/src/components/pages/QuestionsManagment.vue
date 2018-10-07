@@ -1,26 +1,46 @@
 <template>	
-	<v-layout row wrap>
+	<v-layout row wrap>	
+
 		<v-flex xs12>
-		<v-btn round color="success" to="/tests/add" dark>
-			<v-icon size="32px">
-				add
-			</v-icon>
-		 Добавить новый вопрос</v-btn>
+			<p class="display-1">Управление вопросами</p>
 		</v-flex>
+
 		<v-flex xs12>
-		<added-question
-		v-for="question in questions"
-			:title="question.title"
-			:text="question.body"
-			:type="2"
-		></added-question>
-	</v-flex>
-    <v-snackbar :timeout="timeout"
-                bottom="bottom"
-                color="red lighten-1"
-                v-model="snackbar">
-      {{ message }}
-    </v-snackbar>
+			<v-btn round color="success" to="add/question" class="mb-3" dark>
+				<v-icon size="24px" class="mr-2">
+					add
+				</v-icon>
+			Добавить новый вопрос</v-btn>
+		</v-flex>
+
+		<v-flex xs12>
+			<p>{{success_message}}</p>
+			<added-question
+			v-for="question in questions"
+				:id="question.id"
+				:title="question.title"
+				:text="question.text"
+				:type="question.answer_type"
+				:withchecks="0"
+				:element="questions.indexOf(question)"
+				:collection="questions"
+			></added-question>
+		</v-flex>
+
+	    <v-flex xs12>
+			<v-alert
+	        :value="alert"
+	        type="error"
+	      >
+	        {{message}}
+
+		      	<v-tooltip top>
+			        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+			        <span>Обновить</span>
+			    </v-tooltip>
+		      </v-alert>
+	      </v-flex>	
+
 	</v-layout>
 </template>
 
@@ -37,29 +57,37 @@
 		data() {
 			return {
 				questions: [],
-				snackbar: false,
-				message: '',
-				timeout: 0
+				alert: false,
+				alert_message: ''
 			}
 		},
 		methods: {
 			getAddedQuestions() {
-				//Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
-				Axios.get('https://jsonplaceholder.typicode.com/posts', {
-		          //headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data
 		        }).catch(error => {
-		          this.snackbar = true
-		          this.message = 'Не удалось получить список вопросов'
+		          this.alert = true
+		          this.message = 'Не удалось получить список вопросов. Проверьте подключение к сети.'
 
 		          console.log(error)
 		        })
+			},
+			reloadPage() {
+				window.location.reload(true)
 			}
 		},
 	    mounted () {
 	      this.getAddedQuestions()
+	    },
+	    computed: {
+	    	success_message: function() {
+	          if (!this.questions.length)
+	          	return 'В вашем профиле нет созданных вопросов.'
+	          else return 'Добавлено ' + this.questions.length + ' вопросов:'
+	    	}
 	    }
 	}
 </script>

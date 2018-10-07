@@ -95,6 +95,7 @@
     import Axios from 'axios'
     import FileInput from '@/components/other/FileLoader'
     import AddedQuestion from '@/components/boxes/AddedQuestion'
+	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server
@@ -119,9 +120,9 @@
 		},
 		methods: {
 			getTestData() {
-				//Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
-					Axios.get('https://jsonplaceholder.typicode.com/posts', {
-		          //headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
+				//Axios.get('https://jsonplaceholder.typicode.com/posts', {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data

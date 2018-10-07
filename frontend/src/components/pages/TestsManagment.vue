@@ -1,22 +1,26 @@
 <template>
 	<v-layout row wrap>
 		<v-flex xs12>
-		<v-btn round color="success" to="/tests/add" dark>
-			<v-icon size="32px">
-				add
-			</v-icon>
-		 Создать новый тест</v-btn>
+			<p class="display-1">Управление тестами
+			</p>
 		</v-flex>
-<v-flex xs12>
-		 <created-test
-			v-for="test in tests"
-			:id="test.id"
-			:title="test.title"
-			author="author"
-			:description="test.body"
-			:image="'https://datalore.io/logo/RGB/Logo-RGB.svg'"
-		></created-test>
-	</v-flex>
+		<v-flex xs12>
+			<v-btn round color="success" to="add/test" dark>
+				<v-icon size="32px">
+					add
+				</v-icon>
+			 Создать новый тест</v-btn>
+		</v-flex>
+		<v-flex xs12>
+			<created-test
+				v-for="test in tests"
+				:token="test.token"
+				:title="test.name"
+				:description="test.description"
+				:image="test.image"
+				:added="0"
+			></created-test>
+		</v-flex>
 	    <v-snackbar :timeout="timeout"
 	                bottom="bottom"
 	                color="red lighten-1"
@@ -47,8 +51,8 @@
 		},
 		methods: {
 			getCreatedTests() {
-				Axios.get('https://jsonplaceholder.typicode.com/posts', {
-		          //headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				Axios.get(`${TestingSystemAPI}/api/courses-created/`, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
 		          this.tests = data

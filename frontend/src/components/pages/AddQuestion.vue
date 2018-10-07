@@ -1,11 +1,12 @@
 <template>
-	<v-form @submit.prevent="onSubmit">
+	<v-form>
 		<v-container>
 			<v-layout row wrap>
 				<h4 class="display-1">Добавление нового вопроса</h4>
 				<v-flex xs12>
 		            <v-text-field
 		              label="Краткое название (будет видно только вам)"
+		              v-model="title"
 		              required
               		  clearable
               		  :rules="rules"
@@ -16,6 +17,7 @@
 			        <v-textarea
 			            name="input-7-1"
 			            label="Формулировка вопроса"
+			            v-model="text"
 			            hint="Не более 2000 символов"
           		  		:rules="rules"
 			            required
@@ -27,9 +29,11 @@
 		          <v-flex xs12 sm6 xl3>
 	        			<v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
-			            <v-text-field type='number' 
+			            <v-text-field 
+			            type='number' 
 			            :disabled="!enabledAttempts"
 			            label="Количество попыток"
+			            v-model="attempts"
               			clearable
               			box
 			            ></v-text-field>
@@ -42,6 +46,7 @@
 			            <v-text-field type='number' 
 			            :disabled="!enabledTimer"
 			            label="Таймер на вопрос"
+			            v-model="timer"
               			clearable
               			box
 			            hint="В секундах"
@@ -59,6 +64,7 @@
                         @input="getUploadedImage"
 			            :dis="!enabledImage"
 			            :label="imageLoadText"
+			            v-model="image"
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
@@ -73,20 +79,21 @@
                         @input="getUploadedAudio"
 			            :dis="!enabledAudio"
 			            :label="audioLoadText"
+			            v-model="audio"
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
 
 				<v-flex xs10>
 	              <v-slider
-	                v-model="difficulty"
+			        v-model="difficulty"
 	                :max="100"
 	                label="Сложность вопроса"
 	              ></v-slider>
 	            </v-flex>
 	            <v-flex xs2>
 	              <v-text-field
-	                v-model="difficulty"
+			        v-model="difficulty"
 	                type="number"
 	                box
 	              ></v-text-field>
@@ -95,7 +102,6 @@
 				<v-flex xs12>
 		          <v-select
 		            v-model="currentType"
-		          	@change="changeAnswerType"
 		            :items="answerTypes"
 		            item-value="id"
 		            item-text="val"
@@ -105,15 +111,33 @@
 		            required
 		           ></v-select>
 		        </v-flex>
-				<add-answers 
-					:currentType="currentType"
-					:countAnswers="countAnswers"
-				></add-answers>
+
+		        <v-flex xs12>
+					<add-answers 
+						:currentType="currentType"
+						:countAnswers="countAnswers"
+						:answers="answers"
+					></add-answers>
+				</v-flex>
+							    
 				<v-flex xs12>
-					<v-btn round color="success" dark large>
+					<v-alert
+			        :value="alert"
+			        :type="success ? success : error"
+			      	>
+			        {{message}}
+
+				    <v-btn v-if="success" to="/questions" flat>Вернутьcя к вопросам</v-btn>
+				    <v-btn v-if="!success" @click.native="onSubmit()" flat>Попробовать еще раз</v-btn>
+			      </v-alert>
+		      </v-flex>	
+
+		      <v-flex xs12>
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
 						 Добавить вопрос
 					</v-btn>
 				</v-flex>
+
 			</v-layout>
 		</v-container>
 	</v-form>
@@ -121,14 +145,16 @@
 
 <script>
     import axios from 'axios'
+	import router from '@/router'
     import FileInput from '@/components/other/FileLoader.vue'
     import AddAnswers from '@/components/boxes/AddAnswers.vue'
+	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server
 
 	export default {
-        components: {FileInput, AddAnswers},
+        components: { FileInput, AddAnswers },
 
 		data () {
 		    return {
@@ -137,25 +163,42 @@
 			    enabledImage: false,
 			    enabledAudio: false,
 
-      			difficulty: 0,
       			selectedType: [],
-      			currentType: 1,
-				countAnswers: 1,
       			answerTypes: [
 	      			{ id: 1, val: 'Ввод значения'}, 
 	      			{ id: 2, val : 'Выбор одного варианта'}, 
 	      			{ id: 3, val : 'Выбор нескольких вариантов'}
       			],
         		rules: [ (value) => !!value || 'Это обязательное поле' ],
+    			title: '',
+    			text: '',
+    			attempts: '',
+    			timer: '',
+      			difficulty: 0,
+      			currentType: 1,
+				countAnswers: 1,
+
+				message: '',
+				alert: false,
+				success: false,
+
+				questionId: '',
+				answers: [{
+				'0' : {
+                	image: '',
+                	audio: '',
+                	text: '',
+                	priority: 1,
+                	correct: true,
+                	weight: 256,
+                	hint: '',
+                	comment: ''
+				}}],
 
                 image: '',
-                imageTitle: '',
-                imageDescription: '',
                 imageLoadText: 'Изображение к вопросу',
 
                 audio: '',
-                audioTitle: '',
-                audioDescription: '',
                 audioLoadText: 'Голосовое воспроизведение',
 		    }
 		  },
@@ -168,22 +211,56 @@
             },
             onSubmit() {
                  let formData = new FormData()
+
+                 formData.set('text', this.text)
+                 formData.set('title', this.title)
+                 formData.set('attempts_number', this.attempts)
+                 formData.set('timer', this.timer)
+                 formData.set('answer_type', this.currentType)
+                 formData.set('answers_number', this.countAnswers)
+                 formData.set('difficulty', this.difficulty)
                  formData.set('image', this.image)
-                 formData.set('imageTitle', this.imageTitle)
-                 formData.set('imageDescription', this.imageDescription)
-
                  formData.set('audio', this.audio)
-                 formData.set('audioTitle', this.audioTitle)
-                 formData.set('audioDescription', this.audioDescription)
 
-                 axios.post(`${TestingSystemAPI}/api/questions/`, formData)
-	               .then(response => {
-	                    // Any Code
+                 axios.post(`${TestingSystemAPI}/api/questions/`, formData, {
+			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			          params: {}
+			        })
+	               .then((response) => {
+	               		console.log(response)
+	               		this.questionId = response.data.id
+	               		console.log(this.questionId)
+	               		console.log(this.answers.length)
+	               		console.log(this.answers)
+	               		//for (var i = 0; i < this.answers.length; ++i)
+	               		//{
+	               			//this.answers.question = this.questionId
+	               			axios.post(`${TestingSystemAPI}/api/answers/`, this.answers, {
+					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+					          params: {}
+					        })
+			               .then(response => {
+			               		this.success = true
+			                    this.alert = true
+			                    this.message = 'Вопрос успешно добавлен.'
+			                })
+			               .catch(error => {
+			               		this.success = false
+			                    this.alert = true
+			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+			                })
+	               		//}
+						
 	                })
 	               .catch(error => {
-	                    // Any Code
+	               		this.success = false
+	                    this.alert = true
+	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 	                })
-            }
+            },
+			reloadPage() {
+				window.location.reload(true)
+			}
        },
        watch: {
        		currentType: function(val){

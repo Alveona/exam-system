@@ -7,6 +7,7 @@
 	          <v-text-field
 	            type="text"
 	            label="Текст ответа"
+	            v-model="answer.text"
 	            :rules="rules"
 	            required
 	  			clearable
@@ -17,6 +18,7 @@
 	          <v-text-field
 	            type="number"
 	            label="Максимальный балл"
+	            v-model="answer.weight"
 	            :rules="rules"
 	            required
 	  			clearable
@@ -27,6 +29,7 @@
 	          <v-text-field
 	            type="number"
 	            label="Приоритет проверки"
+	            v-model="answer.priority"
 	          ></v-text-field>
 			</v-flex>
 
@@ -34,6 +37,7 @@
 	          <v-text-field
 	            type="text"
 	            label="Подсказка"
+	            v-model="answer.hint"
 	          ></v-text-field>
 			</v-flex>
 
@@ -41,10 +45,12 @@
 	          <v-switch 
 	            v-if="currentType==3"
 		        :label="isTrueText"
+		        v-model="answer.correct"
 		      ></v-switch>
 		      <v-radio 
 		        v-if="currentType==2"
 		        class="mx-3 my-3"
+		        v-model="answer.correct"
 		      	:label="isTrueText" 
 		      	:value="curNumber"
 		      ></v-radio>
@@ -85,26 +91,44 @@
 <script>
     import FileInput from '@/components/other/FileLoader'
 	export default {
-		props: ['currentType', 'curNumber'],
+		props: ['currentType', 'curNumber', 'answers', 'countAnswers'],
 		components: { FileInput },
 		data() {
 			return {
 				isTrueText: 'Ответ верен',
-				image: '',
-				audio: '',
 				enabledAudio: false,
 				enabledImage: false,
                 imageLoadText: 'Изображение к ответу',
-                audioLoadText: 'Аудиоподсказка'
+                audioLoadText: 'Аудиоподсказка',
+        		rules: [ (value) => !!value || 'Это обязательное поле' ],
+                answer: {
+                	image: '',
+                	audio: '',
+                	text: '',
+                	priority: '',
+                	correct: false,
+                	weight: 256,
+                	hint: '',
+                	comment: '',
+                	question: ''
+                }
 			}
 		},
 		methods: {
             getUploadedImage(e) {
-                this.image = e
+                this.answer.image = e
             },
             getUploadedAudio(e) {
-                this.audio = e
-            },
+                this.answer.audio = e
+            }
+		},
+		watch: {
+			answer: function() {
+				alert('hi')
+				this.answers[this.curNumber-1] = this.answer
+            	for (var i = 0; i < this.answers.length; ++i)
+            		console.log(this.answers[i])
+			}
 		}
 	}
 </script>

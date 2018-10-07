@@ -14,6 +14,8 @@ import AddQuestion from '@/components/pages/AddQuestion'
 import EditQuestion from '@/components/pages/EditQuestion'
 import AddTest from '@/components/pages/AddTest'
 import EditTest from '@/components/pages/EditTest'
+import TestPage from '@/components/pages/TestPage'
+import Testing from '@/components/pages/TestPage'
 
 //Boxes
 import AddedQuestion from '@/components/boxes/AddedQuestion'
@@ -39,20 +41,29 @@ const router = new Router({
       	path: 'questions',
       	component: QuestionsManagment,
       },{
-      	path: 'questions/add',
+      	path: 'add/question',
       	component: AddQuestion,
       },{
-      	path: 'questions/edit',
+      	path: 'edit/question/:id',
       	component: EditQuestion,
+      	name: 'editquestion'
       },{
       	path: 'tests',
       	component: TestsManagment
       },{
-      	path: 'tests/add',
+      	path: 'tests/:token',
+      	component: TestPage,
+      	name: 'testpage'
+      },{
+      	path: 'tests/:token/testing',
+      	component: Testing
+      },{
+      	path: 'add/test',
       	component: AddTest
       },{
-      	path: 'tests/edit',
-      	component: EditTest
+      	path: 'edit/test/:token',
+      	component: EditTest,
+      	name: 'edittest'
       },{
       	path: 'stats',
       	component: Stats

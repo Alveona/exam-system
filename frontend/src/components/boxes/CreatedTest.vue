@@ -7,18 +7,17 @@
 		        	<v-img
 		        	class="mb-2"
 		        	:aspect-ratio="16/9" 
-		            :src="path"
+		            :src="image"
 		            position="center center"
 		          >
 		          </v-img>
 		      </v-flex>
 
 				<v-flex xs12 sm8>
-		          <v-card-title primary-title>
+		          <v-card-title :to="{ name: 'testpage', params: { token: token }}" primary-title>
 		            <div>
-		              <div class="headline">{{title}}
-		              </div>
-		              <div>Автор: {{author}}</div>
+		              <div class="headline">{{title}}</div>
+		              <div v-if="added">Автор: {{author}}</div>
 		            </div>
 		          </v-card-title>
 		      </v-flex>
@@ -27,12 +26,26 @@
 				<v-divider light></v-divider>
 
 				<v-flex xs12>
+					<v-alert
+			        :value="alert"
+			        :type="successDelete ? success : error"
+			      >
+			        {{message}}
+
+			      	<v-tooltip v-if="!successDelete" top>
+				        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+				        <span>Обновить</span>
+				    </v-tooltip>
+			      </v-alert>
+		      </v-flex>	
+
+				<v-flex xs12>
 		          <v-card-actions>
 		            <v-btn icon @click="show = !show">
 		              <v-icon>{{ show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
 		            </v-btn>
-		            <v-btn icon><v-icon>edit</v-icon></v-btn>
-		            <v-btn icon><v-icon>delete</v-icon></v-btn>
+		            <v-btn v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>
+		            <v-btn v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>
 		          </v-card-actions>
 		      </v-flex>
 
@@ -49,21 +62,43 @@
 </template>
 
 <script>
+  	import Axios from 'axios'
+	import router from '@/router'
+	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server
 
 	export default {
-		props: ['title', 'id', 'author', 'image', 'description'],
+		props: ['title', 'token', 'author', 'image', 'description', 'added'],
 		data() {
 			return {
-				show: false
+				show: false,
+				added: false,
+				successDelete: false,
+				alert: false,
+				message: ''
 			}
 		},
-		computed: {
-			path: function() {
-				//return TestingSystemAPI + '/' + this.image
-				return this.image
+		methods: {
+			deleteTest(token) {
+				Axios.delete(TestingSystemAPI+'/api/courses/'+token+'/', {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        }).then(({data}) => {
+		          this.alert = true
+		          this.successDelete = true
+		          this.message = 'Тест успешно удален.'
+		        }).catch(error => {
+		          this.alert = true
+		          this.successDelete = false
+		          this.message = 'Не удалось удалить тест. Проверьте подключение к сети.'
+
+		          console.log(error)
+		        })
+		    },
+			reloadPage() {
+				window.location.reload(true)
 			}
 		}
 	}
