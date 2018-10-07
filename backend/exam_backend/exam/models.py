@@ -59,8 +59,8 @@ class Answer(models.Model):
     hint = models.CharField(max_length=255, null=True)
     priority = models.IntegerField(null=True)
 
-    def __str__(self):
-        return '%s' % (self.text)
+    #def __str__(self):
+        #return '%s' % (self.id)
 
 
 class CourseSession(models.Model):

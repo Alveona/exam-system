@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
 import secrets # used to do a safe random choice of questions
+import random
 from .models import Question, Course, Answer, UserCourseRelation, Profile, CourseSession, \
     SessionQuestion, SessionAnswer
 
@@ -139,8 +140,9 @@ class SessionSerializer(serializers.ModelSerializer):
 
         # DEBUG :
         ''''''''''''
-        CourseSession.objects.all().delete()
-        SessionQuestion.objects.all().delete()
+        #CourseSession.objects.all().delete()
+        #SessionQuestion.objects.all().delete()
+        #SessionAnswer.objects.all().delete()
         ''''''''''''
 
 
@@ -168,21 +170,31 @@ class SessionSerializer(serializers.ModelSerializer):
             print(number_of_attempts)
 
             if number_of_attempts >= course.attempts:
-                pass # TODO EXCEPTION
+                raise serializers.ValidationError('Попытки кончились') # TODO THINK OF EXCEPTION
             else:
                 session = CourseSession(course = course, attempt_number = number_of_attempts + 1,
                                     user = self.context['request'].user, finished = False)
                 session.save()
                 list_of_questions = course.questions.all()
                 print(list_of_questions)
-                session_q = SessionQuestion(question = secrets.choice(list_of_questions),
+                question = secrets.choice(list_of_questions)
+                session_q = SessionQuestion(question = question,
                                             session = session, order_number = 1,
                                             result = 0, attempts_number = 0,
                                             finished = False)
                 print('s_q: ', end='')
                 print(session_q)
                 session_q.save()
-                # TODO CREATE SESSION_ANSWER FOR FIRST QUESTION (== FILL QUESTION WITH ANSWERS)
+
+                list_of_all_answers = Answer.objects.all().filter(question = question)
+                list_of_answers = random.sample(set(list_of_all_answers), question.answers_number)
+                print('list of answers: ', end = '')
+                print(list_of_answers)
+                for answer in list_of_answers:
+                    session_a = SessionAnswer(sessionQuestion = session_q, blocked = False, answer = answer)
+                    session_a.save()
+                    print('s_a created: ', end ='')
+                    print(session_a)
         return session
     class Meta:
         model = CourseSession
