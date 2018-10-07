@@ -86,6 +86,7 @@ class SessionAnswer(models.Model):  # erased after question finished (i.e. writt
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True)
     sessionQuestion = models.ForeignKey(SessionQuestion, on_delete=models.CASCADE, null=True)
     blocked = models.BooleanField(default=False)
+    current_result = models.IntegerField(null = True)
 
 
 # док по intermediate models:
