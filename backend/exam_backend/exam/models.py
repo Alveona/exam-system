@@ -59,8 +59,8 @@ class Answer(models.Model):
     hint = models.CharField(max_length=255, null=True)
     priority = models.IntegerField(null=True)
 
-    def __str__(self):
-        return '%s' % (self.text)
+    #def __str__(self):
+        #return '%s' % (self.id)
 
 
 class CourseSession(models.Model):
@@ -78,11 +78,15 @@ class SessionQuestion(models.Model):
     attempts_number = models.IntegerField(null=True)  # attempts of current question
     finished = models.BooleanField(default=False)  # 1 is for finished
 
+    def __str__(self):
+        return '%s' % (self.question)
+
 
 class SessionAnswer(models.Model):  # erased after question finished (i.e. written smth in SessionQuestion.Result
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True)
     sessionQuestion = models.ForeignKey(SessionQuestion, on_delete=models.CASCADE, null=True)
     blocked = models.BooleanField(default=False)
+    current_result = models.IntegerField(null = True)
 
 
 # док по intermediate models:

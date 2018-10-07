@@ -3,10 +3,10 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession
+from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
-    SessionSerializer
+    SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -86,6 +86,13 @@ class AnswerViewSet(viewsets.ModelViewSet):
             return queryset
         return Answer.objects.all().filter(question__user=user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
@@ -96,14 +103,29 @@ class AnswerViewSet(viewsets.ModelViewSet):
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
+    lookup_field = 'token'
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['get', 'post', 'patch', 'delete']
+
 
     def get_queryset(self):
         if self.request.method == "GET":
             queryset = Course.objects.all().filter(token = self.request.query_params.get('token'))
             return queryset
+        return Course.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print('deleting course')
+        UserCourseRelation.objects.all().filter(course = instance).delete()
+        CourseSession.objects.all().filter(course = instance).delete()
+        Course.objects.all().get(token=instance.token).delete()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 class CourseCreatedViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
@@ -162,3 +184,31 @@ class SessionViewSet(viewsets.ModelViewSet):
     serializer_class = SessionSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['post']
+
+class SessionQuestionViewSet(viewsets.ModelViewSet):
+    queryset = SessionQuestion.objects.all()
+    serializer_class = SessionQuestionSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        session = CourseSession.objects.all().get(user = self.request.user, course__token =
+                self.request.query_params.get('token'), finished = False)
+        print(session)
+        question = SessionQuestion.objects.all().filter(session = session, finished = False)
+        print(question)
+        return question
+
+class SessionAnswerViewSet(viewsets.ModelViewSet):
+    queryset = SessionAnswer.objects.all()
+    serializer_class = SessionAnswerSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        question = SessionQuestion.objects.all().get(id = self.request.query_params.get('id'))
+        answers = SessionAnswer.objects.all().filter(sessionQuestion = question)
+        return answers
+
+
+
