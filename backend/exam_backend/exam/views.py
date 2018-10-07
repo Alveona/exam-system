@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession
+from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
     SessionSerializer
@@ -96,14 +96,29 @@ class AnswerViewSet(viewsets.ModelViewSet):
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
+    lookup_field = 'token'
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['get', 'post', 'patch', 'delete']
+
 
     def get_queryset(self):
         if self.request.method == "GET":
             queryset = Course.objects.all().filter(token = self.request.query_params.get('token'))
             return queryset
+        return Course.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        print('deleting course')
+        UserCourseRelation.objects.all().filter(course = instance).delete()
+        CourseSession.objects.all().filter(course = instance).delete()
+        Course.objects.all().get(token=instance.token).delete()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 class CourseCreatedViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()

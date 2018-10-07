@@ -76,15 +76,20 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    subscribed = serializers.SerializerMethodField()
+    extra_kwargs = {
+        'url': {'view_name': 'courses', 'lookup_field': 'token'}
+    }
     def create(self, validated_data):
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
-                        token = validated_data['token'], perfect_mark = validated_data['perfect_mark'],
-                        good_mark=validated_data['good_mark'],
-                        satisfactory_mark = validated_data['satisfactory_mark'],
+                        token = validated_data['token'],
                         attempts = validated_data['attempts'])
+        course.perfect_mark = self.context['request'].data['perfect_mark']
+        course.good_mark = self.context['request'].data['good_mark']
+        course.satisfactory_mark = self.context['request'].data['satisfactory_mark']
         course.save()
-        for question in validated_data['questions']:
+        for question in self.context['request'].data['questions']:
             course.questions.add(question)
 
         if 'image' in validated_data:
@@ -104,7 +109,20 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         # TODO RETURN 'SUBSCRIBED' FIELD IN JSON
         model = Course
-        fields = '__all__'
+        fields = ('id', 'name', 'description', 'author', 'token', 'image'
+                  , 'questions_number', 'attempts', 'subscribed')
+
+    def get_subscribed(self, obj):
+        print(obj)
+        course = Course.objects.all().get(token = obj.token)
+        print(course)
+        subscribed_course = UserCourseRelation.objects.all().filter(access = 0, course = course,
+                                                                    user = self.context['request'].user)
+        print(subscribed_course)
+        if not subscribed_course:
+            return False
+        return True
+
 
 class RelationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
@@ -170,7 +188,7 @@ class SessionSerializer(serializers.ModelSerializer):
             print(number_of_attempts)
 
             if number_of_attempts >= course.attempts:
-                raise serializers.ValidationError('Попытки кончились') # TODO THINK OF EXCEPTION
+                raise serializers.ValidationError('Попытки кончились')
             else:
                 session = CourseSession(course = course, attempt_number = number_of_attempts + 1,
                                     user = self.context['request'].user, finished = False)
