@@ -1,7 +1,7 @@
 from rest_framework import routers
 from .views import QuestionViewSet, AnswerViewSet, CourseViewSet, QuestionListViewSet, \
     ProfileViewSet, RegisterViewSet, CourseCreatedViewSet, CourseAddedViewSet, RelationViewSet, \
-    SessionViewSet, SessionQuestionViewSet
+    SessionViewSet, SessionQuestionViewSet, SessionAnswerViewSet
 
 router = routers.DefaultRouter(trailing_slash=True)
 router.register(r'questions', QuestionViewSet, base_name='questions')
@@ -15,4 +15,5 @@ router.register(r'courses-added', CourseAddedViewSet)
 router.register(r'course-subsc', RelationViewSet)
 router.register(r'session', SessionViewSet)
 router.register(r'session-q', SessionQuestionViewSet)
+router.register(r'session-a', SessionAnswerViewSet)
 urlpatterns = router.urls

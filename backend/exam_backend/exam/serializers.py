@@ -72,7 +72,7 @@ class QuestionListSerializer(serializers.ModelSerializer):
 class AnswerInCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
-        fields = ('text', 'weight', 'image', 'priority')
+        fields = ('id', 'text', 'weight', 'image', 'priority')
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -237,13 +237,15 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
 class SessionAnswerSerializer(serializers.ModelSerializer):
     answer = AnswerInCourseSerializer(read_only=True)
-    hint = serializers.SerializerMethodField()
-    audio_hint = serializers.SerializerMethodField()
+    #hint = serializers.SerializerMethodField()
+    #audio_hint = serializers.SerializerMethodField()
 
     def create(self, validated_data):
         pass #TODO POST ON SESSION_ANSWER
 
     #def get_hint(self, obj):
+
+    #def get_audio_hint(self, obj):
 
     class Meta:
         model = SessionAnswer

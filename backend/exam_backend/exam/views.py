@@ -201,6 +201,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         question = SessionQuestion.objects.all().get(id = self.request.query_params.get('id'))
         answers = SessionAnswer.objects.all().filter(sessionQuestion = question)
+        return answers
 
 
 
