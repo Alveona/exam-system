@@ -95,6 +95,7 @@ class AnswerViewSet(viewsets.ModelViewSet):
         return Answer.objects.all().filter(question__user=user)
 
     def create(self, request, *args, **kwargs):
+        print(self.request.data)
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -269,21 +270,94 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post']
 
     def create(self, request, *args, **kwargs):
-        print(self.request.data)
         question = SessionQuestion.objects.all().get(id=self.request.data['id'])
-        answers_list = self.request.data['answers']
-        print(answers_list)
-        print('answer_type: ', end='')
-        print(question.question.answer_type)
-        answers_of_question = SessionAnswer.objects.all().filter(sessionQuestion=question, blocked=False)
+
         if question.question.answer_type == 1:
-            #print(SessionQuestion.objects.all())
+            print(self.request.data)
+            answers_list = self.request.data['answers']
+            print(answers_list)
+            print('answer_type: ', end='')
+            print(question.question.answer_type)
             print(SessionAnswer.objects.all().get(sessionQuestion=question))
             correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question)
             print('correct answer is ', end='')
             print(correct_answer.answer.text)
             print('your answer is ', end='')
             print(answers_list[0])
+            if answers_list[0] == correct_answer.answer.text:
+                print('your answer is correct')
+                correct_answer.blocked = True
+                correct_answer.save()
+                question.result += correct_answer.current_result
+                question.finished = True
+                question.save()
+                correct_answer.delete()
+                return Response({'status': 'all ok'})
+            else:
+                print('your answer is incorrect')
+                print('previous number of attempts is ', end='')
+                print(question.attempts_number)
+                #print(correct_answer.current_result)
+                question.attempts_number = question.attempts_number - 1
+                if question.attempts_number == 0:
+                    question.result = 0
+                    question.finished = True
+                    question.save()
+                    correct_answer.delete()
+                    return Response({'status': 'attempts are over'})
+                print('current number of attempts is ', end='')
+                print(question.attempts_number)
+                question.save()
+                print('current result before division: ', end='')
+                print(correct_answer.current_result)
+                correct_answer.current_result = correct_answer.current_result / 2
+                correct_answer.save()
+                if correct_answer.current_result == 0:
+                    question.result = 0
+                    question.finished = True
+                    question.save()
+                    correct_answer.delete()
+                print('current result is', end='')
+                print(correct_answer.current_result)
+                return Response({'status': 'something is wrong'})
+
+        if question.question.answer_type == 2:
+            print(self.request.data)
+            answers_list = self.request.data['answers']
+            print(answers_list)
+            ids = []
+            chosen = []
+            for object in answers_list:
+                #print(object)
+                ids.append(object['id'])
+                chosen.append(object['chosen'])
+                #ids.append(object[0])
+                #chosen.append(object[1])
+            #print('ids: ' + str(ids))
+            #print('chosen: ' + str(chosen))
+
+            answers_dict = dict(zip(ids, chosen))
+            print('answers_dict: ' + str(answers_dict))
+            print('answer_type: ', end='')
+            #print(question)
+            print(question.question.answer_type)
+            print(SessionAnswer.objects.all().filter(sessionQuestion=question))
+            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question, answer__correct = True)
+            print('correct answer is ', end='')
+            print(correct_answer.answer.id)
+
+            found_correct = False
+            for _id, chosen in answers_dict.items():
+                if _id == correct_answer.answer.id and chosen == True:
+                    found_correct = True
+                    print('your answer is correct')
+                else:
+                    print('your answer is incorrect')
+            if found_correct:
+                pass # TODO OK
+            else:
+                pass # TODO NOT OK
+            '''
             if answers_list[0] == correct_answer.answer.text:
                 print('your answer is correct')
                 correct_answer.blocked = True
@@ -319,7 +393,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     correct_answer.delete()
                 print('current result is', end='')
                 print(correct_answer.current_result)
-                return Response({'status': 'something is wrong'})
+                return Response({'status': 'something is wrong'})'''
 
     def get_queryset(self):
         question = SessionQuestion.objects.all().get(id=self.request.query_params.get('id'))

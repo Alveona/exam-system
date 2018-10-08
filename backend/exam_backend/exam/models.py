@@ -57,7 +57,7 @@ class Answer(models.Model):
     image = models.ImageField(upload_to='answers/', null=True, verbose_name='Изображение')
     audio = models.FileField(upload_to='answers_audio/', null=True)
     hint = models.CharField(max_length=255, null=True)
-    priority = models.IntegerField(null=True)
+    priority = models.IntegerField(blank = True, null=True)
 
     #def __str__(self):
         #return '%s' % (self.id)
