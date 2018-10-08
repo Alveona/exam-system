@@ -19,12 +19,14 @@ from django.conf.urls import include, url
 from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token, refresh_jwt_token
 from django.conf.urls.static import static
 from django.conf import settings
+import debug_toolbar
 
 register_urlpatterns = [
     path('accounts/', include('rest_registration.api.urls')),
 ]
 
 urlpatterns = [
+    path('debug/', include(debug_toolbar.urls)),
     path('admin/', admin.site.urls),
     url(r'^token-auth/', obtain_jwt_token),
     url(r'^token-verify/', verify_jwt_token),

@@ -222,7 +222,7 @@ class SessionSerializer(serializers.ModelSerializer):
                 question = secrets.choice(list_of_questions)
                 session_q = SessionQuestion(question=question,
                                             session=session, order_number=1,
-                                            result=0, attempts_number=0,
+                                            result=0, attempts_number=question.attempts_number,
                                             finished=False)
                 print('s_q: ', end='')
                 print(session_q)

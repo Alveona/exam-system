@@ -16,4 +16,5 @@ router.register(r'course-subsc', RelationViewSet)
 router.register(r'session', SessionViewSet)
 router.register(r'session-q', SessionQuestionViewSet)
 router.register(r'session-a', SessionAnswerViewSet)
+
 urlpatterns = router.urls
