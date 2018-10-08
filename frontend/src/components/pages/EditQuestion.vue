@@ -123,6 +123,7 @@
     import axios from 'axios'
     import FileInput from '@/components/other/FileLoader.vue'
     import AddAnswers from '@/components/boxes/AddAnswers.vue'
+	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server

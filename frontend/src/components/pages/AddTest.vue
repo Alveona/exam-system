@@ -32,10 +32,10 @@
 						<added-question
 						v-for="question in questions"
 						:title="question.title"
-						:text="question.body"
-						:type="2"
+						:text="question.text"
+						:type="question.answer_type"
 						:withchecks="1"
-						:questionsChecks="questionsChecks"
+						:questionsChecks="questionsChecks[indexOf(question)]"
 						></added-question>
 						<p v-if="error">Не удалось загрузить список вопросов</p>
 					</div>
@@ -143,6 +143,7 @@
     import Axios from 'axios'
     import FileInput from '@/components/other/FileLoader'
     import AddedQuestion from '@/components/boxes/AddedQuestion'
+	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server
@@ -167,9 +168,9 @@
 		},
 		methods: {
 			getAddedQuestions() {
-				//Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
-					Axios.get('https://jsonplaceholder.typicode.com/posts', {
-		          //headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
+					//Axios.get('https://jsonplaceholder.typicode.com/posts', {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data

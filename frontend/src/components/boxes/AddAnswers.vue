@@ -7,6 +7,7 @@
 	            class="mr-2"
 	            type="text"
 	            label="Правильный ответ"
+	            v-model="answers[0].text"
 	            :rules="rules"
 	            required
 	  			clearable
@@ -18,6 +19,7 @@
 	          <v-text-field
 	            class="ml-2"
 	            type="text"
+	            v-model="answers[0].comment"
 	            label="Комментарий к формату ответа"
 	            hint="Например, 'Округлить до двух знаков после запятой'"
 	  			clearable
@@ -30,6 +32,7 @@
                 type="number"
                 class="mr-2"
                 label="Максимальный балл за ответ"
+                v-model="answers[0].weight"
                 value="256"
 	            :rules="rules"
                 box
@@ -42,6 +45,7 @@
                 type="text"
                 class="ml-2"
                 label="Текстовая подсказка"
+                v-model="answers[0].hint"
                 box
               ></v-text-field>
             </v-flex>
@@ -75,16 +79,22 @@
 	          ></v-text-field>
 	        </v-flex>
 			
-			<h4 v-if="currentType != 1" class="title">Ответы: </h4>
+			<v-flex xs12>
+				<h4 v-if="currentType != 1" class="title">Ответы: </h4>
+			</v-flex>
 			<v-radio-group v-model="oneAnswerRadios">
 
-			<add-answer 
-				v-for="answer in countAnswers"
-				:currentType="currentType"
-				:curNumber="answer"
-			></add-answer>
+			<v-flex xs12>
+				<add-answer 
+					v-for="answer in countAnswers"
+					:currentType="currentType"
+					:curNumber="answer"
+					:answers="answers"
+				></add-answer>
+			</v-flex>
 
 			</v-radio-group>
+
 			<v-layout column align-center justify-center>
 				<v-flex xs12 class="mb-3" >
 					<v-btn 
@@ -132,8 +142,9 @@
 <script>
     import FileInput from '@/components/other/FileLoader'
     import AddAnswer from '@/components/boxes/AddAnswer'
+
 	export default {
-		props: ['currentType', 'countAnswers'],
+		props: ['currentType', 'countAnswers', 'answers'],
 		components: { FileInput, AddAnswer },
 		data() {
 			return {
@@ -146,8 +157,9 @@
 		},
 		methods: {
 			getUploadedAudio(e){
-                this.audio = e
+                this.answers[0].audio = e
 			}
+
 		}
 	}
 </script>
