@@ -260,7 +260,7 @@ class SessionAnswerSerializer(serializers.ModelSerializer):
 
     # hint = serializers.SerializerMethodField()
     # audio_hint = serializers.SerializerMethodField()
-
+    '''
     def create(self, validated_data):
         # course =    CourseSession.objects.all().get(user = self.request.user, course__token =
         # self.context['request'].data['token'], finished = False)
@@ -279,10 +279,13 @@ class SessionAnswerSerializer(serializers.ModelSerializer):
                 print('your answer is correct')
                 correct_answer.blocked = True
                 correct_answer.save()
+
                 question.result += correct_answer.current_result
                 question.save()
-
-                return None
+                serializer = SessionAnswerSerializer(correct_answer, data = None)
+                if serializer.is_valid():
+                    return serializer.save().data
+                #return correct_answer
             else:
                 print('your answer is incorrect')
                 print('previous number of attempts is ', end='')
@@ -293,7 +296,9 @@ class SessionAnswerSerializer(serializers.ModelSerializer):
                 question.save()
                 correct_answer.current_result = correct_answer.current_result / 2
                 correct_answer.save()
-                return None
+                serializer = SessionAnswerSerializer(correct_answer,data = None)
+                if serializer.is_valid():
+                    return serializer.save().data'''
 
 
     # def get_hint(self, obj):

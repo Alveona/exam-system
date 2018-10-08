@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
@@ -196,6 +197,8 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
                 self.request.query_params.get('token'), finished = False)
         print(session)
         question = SessionQuestion.objects.all().filter(session = session, finished = False)
+        if not question:
+            pass # TODO CREATE NEW QUESTION IF THERE ARE NO UNFINISHED QUESTIONS
         print(question)
         return question
 
@@ -204,6 +207,57 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
     serializer_class = SessionAnswerSerializer
     permission_classes = (IsAuthenticated, )
     http_method_names = ['get', 'post']
+
+    #@action(methods=['post'], detail=True)
+    def create(self, request, *args, **kwargs):
+        # course =    CourseSession.objects.all().get(user = self.request.user, course__token =
+        # self.context['request'].data['token'], finished = False)
+        print(self.request.data)
+        question = SessionQuestion.objects.all().get(id=self.request.data['id'])
+        answers_list = self.request.data['answers']
+        print(answers_list)
+        print('answer_type: ', end='')
+        print(question.question.answer_type)
+        answers_of_question = SessionAnswer.objects.all().filter(sessionQuestion=question, blocked=False)
+        if question.question.answer_type == 1:
+            print(SessionAnswer.objects.all().get(sessionQuestion=question))
+            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question)
+            print('correct answer is ', end='')
+            print(correct_answer.answer.text)
+            print('your answer is ', end='')
+            print(answers_list[0])
+            if answers_list[0] == correct_answer.answer.text:
+                print('your answer is correct')
+                correct_answer.blocked = True
+                correct_answer.save()
+                question.result += correct_answer.current_result
+                question.finished = True
+                question.save()
+                return Response({'status': 'all ok'})
+            else:
+                print('your answer is incorrect')
+                print('previous number of attempts is ', end='')
+                print(question.attempts_number)
+                question.attempts_number = question.attempts_number - 1
+                if question.attempts_number == - 1:
+                    question.result = 0 # TODO IF ANSWER_TYPE == 2 || 3, COLLECT RESULT FROM S_ANSWERS
+                    question.finished = True
+                    question.save()
+                    correct_answer.delete()
+                    return Response({'status': 'attempts are over'})
+                print('current number of attempts is ', end='')
+                print(question.attempts_number)
+                question.save()
+                correct_answer.current_result = correct_answer.current_result / 2
+                correct_answer.save()
+                if correct_answer.current_result == 0:
+                    question.result = 0
+                    question.finished = True
+                    question.save()
+                    correct_answer.delete()
+                print('current result is', end='')
+                print(correct_answer.current_result)
+                return Response({'status': 'something is wrong'})
 
     def get_queryset(self):
         question = SessionQuestion.objects.all().get(id = self.request.query_params.get('id'))
