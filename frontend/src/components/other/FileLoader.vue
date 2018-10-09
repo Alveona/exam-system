@@ -56,6 +56,9 @@
             },
             label: {
                 type: String
+            },
+            checked: {
+                type: Boolean
             }
         },
 
@@ -69,6 +72,11 @@
         watch: {
             value(v) {
                 this.fileUrl = v
+            },
+            checked(v) {
+                if (!v) {
+                    this.removeFile()
+                }
             }
         },
 
@@ -81,9 +89,8 @@
                 this.$refs.file.click()
             },
 
-            onFilePicked(event) {
+            onFilePicked(event) { 
                 const files = event.target.files || event.dataTransfer.files
-
                 if (files && files[0]) {
                     this.filename = files[0].name
 

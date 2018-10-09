@@ -88,10 +88,10 @@
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
+		          this.collection.splice(this.element, 1)
 		          this.snackbar = true
 		          this.successDelete = true
 		          this.snackbar_message = 'Вопрос успешно удален.'
-		          this.collection.splice(this.element, 1)
 		        }).catch(error => {
 		          this.alert = true
 		          this.successDelete = false

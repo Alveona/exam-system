@@ -14,7 +14,7 @@
 		</v-flex>
 
 		<v-flex xs12>
-			<p>{{success_message}}</p>
+			<p v-if="successLoad">{{success_message}}</p>
 			<added-question
 			v-for="question in questions"
 				:id="question.id"
@@ -58,7 +58,8 @@
 			return {
 				questions: [],
 				alert: false,
-				alert_message: ''
+				alert_message: '',
+				successLoad: false
 			}
 		},
 		methods: {
@@ -68,6 +69,7 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data
+		          this.successLoad = true
 		        }).catch(error => {
 		          this.alert = true
 		          this.message = 'Не удалось получить список вопросов. Проверьте подключение к сети.'
@@ -93,5 +95,4 @@
 </script>
 
 <style>
-	
 </style>

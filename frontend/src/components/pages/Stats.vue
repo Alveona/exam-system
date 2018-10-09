@@ -1,7 +1,9 @@
 <template>
 	<v-layout>
-		<stats-box v-for="a in length"
-		:answers="arr[a]"></stats-box>
+		<stats-box
+		:answers="arr"></stats-box>
+		<v-btn @click.native="inc()"></v-btn>
+		<p v-for="a in arr">{{a.title}}</p>
 	</v-layout>
 </template>
 
@@ -12,7 +14,18 @@
 		data() {
 			return {
 				arr: [],
-				length: 3
+				count: 5,
+				loc: 3
+			}
+		},
+		methods: {
+			inc() {
+				this.loc = 2
+			}
+		},
+		watch: {
+			loc: function() {
+				this.count++
 			}
 		}
 	}

@@ -12,17 +12,19 @@
 		              required
               		  clearable
               		  :rules="rules"
-              		  box
+              		  v-model="title"
 		            ></v-text-field>
 		        </v-flex>
 
   				<v-flex xs12 sm6>
 		            <v-text-field
 		              label="Ссылка на курс"
+		              placeholder="your-test"
 		              required
               		  clearable
+            		  prefix="/"
+              		  v-model="token"
               		  :rules="rules"
-              		  box
 		            ></v-text-field>
 		        </v-flex>
 
@@ -37,17 +39,28 @@
 						:withchecks="1"
 						:questionsChecks="questionsChecks[indexOf(question)]"
 						></added-question>
-						<p v-if="error">Не удалось загрузить список вопросов</p>
+						<p v-if="error">Не удалось загрузить список вопросов.</p>
 					</div>
 				</v-flex>
+
+				<v-flex xs12>
+			        <v-textarea
+			            label="Описание теста"
+			            v-model="description"
+          		  		:rules="rules"
+			            required
+              			clearable
+              			box
+			          ></v-textarea>
+		        </v-flex>
 
 		        <v-flex xs12 sm6>
 		          <v-text-field
 		            type="number"
 		            label="Количество вопросов"
 		            :rules="rules"
+		            v-model="questions_number"
 		            hint="Не более, чем число вопросов, выбранных выше"
-		            box
 		            required
               		clearable
 		          ></v-text-field>
@@ -56,8 +69,10 @@
 	     		<v-flex xs12 sm6>
 		            <v-text-field
 		              label="Автор курса"
+		              v-model="author"
+		              required
+		              :rules="rules"
               		  clearable
-              		  box
 		            ></v-text-field>
 		        </v-flex>
 
@@ -65,8 +80,8 @@
 		          <v-text-field
 		            type="number"
 		            label="Количество попыток"
-		            :rules="rules"
-		            box
+		            :rules="rulesAttempts"
+		            v-model="attempts"
 		            required
               		clearable
 		          ></v-text-field>
@@ -80,6 +95,7 @@
 	                    accept="image/*"
 	                    ref="fileInput"
                         @input="getUploadedImage"
+                        :checked="enabledImage"
 			            :dis="!enabledImage"
 			            :label="imageLoadText"
 			            ></file-input>
@@ -94,9 +110,9 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Отлично'"
-		            :rules="rules"
+		            :rules="rulesPercents"
 		            hint="В процентах (%)"
-		            value="75"
+		            v-model="perfect_mark"
 		            box
 		            required
               		clearable
@@ -107,9 +123,9 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Хорошо'"
-		            :rules="rules"
+		            :rules="rulesPercents"
+		            v-model="good_mark"
 		            hint="В процентах (%)"
-		            value="50"
 		            box
 		            required
               		clearable
@@ -120,9 +136,9 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Удовлетворительно'"
-		            :rules="rules"
+		            v-model="satisfactory_mark"
+		            :rules="rulesPercents"
 		            hint="В процентах (%)"
-		            value="25"
 		            box
 		            required
               		clearable
@@ -156,14 +172,28 @@
         		rules: [ (value) => !!value || 'Это обязательное поле' ],
 
                 image: '',
-                imageTitle: '',
-                imageDescription: '',
                 imageLoadText: 'Изображение к тесту',
+
+                rulesPercents: [(value)=> (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
+        		rulesAttempts: [ (value) => (value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
 
 			    enabledImage: false,
 			    questions: [],
 			    questionsChecks: [],
-			    error : false
+			    error : false,
+
+			    title: '',
+			    token: '',
+			    attempts: '',
+			    questions_number: '',
+			    author: '',
+			    perfect_mark: 75,
+			    good_mark: 50,
+			    satisfactory_mark: 25,
+			    max_percent: 100,
+			    min_percent: 0,
+        		maxAttempts: 100,
+        		minAttempts: 1,
 		    }
 		},
 		methods: {
@@ -180,10 +210,111 @@
 
 		          console.log(error)
 		        })
-			}
+			},
+            getUploadedImage(e) {
+                this.image = e
+            },
+            onSubmit() {
+                 let formData = new FormData()
+
+                 formData.set('name', this.token)
+                 formData.set('title', this.title)
+                 formData.set('attempts', this.attempts)
+                 formData.set('questions_number', this.questions_number)
+                 formData.set('author', this.author)
+                 formData.set('description', this.description)
+                 formData.set('image', this.image)
+                 formData.set('perfect_mark', this.perfect_mark)
+                 formData.set('good_mark', this.good_mark)
+                 formData.set('satisfactory_mark', this.satisfactory_mark)
+
+                 Axios.post(`${TestingSystemAPI}/api/courses/`, formData, {
+			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			          params: {}
+			        })
+	               .then((response) => {
+	               		console.log(response)
+	               		this.questionId = response.data.id
+	               		console.log(this.questionId)
+	               		console.log(this.answers.length)
+	               		console.log(this.answers)
+	               		for (var i = 0; i < this.answers.length; ++i)
+	               			this.answers[i].question = this.questionId
+	               			axios.post(`${TestingSystemAPI}/api/answers/`, this.answers, {
+					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+					          params: {}
+					        })
+			               .then(response => {
+			               		this.success = true
+			                    this.alert = true
+			                    this.message = 'Вопрос успешно добавлен.'
+			                })
+			               .catch(error => {
+			               		this.success = false
+			                    this.alert = true
+			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+			                })
+						
+	                })
+	               .catch(error => {
+	               		this.success = false
+	                    this.alert = true
+	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+	                })
+            },
+            textToTranslit(text) {
+            	var transl = []
+				transl['а']='a'
+				transl['б']='b'
+				transl['в']='v'
+				transl['г']='g'
+				transl['д']='d'
+				transl['е']='e'
+				transl['ё']='yo'
+				transl['ж']='zh'
+				transl['з']='z'
+				transl['и']='i'
+				transl['й']='j'
+				transl['к']='k'
+				transl['л']='l'
+				transl['м']='m'
+				transl['н']='n'
+				transl['о']='o'
+				transl['п']='p'
+				transl['р']='r'
+				transl['с']='s'
+				transl['т']='t'
+				transl['у']='u'
+				transl['ф']='f'
+				transl['х']='kh'
+				transl['ц']='c'
+				transl['ч']='ch'
+				transl['ш']='sh'
+				transl['щ']='shch'
+				transl['ъ']=''
+				transl['ы']='i'
+				transl['ь']=''
+				transl['э']='e'
+				transl['ю']='yu'
+				transl['я']='ya'
+				transl[' ']='_'
+				var result=''
+			    for (var i=0; i < text.length; i++) {
+			        if(transl[text[i]]!=undefined)  
+			        	result += transl[text[i]]
+			        else 
+			        	result += text[i]
+    			}
+			    return result
+            }
 		},
 		mounted(){
 			this.getAddedQuestions()
+		},
+		watch: {
+			title: function(val) {
+				this.token = this.textToTranslit(val)
+			}
 		}
     }
 	

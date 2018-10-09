@@ -1,17 +1,21 @@
 <template>
 	<v-layout row wrap>
+
 		<v-flex xs12>
 			<p class="display-1">Управление тестами
 			</p>
 		</v-flex>
+
 		<v-flex xs12>
-			<v-btn round color="success" to="add/test" dark>
-				<v-icon size="32px">
+			<v-btn round color="success" to="add/test" class="mb-3" dark>
+				<v-icon size="24px" class="mr-2">
 					add
 				</v-icon>
-			 Создать новый тест</v-btn>
+			Создать новый тест</v-btn>
 		</v-flex>
+
 		<v-flex xs12>
+			<p v-if="successLoad">{{success_message}}</p>
 			<created-test
 				v-for="test in tests"
 				:token="test.token"
@@ -19,14 +23,25 @@
 				:description="test.description"
 				:image="test.image"
 				:added="0"
+				:element="tests.indexOf(test)"
+				:collection="tests"
 			></created-test>
 		</v-flex>
-	    <v-snackbar :timeout="timeout"
-	                bottom="bottom"
-	                color="red lighten-1"
-	                v-model="snackbar">
-	      {{ message }}
-	    </v-snackbar>
+
+		 <v-flex xs12>
+			<v-alert
+	        :value="alert"
+	        type="error"
+	      >
+	        {{message}}
+
+		      	<v-tooltip top>
+			        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+			        <span>Обновить</span>
+			    </v-tooltip>
+		      </v-alert>
+	      </v-flex>	
+
 	</v-layout>
 </template>
 
@@ -44,9 +59,9 @@
 		data() {
 			return {
 				tests: [],
-				timeout: 0,
 				message: '',
-				snackbar: false
+				alert: false,
+				successLoad: false
 			}
 		},
 		methods: {
@@ -56,17 +71,28 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.tests = data
+		          this.successLoad = true
 		        }).catch(error => {
-		          this.snackbar = true
+		          this.alert = true
 		          this.message = 'Не удалось получить список тестов'
 
 		          console.log(error)
 		        })
+			},
+			reloadPage() {
+				window.location.reload(true)
 			}
 		},
 		mounted() {
 			this.getCreatedTests()
-		}
+		},
+	    computed: {
+	    	success_message: function() {
+	          if (!this.tests.length)
+	          	return 'В вашем профиле нет созданных вопросов.'
+	          else return 'Добавлено ' + this.tests.length + ' вопросов:'
+	    	}
+	    }
 	}
 </script>
 

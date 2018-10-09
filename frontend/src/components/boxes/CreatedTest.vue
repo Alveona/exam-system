@@ -70,7 +70,7 @@
 	const TestingSystemAPI = connection.server
 
 	export default {
-		props: ['title', 'token', 'author', 'image', 'description', 'added'],
+		props: ['title', 'token', 'author', 'image', 'description', 'added', 'element', 'collection'],
 		data() {
 			return {
 				show: false,
@@ -86,6 +86,7 @@
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
+		          this.collection.splice(this.element, 1)
 		          this.alert = true
 		          this.successDelete = true
 		          this.message = 'Тест успешно удален.'

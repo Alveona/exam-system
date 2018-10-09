@@ -9,17 +9,15 @@
 		              v-model="title"
 		              required
               		  clearable
-              		  :rules="rules"
+              		  :rules="rulesTitleLength"
               		  box
 		            ></v-text-field>
 		        </v-flex>
 		        <v-flex xs12>
 			        <v-textarea
-			            name="input-7-1"
 			            label="Формулировка вопроса"
 			            v-model="text"
-			            hint="Не более 2000 символов"
-          		  		:rules="rules"
+          		  		:rules="rulesQuestionLength"
 			            required
               			clearable
               			box
@@ -34,8 +32,10 @@
 			            :disabled="!enabledAttempts"
 			            label="Количество попыток"
 			            v-model="attempts"
+			            :rules="rulesAttempts"
               			clearable
               			box
+              			hint="Если не указать, то закончатся, когда обнулятся баллы"
 			            ></v-text-field>
 				      </v-layout>
 		          </v-flex>
@@ -45,6 +45,7 @@
 			          	<v-checkbox v-model="enabledTimer" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field type='number' 
 			            :disabled="!enabledTimer"
+			            :rules="rulesTimer"
 			            label="Таймер на вопрос"
 			            v-model="timer"
               			clearable
@@ -63,8 +64,8 @@
 	                    ref="fileInput"
                         @input="getUploadedImage"
 			            :dis="!enabledImage"
+			            :checked="enabledImage"
 			            :label="imageLoadText"
-			            v-model="image"
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
@@ -78,8 +79,8 @@
 	                    ref="fileInput"
                         @input="getUploadedAudio"
 			            :dis="!enabledAudio"
+			            :checked="enabledAudio"
 			            :label="audioLoadText"
-			            v-model="audio"
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
@@ -87,7 +88,8 @@
 				<v-flex xs10>
 	              <v-slider
 			        v-model="difficulty"
-	                :max="100"
+	                :max="maxDifficulty"
+	                :min="minDifficulty"
 	                label="Сложность вопроса"
 	              ></v-slider>
 	            </v-flex>
@@ -95,6 +97,7 @@
 	              <v-text-field
 			        v-model="difficulty"
 	                type="number"
+	                :rules="rulesDifficulty"
 	                box
 	              ></v-text-field>
 	            </v-flex>
@@ -106,7 +109,6 @@
 		            item-value="id"
 		            item-text="val"
 			        label="Тип ответа"
-      		  		:rules="rules"
 		            box
 		            required
 		           ></v-select>
@@ -117,6 +119,8 @@
 						:currentType="currentType"
 						:countAnswers="countAnswers"
 						:answers="answers"
+  						v-on:update:countAnswers="countAnswers = $event"
+  						v-on:push="pushAnswer()"
 					></add-answers>
 				</v-flex>
 							    
@@ -163,37 +167,42 @@
 			    enabledImage: false,
 			    enabledAudio: false,
 
+				maxDifficulty: 100,
+        		minDifficulty: 1,
+        		maxAttempts: 100,
+        		minAttempts: 1,
+        		minTimer: 10,
+        		maxTimer: 3600,
+        		maxTitleLength: 100,
+        		minTitleLength: 6,
+        		maxQuestionLength: 2000,
+        		minQuestionLength: 12,
+    			title: '',
+    			text: '',
+      			difficulty: 1,
+      			currentType: 1,
+				countAnswers: 1,
+
       			selectedType: [],
       			answerTypes: [
 	      			{ id: 1, val: 'Ввод значения'}, 
 	      			{ id: 2, val : 'Выбор одного варианта'}, 
 	      			{ id: 3, val : 'Выбор нескольких вариантов'}
       			],
-        		rules: [ (value) => !!value || 'Это обязательное поле' ],
-    			title: '',
-    			text: '',
-    			attempts: '',
-    			timer: '',
-      			difficulty: 0,
-      			currentType: 1,
-				countAnswers: 1,
 
+        		rulesRequired: [ (value) => !!value || 'Это обязательное поле' ],
+        		rulesTitleLength: [ (str) => (str.length >= this.minTitleLength && str.length <= this.maxTitleLength) || 'Допустимая длина: от '+this.minTitleLength + ' до ' + this.maxTitleLength + ' символов' ],
+        		rulesQuestionLength: [ (str) => (str.length >= this.minQuestionLength && str.length <= this.maxQuestionLength) || 'Допустимая длина: от '+this.minQuestionLength + ' до ' + this.maxQuestionLength + ' символов' ],
+        		rulesDifficulty: [ (value) => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty ],
+        		rulesAttempts: [ (value) => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
+        		rulesTimer: [ (value) => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer ],
+        		
 				message: '',
 				alert: false,
 				success: false,
 
 				questionId: '',
-				answers: [{
-				'0' : {
-                	image: '',
-                	audio: '',
-                	text: '',
-                	priority: 1,
-                	correct: true,
-                	weight: 256,
-                	hint: '',
-                	comment: ''
-				}}],
+				answers: [''],
 
                 image: '',
                 imageLoadText: 'Изображение к вопросу',
@@ -232,9 +241,8 @@
 	               		console.log(this.questionId)
 	               		console.log(this.answers.length)
 	               		console.log(this.answers)
-	               		//for (var i = 0; i < this.answers.length; ++i)
-	               		//{
-	               			//this.answers.question = this.questionId
+	               		for (var i = 0; i < this.answers.length; ++i)
+	               			this.answers[i].question = this.questionId
 	               			axios.post(`${TestingSystemAPI}/api/answers/`, this.answers, {
 					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 					          params: {}
@@ -249,7 +257,6 @@
 			                    this.alert = true
 			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 			                })
-	               		//}
 						
 	                })
 	               .catch(error => {
@@ -260,6 +267,28 @@
             },
 			reloadPage() {
 				window.location.reload(true)
+			},
+			pushAnswer() {
+				var isTrue = false
+				if (this.currentType == 1)
+					isTrue = true
+				this.answers.push({
+                	image: null,
+                	audio: null,
+                	text: '',
+                	priority: this.answers.length+1,
+                	correct: isTrue,
+                	weight: 256,
+                	hint: '',
+                	comment: '',
+                	question: 0,
+					enabledAudio: false,
+					enabledImage: false
+				})
+				console.log('countAnswers: '+ this.countAnswers)
+            	console.log('array len: ' + this.answers.length)
+
+            	console.log(this.answers)
 			}
        },
        watch: {
@@ -268,6 +297,32 @@
        				this.countAnswers = 1
        			else if (val == 2 || val == 3)
        				this.countAnswers = 2
+
+       			this.answers.splice(0)
+       			while (this.answers.length < val)
+       					this.pushAnswer()
+				console.log('countAnswers: '+ this.countAnswers)
+            	console.log('array len: ' + this.answers.length)
+       		},
+       		enabledImage: function(val) {
+       			if (!val)
+       				this.image = null
+       		},
+       		enabledAudio: function(val) {
+       			if (!val)
+       				this.audio = null
+       		}
+       },
+       computed: {
+       		attempts: function(val) {
+       			if (this.enabledAttempts)
+       				return val
+       			else return null
+       		},
+       		timer: function(val) {
+       			if (this.enabledTimer)
+       				return val
+       			else return null
        		}
        }
 	}
