@@ -328,13 +328,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             ids = []
             chosen = []
             for object in answers_list:
-                #print(object)
                 ids.append(object['id'])
                 chosen.append(object['chosen'])
-                #ids.append(object[0])
-                #chosen.append(object[1])
-            #print('ids: ' + str(ids))
-            #print('chosen: ' + str(chosen))
 
             answers_dict = dict(zip(ids, chosen))
             print('answers_dict: ' + str(answers_dict))
@@ -346,17 +341,105 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print('correct answer is ', end='')
             print(correct_answer.answer.id)
 
+            answers = SessionAnswer.objects.all().filter(sessionQuestion = question).order_by('answer__priority')
+            for answer in answers:
+                print(str(answer) + ' prior: ' + str(answer.answer.priority) + ' correct: ' + str(answer.answer.correct))
+
+            intermediate_correct = 0
+            should_be_correct = question.question.answers_number
+            for _id, chosen in answers_dict.items():
+                for answer in answers:
+                    if answer.id == _id:
+                        if answer.answer.correct == chosen:
+                            intermediate_correct+=1
+                            print(intermediate_correct)
+
+            if intermediate_correct == should_be_correct:
+                for answer in answers:
+                    question.result += answer.current_result
+                    question.finished = True
+                    question.save()
+                    answers.delete()
+                    return Response({'status': 'all ok'})
+            else:
+                print(intermediate_correct)
+                print('question ' + str(answers.filter(answer__priority = intermediate_correct + 1)) +' failed')
+                print('your answer is incorrect')
+                print('previous number of attempts is ', end='')
+                print(question.attempts_number)
+                # print(correct_answer.current_result)
+                question.attempts_number = question.attempts_number - 1
+                if question.attempts_number == 0:
+                    question.result = 0  # TODO IF ANSWER_TYPE == 3, COLLECT RESULT FROM S_ANSWERS
+                    question.finished = True
+                    question.save()
+                    answers.delete()
+                    return Response({'status': 'attempts are over'})
+                print('current number of attempts is ', end='')
+                question.save()
+                for answer in answers:
+                    answer.current_result = answer.current_result / 2
+                    print('current result of answer is ' + str(answer.current_result))
+                    answer.save()
+
+                result_sum = 0
+                for answer in answers:
+                    result_sum += answer.current_result
+                if result_sum == 0:
+                    question.result = 0
+                    question.finished = True
+                    question.save()
+                    answers.delete()
+                    return Response({'status': 'all results are zero'})
+
+                return Response({'status': 'something is wrong'})
+
+
+
+
+            '''
             found_correct = False
             for _id, chosen in answers_dict.items():
                 if _id == correct_answer.answer.id and chosen == True:
                     found_correct = True
-                    print('your answer is correct')
+                    print('this answer is correct')
+                    break
                 else:
-                    print('your answer is incorrect')
+                    print('this answer is incorrect')
+                    continue
+
             if found_correct:
-                pass # TODO OK
+                print('your final answer is correct')
+                for answer in answers:
+                    question.result += answer.current_result
+                    question.finished = True
+                    question.save()
+                    answers.delete()
+                    return Response({'status': 'all ok'})
             else:
-                pass # TODO NOT OK
+                print('your answer is incorrect')
+                print('previous number of attempts is ', end='')
+                print(question.attempts_number)
+                # print(correct_answer.current_result)
+                question.attempts_number = question.attempts_number - 1
+                if question.attempts_number == 0:
+                    question.result = 0  # TODO IF ANSWER_TYPE == 3, COLLECT RESULT FROM S_ANSWERS
+                    question.finished = True
+                    question.save()
+                    answers.delete()
+                    return Response({'status': 'attempts are over'})
+                print('current number of attempts is ', end='')
+                question.save()
+                for answer in answers:
+                    answer.current_result = answer.current_result / 2
+                    print('current result of answer is ' + str(answer.result))
+                    answer.save()'''
+
+
+
+
+
+
             '''
             if answers_list[0] == correct_answer.answer.text:
                 print('your answer is correct')

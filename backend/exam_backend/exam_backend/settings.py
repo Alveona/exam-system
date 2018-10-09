@@ -25,8 +25,8 @@ SECRET_KEY = 'o7bf)lh&=qoyb2got@6)c4acc63ek0)vnk2#ey=d)l3zk5l&qr'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "exserver", "10.0.1.4"]
-INTERNAL_IPS = ["127.0.0.1", "exserver", "10.0.1.4"]
+ALLOWED_HOSTS = ["127.0.0.1", "exserver", "10.0.1.4", "172.20.10.2"]
+INTERNAL_IPS = ["127.0.0.1", "exserver", "10.0.1.4", "172.20.10.2"]
 
 #CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
@@ -66,7 +66,8 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = (
     'localhost:8000',
     '10.0.1.4',
-    'exserver'
+    'exserver',
+    '172.20.10.2'
 )
 CORS_ALLOW_METHODS = (
         'GET',
