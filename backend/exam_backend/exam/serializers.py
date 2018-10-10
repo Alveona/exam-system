@@ -93,7 +93,11 @@ class CourseSerializer(serializers.ModelSerializer):
         'url': {'view_name': 'courses', 'lookup_field': 'token'}
     }
 
+    current_attempt = serializers.SerializerMethodField()
+
     def create(self, validated_data):
+        questions_to_parse = validated_data['questions']
+        print(questions_to_parse)
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
                         token=validated_data['token'],
@@ -105,8 +109,7 @@ class CourseSerializer(serializers.ModelSerializer):
         course.save()
         #questions = self.context['request'].data['questions']
         questions_to_parse = validated_data['questions']
-        print(questions_to_parse)
-        print(type(questions_to_parse))
+
         if questions_to_parse:
             for question in questions_to_parse:
                 course.questions.add(question)
@@ -129,7 +132,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ('id', 'name', 'description', 'author', 'token', 'image'
-                  , 'questions_number', 'attempts', 'subscribed', 'questions')
+                  , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt')
 
     def get_subscribed(self, obj):
         print(obj)
@@ -141,6 +144,15 @@ class CourseSerializer(serializers.ModelSerializer):
         if not subscribed_course:
             return False
         return True
+
+    def get_current_attempt(self, obj):
+        sessions = CourseSession.objects.all().filter(course=obj,
+                                                      user=self.context['request'].user, finished=True)
+        attempts = [attempt_number for attempt_number in [session for session in sessions]]
+        if attempts:
+            return max(attempts)
+        else:
+            return 0
 
 
 class RelationSerializer(serializers.ModelSerializer):
@@ -256,6 +268,23 @@ class SessionSerializer(serializers.ModelSerializer):
 
 class SessionQuestionSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
+
+    hint = serializers.SerializerMethodField()
+    audio_hint = serializers.SerializerMethodField()
+
+    def get_hint(self, obj):
+        object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True)
+        if object.first():
+            return obj.answer.hint
+        else:
+            return ''
+
+    def get_audio_hint(self, obj):
+        object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True)
+        if object.first():
+            return obj.answer.audio
+        else:
+            return None
 
     class Meta:
         model = SessionQuestion

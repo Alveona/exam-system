@@ -291,10 +291,35 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
             question.result = 0
             question.finished = True
+            question.save()
             answers.delete()
-        #if self.request.data['status'] == 3:
-            #question.result = 0
-            #question.finished = True
+        if self.request.data['status'] == 3:
+            question.result = 0
+            question.finished = True
+            question.save()
+            course = Course.objects.all().get(token=self.request.query_params.get('token'))
+            session = CourseSession.objects.all().get(user=self.request.user, course__token=
+                                        self.request.query_params.get('token'), finished=False)
+            current_question = max([session.order_number for session in
+                                    SessionQuestion.objects.all().filter(session=session, finished=True)])
+            list_of_questions = course.questions.all()
+            question = secrets.choice(list_of_questions)
+            previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
+            found_suitable_question = False
+            while not found_suitable_question:
+                for sq in previous_session_questions:
+                    if question == sq.question:
+                        question = secrets.choice(list_of_questions)
+                        break
+                    else:
+                        found_suitable_question = True
+                        break
+                continue
+            session_q = SessionQuestion(question=question,
+                                        session=session, order_number=current_question + 1,
+                                        result=0, attempts_number=question.attempts_number,
+                                        finished=True)
+            session_q.save()
 
 
         if question.question.answer_type == 1:
