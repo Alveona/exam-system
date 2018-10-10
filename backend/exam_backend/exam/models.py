@@ -87,7 +87,7 @@ class SessionAnswer(models.Model):  # erased after question finished (i.e. writt
     sessionQuestion = models.ForeignKey(SessionQuestion, on_delete=models.CASCADE, null=True)
     blocked = models.BooleanField(default=False)
     current_result = models.IntegerField(null = True)
-
+    will_send_hint = models.BooleanField(default=False)
 
 # док по intermediate models:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships

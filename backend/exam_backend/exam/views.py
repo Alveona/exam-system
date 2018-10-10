@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
-    SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer
+    SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -185,9 +185,23 @@ class RelationViewSet(viewsets.ModelViewSet):
     serializer_class = RelationSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['post']
+    #lookup_field = 'token'
 
     def get_queryset(self):
         return None
+
+class RelationUnsubscribeViewSet(viewsets.ModelViewSet):
+    queryset = UserCourseRelation.objects.all()
+    serializer_class = RelationUnsubscribeSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['post']
+
+    def create(self, request, *args, **kwargs):
+        course = Course.objects.all().get(token=self.request.data['token'])
+        relation = UserCourseRelation(user=self.request.user,
+                                      course=course, access=0)
+        relation.delete()
+        return Response({'status': 'Successfully deleted'})
 
 
 class SessionViewSet(viewsets.ModelViewSet):
@@ -268,18 +282,31 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
     serializer_class = SessionAnswerSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post']
+    #answer_to_hint = None
 
     def create(self, request, *args, **kwargs):
         question = SessionQuestion.objects.all().get(id=self.request.data['id'])
 
+        if self.request.data['status'] == 2:
+            answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
+            question.result = 0
+            question.finished = True
+            answers.delete()
+        #if self.request.data['status'] == 3:
+            #question.result = 0
+            #question.finished = True
+
+
         if question.question.answer_type == 1:
             print(self.request.data)
+
             answers_list = self.request.data['answers']
             print(answers_list)
             print('answer_type: ', end='')
             print(question.question.answer_type)
             print(SessionAnswer.objects.all().get(sessionQuestion=question))
             correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question)
+            correct_answer.will_send_hint = False
             print('correct answer is ', end='')
             print(correct_answer.answer.text)
             print('your answer is ', end='')
@@ -319,6 +346,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     correct_answer.delete()
                 print('current result is', end='')
                 print(correct_answer.current_result)
+                #self.answer_to_hint = correct_answer
+                correct_answer.will_send_hint = True
                 return Response({'status': 'something is wrong'})
 
         if question.question.answer_type == 2:
@@ -343,6 +372,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
 
             answers = SessionAnswer.objects.all().filter(sessionQuestion = question).order_by('answer__priority')
             for answer in answers:
+                answer.will_send_hint = False
                 print(str(answer) + ' prior: ' + str(answer.answer.priority) + ' correct: ' + str(answer.answer.correct))
 
             intermediate_correct = 0
@@ -370,12 +400,13 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                 # print(correct_answer.current_result)
                 question.attempts_number = question.attempts_number - 1
                 if question.attempts_number == 0:
-                    question.result = 0  # TODO IF ANSWER_TYPE == 3, COLLECT RESULT FROM S_ANSWERS
+                    question.result = 0
                     question.finished = True
                     question.save()
                     answers.delete()
                     return Response({'status': 'attempts are over'})
                 print('current number of attempts is ', end='')
+                print(question.attempts_number)
                 question.save()
                 for answer in answers:
                     answer.current_result = answer.current_result / 2
@@ -392,24 +423,51 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     answers.delete()
                     return Response({'status': 'all results are zero'})
 
+                answers.get(answer__priority = intermediate_correct + 1).will_send_hint = True
                 return Response({'status': 'something is wrong'})
 
+        if question.question.answer_type == 3:
+            print(self.request.data)
+            answers_list = self.request.data['answers']
+            print(answers_list)
+            ids = []
+            chosen = []
+            for object in answers_list:
+                ids.append(object['id'])
+                chosen.append(object['chosen'])
 
+            answers_dict = dict(zip(ids, chosen))
+            print('answers_dict: ' + str(answers_dict))
+            print('answer_type: ', end='')
+            #print(question)
+            print(question.question.answer_type)
+            print(SessionAnswer.objects.all().filter(sessionQuestion=question))
+            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question, answer__correct = True)
+            print('correct answer is ', end='')
+            print(correct_answer.answer.id)
 
+            answers = SessionAnswer.objects.all().filter(sessionQuestion = question).order_by('answer__priority')
+            for answer in answers:
+                answer.will_send_hint = False
+                print(str(answer) + ' prior: ' + str(answer.answer.priority) + ' correct: ' + str(answer.answer.correct))
 
-            '''
-            found_correct = False
+            intermediate_correct = 0
+            should_be_correct = question.question.answers_number
+            incorrect_chosen = 0
+            correct_not_chosen = 0
             for _id, chosen in answers_dict.items():
-                if _id == correct_answer.answer.id and chosen == True:
-                    found_correct = True
-                    print('this answer is correct')
-                    break
-                else:
-                    print('this answer is incorrect')
-                    continue
+                for answer in answers:
+                    if answer.id == _id:
+                        if answer.answer.correct == chosen:
+                            intermediate_correct+=1
+                            print(intermediate_correct)
+                        else:
+                            if answer.answer.correct == False:
+                                incorrect_chosen += 1
+                            else:
+                                correct_not_chosen += 1
 
-            if found_correct:
-                print('your final answer is correct')
+            if intermediate_correct == should_be_correct:
                 for answer in answers:
                     question.result += answer.current_result
                     question.finished = True
@@ -417,66 +475,84 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     answers.delete()
                     return Response({'status': 'all ok'})
             else:
-                print('your answer is incorrect')
-                print('previous number of attempts is ', end='')
-                print(question.attempts_number)
-                # print(correct_answer.current_result)
-                question.attempts_number = question.attempts_number - 1
-                if question.attempts_number == 0:
-                    question.result = 0  # TODO IF ANSWER_TYPE == 3, COLLECT RESULT FROM S_ANSWERS
-                    question.finished = True
+                if incorrect_chosen > 0:
+                    print(intermediate_correct)
+                    print('question ' + str(answers.filter(answer__priority = intermediate_correct + 1)) +' failed')
+                    print('your answer is incorrect')
+                    print('previous number of attempts is ', end='')
+                    print(question.attempts_number)
+                    # print(correct_answer.current_result)
+                    question.attempts_number = question.attempts_number - 1
+                    if question.attempts_number == 0:
+                        for answer in answers:
+                            question.result += answer.result
+                        question.finished = True
+                        question.save()
+                        answers.delete()
+                        return Response({'status': 'attempts are over'})
+                    print('current number of attempts is ', end='')
+                    print(question.attempts_number)
                     question.save()
-                    answers.delete()
-                    return Response({'status': 'attempts are over'})
-                print('current number of attempts is ', end='')
-                question.save()
-                for answer in answers:
-                    answer.current_result = answer.current_result / 2
-                    print('current result of answer is ' + str(answer.result))
-                    answer.save()'''
+                    for answer in answers:
+                        if answer.blocked == False:
+                            answer.current_result = answer.current_result / 2
+                        print('current result of answer is ' + str(answer.current_result))
+                        answer.save()
 
+                    result_sum = 0
+                    for answer in answers:
+                        result_sum += answer.current_result
+                    if result_sum == 0:
+                        question.result = 0
+                        question.finished = True
+                        question.save()
+                        answers.delete()
+                        return Response({'status': 'all results are zero'})
 
-
-
-
-
-            '''
-            if answers_list[0] == correct_answer.answer.text:
-                print('your answer is correct')
-                correct_answer.blocked = True
-                correct_answer.save()
-                question.result += correct_answer.current_result
-                question.finished = True
-                question.save()
-                correct_answer.delete()
-                return Response({'status': 'all ok'})
-            else:
-                print('your answer is incorrect')
-                print('previous number of attempts is ', end='')
-                print(question.attempts_number)
-                #print(correct_answer.current_result)
-                question.attempts_number = question.attempts_number - 1
-                if question.attempts_number == 0:
-                    question.result = 0  # TODO IF ANSWER_TYPE == 2 || 3, COLLECT RESULT FROM S_ANSWERS
-                    question.finished = True
+                    answers.get(answer__priority = intermediate_correct + 1).will_send_hint = True
+                    return Response({'status': 'incorrect chosen'})
+                else:
+                    print(intermediate_correct)
+                    print('question ' + str(answers.filter(answer__priority=intermediate_correct + 1)) + ' failed')
+                    print('your answer is incorrect')
+                    print('previous number of attempts is ', end='')
+                    print(question.attempts_number)
+                    # print(correct_answer.current_result)
+                    question.attempts_number = question.attempts_number - 1
+                    if question.attempts_number == 0:
+                        for answer in answers:
+                            question.result += answer.result
+                        question.finished = True
+                        question.save()
+                        answers.delete()
+                        return Response({'status': 'attempts are over'})
+                    print('current number of attempts is ', end='')
+                    print(question.attempts_number)
                     question.save()
-                    correct_answer.delete()
-                    return Response({'status': 'attempts are over'})
-                print('current number of attempts is ', end='')
-                print(question.attempts_number)
-                question.save()
-                print('current result before division: ', end='')
-                print(correct_answer.current_result)
-                correct_answer.current_result = correct_answer.current_result / 2
-                correct_answer.save()
-                if correct_answer.current_result == 0:
-                    question.result = 0
-                    question.finished = True
-                    question.save()
-                    correct_answer.delete()
-                print('current result is', end='')
-                print(correct_answer.current_result)
-                return Response({'status': 'something is wrong'})'''
+                    for i in range(1, intermediate_correct):
+                        answer = answers.get(answer__priority = i, answer__correct = True)
+                        if answer:
+                            answer.blocked = True
+
+                    for answer in answers:
+                        if answer.blocked == False:
+                            answer.current_result = answer.current_result / 2
+                        print('current result of answer is ' + str(answer.current_result))
+                        answer.save()
+
+                    result_sum = 0
+                    for answer in answers:
+                        result_sum += answer.current_result
+                    if result_sum == 0:
+                        question.result = 0
+                        question.finished = True
+                        question.save()
+                        answers.delete()
+                        return Response({'status': 'all results are zero'})
+
+                    answers.get(answer__priority=intermediate_correct + 1).will_send_hint = True
+                    return Response({'status': 'not all corrects chosen'})
+
 
     def get_queryset(self):
         question = SessionQuestion.objects.all().get(id=self.request.query_params.get('id'))
