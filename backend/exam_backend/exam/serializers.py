@@ -180,7 +180,7 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_current_attempt(self, obj):
         sessions = CourseSession.objects.all().filter(course=obj,
                                                       user=self.context['request'].user, finished=True)
-        attempts = [attempt_number for attempt_number in [session for session in sessions]]
+        attempts = [s.attempt_number for s in [session for session in sessions]]
         if attempts:
             return max(attempts)
         else:

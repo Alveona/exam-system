@@ -79,7 +79,22 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerFormDataSerializer
     permission_classes = (IsAuthenticated, )
-    http_method_names = ['post', 'patch']
+    http_method_names = ['post', 'patch', 'get']
+
+
+    def get_queryset(self):
+        if self.request.method == "GET":
+            queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
+                                                   question__user=self.request.user)
+            return queryset
+        if self.request.method == "DELETE":
+            print('object deleted')
+        user = self.request.user
+        if user.is_superuser:
+            queryset = Answer.objects.all()
+            return queryset
+        return Answer.objects.all().filter(question__user=user)
+
 
     def create(self, request, *args, **kwargs):
         #print(self.request.data)
@@ -132,6 +147,13 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)'''
         return Response(status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class AnswerViewSet(viewsets.ModelViewSet):
@@ -284,8 +306,13 @@ class SessionStatsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.method == 'GET':
             session = CourseSession.objects.all().filter(course__user = self.request.user,
-                                                         course__token = self.request.query_params.get('token'), finished = True)
-            return session
+                                                         course__token = self.request.query_params.get('token'), finished = True).\
+                order_by('-attempt_number').first()
+            empty = CourseSession.objects.none()
+            list = []
+            list.append(session)
+            return list
+        return self.queryset
 
 class SessionQuestionViewSet(viewsets.ModelViewSet):
     queryset = SessionQuestion.objects.all()
@@ -374,13 +401,15 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             question.finished = True
             question.save()
             answers.delete()
+            return Response({'status': 'skiped'})
         if self.request.data['status'] == 3:
             question.result = 0
             question.finished = True
             question.save()
-            course = Course.objects.all().get(token=self.request.query_params.get('token'))
+            #course = Course.objects.all().get(token=self.request.query_params.get('token'))
+            course = question.session.course
             session = CourseSession.objects.all().get(user=self.request.user, course__token=
-                                        self.request.query_params.get('token'), finished=False)
+                                        course.token, finished=False)
             current_question = max([session.order_number for session in
                                     SessionQuestion.objects.all().filter(session=session, finished=True)])
             list_of_questions = course.questions.all()
@@ -401,7 +430,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                                         result=0, attempts_number=question.attempts_number,
                                         finished=True)
             session_q.save()
-
+            return Response({'status': 'aborted'})
 
         if question.question.answer_type == 1:
             print(self.request.data)
@@ -454,6 +483,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                 print(correct_answer.current_result)
                 #self.answer_to_hint = correct_answer
                 correct_answer.will_send_hint = True
+                correct_answer.save()
                 return Response({'status': 'something is wrong'})
 
         if question.question.answer_type == 2:
@@ -529,7 +559,9 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     answers.delete()
                     return Response({'status': 'all results are zero'})
 
-                answers.get(answer__priority = intermediate_correct + 1).will_send_hint = True
+                incor_ans = answers.get(answer__priority = intermediate_correct + 1)
+                incor_ans.will_send_hint = True
+                incor_ans.save()
                 return Response({'status': 'something is wrong'})
 
         if question.question.answer_type == 3:
@@ -615,7 +647,9 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         answers.delete()
                         return Response({'status': 'all results are zero'})
 
-                    answers.get(answer__priority = intermediate_correct + 1).will_send_hint = True
+                    incor_ans = answers.get(answer__priority=intermediate_correct + 1)
+                    incor_ans.will_send_hint = True
+                    incor_ans.save()
                     return Response({'status': 'incorrect chosen'})
                 else:
                     print(intermediate_correct)
@@ -639,7 +673,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         answer = answers.get(answer__priority = i, answer__correct = True)
                         if answer:
                             answer.blocked = True
-
+                            answer.save()
                     for answer in answers:
                         if answer.blocked == False:
                             answer.current_result = answer.current_result / 2
@@ -656,7 +690,9 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         answers.delete()
                         return Response({'status': 'all results are zero'})
 
-                    answers.get(answer__priority=intermediate_correct + 1).will_send_hint = True
+                    incor_ans = answers.get(answer__priority=intermediate_correct + 1)
+                    incor_ans.will_send_hint = True
+                    incor_ans.save()
                     return Response({'status': 'not all corrects chosen'})
 
 
