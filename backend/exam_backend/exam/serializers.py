@@ -347,16 +347,19 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
     def get_hint(self, obj):
         object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True)
-        print('obj from hint: ' + str(object))
+        #print('obj from hint: ' + str(object))
         if object.first():
-            return object.answer.hint
+            return object.first().answer.hint
         else:
             return ''
 
     def get_audio_hint(self, obj):
         object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True)
         if object.first():
-            return object.answer.audio
+            if object.first().answer.audio:
+                return object.first().answer.audio
+            else:
+                return None
         else:
             return None
 
