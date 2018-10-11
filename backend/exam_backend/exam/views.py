@@ -209,6 +209,11 @@ class SessionViewSet(viewsets.ModelViewSet):
     serializer_class = SessionSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['post']
+    ''' def get_queryset(self):
+        if self.request.method == 'GET':
+            session = CourseSession.objects.all().filter(course__token = self.request.query_params.get('token'), finished = True)
+            #sessions_q = 
+        return self.queryset'''
 
 
 class SessionQuestionViewSet(viewsets.ModelViewSet):
@@ -258,10 +263,14 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
             print(session_q)
             session_q.save()
 
-            list_of_all_answers = Answer.objects.all().filter(question=question)
-            print('list of all answers: ', end='')
-            print(list_of_all_answers)
-            list_of_answers = random.sample(set(list_of_all_answers), question.answers_number)
+            list_of_correct_answers = list(Answer.objects.all().filter(question=question, correct=True))
+            print('correct list: ' + str(list_of_correct_answers))
+            list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct=False))
+            print('incorrect list: ' + str(list_of_incorrect_answers))
+            list_of_answers = list_of_correct_answers
+            list_of_answers += random.sample(set(list_of_incorrect_answers),
+                                             question.answers_number - len(list_of_correct_answers))
+            random.shuffle(list_of_answers)
             print('list of answers: ', end='')
             print(list_of_answers)
             for answer in list_of_answers:

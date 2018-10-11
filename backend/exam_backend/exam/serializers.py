@@ -193,6 +193,20 @@ class CourseAddedSerializer(serializers.ModelSerializer):
         fields = ('token', 'name', 'user', 'description', 'image')
 
 
+class SessionStatsSerializer(serializers.ModelSerializer):
+    weight_sum = serializers.SerializerMethodField()
+
+    def get_weight_sum(self, obj):
+        question = obj.question
+        answers = Answer.objects.all().filter(question = question)
+        weight_sum = sum([answer.weight for answer in answers])
+        return weight_sum
+
+    class Meta:
+        model = SessionQuestion
+        field = ('order_number', 'result' 'weight')
+
+
 class SessionSerializer(serializers.ModelSerializer):
     '''perfect_mark = serializers.SerializerMethodField()
     good_mark = serializers.SerializerMethodField()
@@ -209,7 +223,6 @@ class SessionSerializer(serializers.ModelSerializer):
         ''''''''''''
 
         course = Course.objects.all().get(token=self.context['request'].data['token'])
-        # print(course.questions)
         not_finished_session = CourseSession.objects.all().filter(course=course,
                                                                   user=self.context['request'].user, finished=False)
         print('not finished session: ', end='')
@@ -246,11 +259,14 @@ class SessionSerializer(serializers.ModelSerializer):
                 print('s_q: ', end='')
                 print(session_q)
                 session_q.save()
-
-                list_of_all_answers = Answer.objects.all().filter(question=question)
-                print('list of all answers: ', end='')
-                print(list_of_all_answers)
-                list_of_answers = random.sample(set(list_of_all_answers), question.answers_number)
+                list_of_correct_answers = list(Answer.objects.all().filter(question = question, correct = True))
+                print('correct list: ' + str(list_of_correct_answers))
+                list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct = False))
+                print('incorrect list: ' + str(list_of_incorrect_answers))
+                list_of_answers = list_of_correct_answers
+                list_of_answers += random.sample(set(list_of_incorrect_answers),
+                                                           question.answers_number - len(list_of_correct_answers))
+                random.shuffle(list_of_answers)
                 print('list of answers: ', end='')
                 print(list_of_answers)
                 for answer in list_of_answers:
@@ -293,9 +309,9 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
 class SessionAnswerSerializer(serializers.ModelSerializer):
     answer = AnswerInCourseSerializer(read_only=True)
-    hint = serializers.SerializerMethodField()
+    '''hint = serializers.SerializerMethodField()
     audio_hint = serializers.SerializerMethodField()
-
+    
     def get_hint(self, obj):
         if obj.will_send_hint == True:
             return obj.answer.hint
@@ -306,7 +322,7 @@ class SessionAnswerSerializer(serializers.ModelSerializer):
         if obj.will_send_hint == True:
             return obj.answer.audio
         else:
-            return None
+            return None'''
 
     class Meta:
         model = SessionAnswer
