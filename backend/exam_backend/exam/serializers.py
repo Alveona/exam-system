@@ -81,7 +81,39 @@ class AnswerInCourseSerializer(serializers.ModelSerializer):
 
 class AnswerSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = Answer
+        fields = '__all__'
 
+class AnswerFormDataSerializer(serializers.ModelSerializer):
+    '''
+    def create(self, validated_data):
+        print(validated_data)
+
+        question_to_parse = validated_data['question']
+        print(question_to_parse)
+        for q in question_to_parse:
+            print(q)
+        text_to_parse = validated_data['text']
+        correct_to_parse = validated_data['correct']
+        weight_to_parse = validated_data['weight']
+        audio_to_parse = validated_data['audio']
+        hint_to_parse = validated_data['hint']
+        priority_to_parse = validated_data['priority']
+
+
+        list_of_created_ids = []
+        for i in range(0, len(question_to_parse)-1):
+            answer = Answer(question = question_to_parse[i], text = text_to_parse[i],
+                            correct = correct_to_parse[i], weight = weight_to_parse[i],
+                            audio = audio_to_parse[i], hint = hint_to_parse[i],
+                            priority = priority_to_parse[i])
+            answer.save()
+            print(answer)
+            list_of_created_ids.append(answer.id)
+        queryset = Answer.objects.all().filter(id__in = list_of_created_ids)
+        return queryset
+    '''
     class Meta:
         model = Answer
         fields = '__all__'
@@ -108,7 +140,7 @@ class CourseSerializer(serializers.ModelSerializer):
         course.satisfactory_mark = self.context['request'].data['satisfactory_mark']
         course.save()
         #questions = self.context['request'].data['questions']
-        questions_to_parse = validated_data['questions']
+        #questions_to_parse = validated_data['questions']
 
         if questions_to_parse:
             for question in questions_to_parse:
@@ -260,7 +292,7 @@ class SessionSerializer(serializers.ModelSerializer):
             print('existing sessions: ', end='')
             print(sessions)
 
-            attempts = [attempt_number for attempt_number in [session for session in sessions]]
+            attempts = [s.attempt_number for s in [session for session in sessions]]
             if attempts:
                 number_of_attempts = max(attempts)
             else:
@@ -315,15 +347,16 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
     def get_hint(self, obj):
         object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True)
+        print('obj from hint: ' + str(object))
         if object.first():
-            return obj.answer.hint
+            return object.answer.hint
         else:
             return ''
 
     def get_audio_hint(self, obj):
         object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True)
         if object.first():
-            return obj.answer.audio
+            return object.answer.audio
         else:
             return None
 

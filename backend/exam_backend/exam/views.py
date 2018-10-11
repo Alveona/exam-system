@@ -10,7 +10,7 @@ from .models import Question, Answer, Course, Profile, UserCourseRelation, Cours
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
     SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer, \
-    SessionStatsSerializer
+    SessionStatsSerializer, AnswerFormDataSerializer
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -74,6 +74,64 @@ class QuestionListViewSet(viewsets.ModelViewSet):
             queryset = Question.objects.all()
             return queryset
         return Question.objects.all().filter(user=user)
+
+class AnswerFormDataViewSet(viewsets.ModelViewSet):
+    queryset = Answer.objects.all()
+    serializer_class = AnswerFormDataSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['post', 'patch']
+
+    def create(self, request, *args, **kwargs):
+        #print(self.request.data)
+        _dict = dict(self.request.data)
+        print(_dict)
+        question_to_parse = []
+        text_to_parse = []
+        correct_to_parse = []
+        weight_to_parse = []
+        audio_to_parse = []
+        hint_to_parse = []
+        priority_to_parse = []
+        image_to_parse = []
+
+        for value in _dict['question']:
+            question_to_parse.append(value)
+        for value in _dict['text']:
+            text_to_parse.append(value)
+        for value in _dict['correct']:
+            correct_to_parse.append(value.capitalize())
+        for value in _dict['weight']:
+            weight_to_parse.append(value)
+        for value in _dict['audio']:
+            audio_to_parse.append(value if value != 'null' else None)
+        print(audio_to_parse)
+        for value in _dict['hint']:
+            hint_to_parse.append(value if value != 'null' else None)
+        for value in _dict['image']:
+            image_to_parse.append(value if value != 'null' else None)
+        for value in _dict['priority']:
+            priority_to_parse.append(value)
+        print('len: ' + str(len(question_to_parse)))
+        #list_of_created_ids = []
+        for i in range(0, len(question_to_parse)):
+            print(i)
+            question = Question.objects.all().get(id = question_to_parse[i])
+            answer = Answer(question=question, text=text_to_parse[i],
+                            correct=correct_to_parse[i], weight=weight_to_parse[i],
+                            audio=audio_to_parse[i], hint=hint_to_parse[i],
+                            priority=priority_to_parse[i], image = image_to_parse[i])
+            answer.save()
+            print(answer)
+            #list_of_created_ids.append(answer.id)
+
+        '''
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)'''
+        return Response(status=status.HTTP_201_CREATED)
+
 
 
 class AnswerViewSet(viewsets.ModelViewSet):
