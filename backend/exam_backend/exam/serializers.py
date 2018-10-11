@@ -357,7 +357,10 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
         object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True)
         if object.first():
             if object.first().answer.audio:
-                return object.first().answer.audio
+                #return object.first().answer.audio
+                #return None
+                print(object.first().answer.audio)
+                return str('http://172.20.10.2:8000/media/' + str(object.first().answer.audio))
             else:
                 return None
         else:

@@ -323,25 +323,25 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         session = CourseSession.objects.all().get(user=self.request.user, course__token=
                             self.request.query_params.get('token'), finished=False)
-        print(session)
+        #print(session)
         question = SessionQuestion.objects.all().filter(session=session, finished=False)
         if not question:
-            print("No unfinished sessions")
+            #print("No unfinished sessions")
             current_question = max([session.order_number for session in SessionQuestion.objects.all().filter(session = session, finished = True)])
 
             if current_question >= session.course.questions_number:
                 session.finished = True
                 session.save()
                 queryset = SessionQuestion.objects.none()
-                print('test finished!')
+                #print('test finished!')
                 return queryset
                 #raise serializers.ValidationError({'status': 'test is over'})
             # TODO DIFFICULTY FUNCTION
             course = Course.objects.all().get(token=self.request.query_params.get('token'))
             list_of_questions = course.questions.all()
-            print(list_of_questions)
+            #print(list_of_questions)
             question = secrets.choice(list_of_questions)
-            print('chosen question is ' + str(question))
+            #print('chosen question is ' + str(question))
             previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
             found_suitable_question = False
             while not found_suitable_question:
@@ -351,37 +351,37 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
                         break
                     else:
                         found_suitable_question = True
-                        print('chosen question in for is '+ str(question))
+                        #print('chosen question in for is '+ str(question))
                         break
                 continue
             session_q = SessionQuestion(question=question,
                                         session=session, order_number=current_question + 1,
                                         result=0, attempts_number=question.attempts_number,
                                         finished=False)
-            print('s_q: ', end='')
-            print(session_q)
+            #print('s_q: ', end='')
+            #print(session_q)
             session_q.save()
 
             list_of_correct_answers = list(Answer.objects.all().filter(question=question, correct=True))
-            print('correct list: ' + str(list_of_correct_answers))
+            #print('correct list: ' + str(list_of_correct_answers))
             list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct=False))
-            print('incorrect list: ' + str(list_of_incorrect_answers))
+            #print('incorrect list: ' + str(list_of_incorrect_answers))
             list_of_answers = list_of_correct_answers
             list_of_answers += random.sample(set(list_of_incorrect_answers),
                                              question.answers_number - len(list_of_correct_answers))
             random.shuffle(list_of_answers)
-            print('list of answers: ', end='')
-            print(list_of_answers)
+            #print('list of answers: ', end='')
+            #print(list_of_answers)
             for answer in list_of_answers:
                 session_a = SessionAnswer(sessionQuestion=session_q, blocked=False, answer=answer,
                                           current_result=answer.weight)
                 session_a.save()
-                print('s_a created: ', end='')
-                print(session_a)
-            print('s_q created:', end='')
-            print(session_q)
+                #print('s_a created: ', end='')
+                #print(session_a)
+            #print('s_q created:', end='')
+            #print(session_q)
             return SessionQuestion.objects.all().filter(id = session_q.id)
-        print(question)
+        #print(question)
         return question
 
 
@@ -526,7 +526,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     question.finished = True
                     question.save()
                     answers.delete()
-                    return Response({'status': 'all ok'})
+                return Response({'status': 'all ok'})
             else:
                 print(intermediate_correct)
                 print('question ' + str(answers.filter(answer__priority = intermediate_correct + 1)) +' failed')
@@ -580,9 +580,9 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             #print(question)
             print(question.question.answer_type)
             print(SessionAnswer.objects.all().filter(sessionQuestion=question))
-            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question, answer__correct = True)
-            print('correct answer is ', end='')
-            print(correct_answer.answer.id)
+            correct_answer = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__correct = True)
+            print('correct answer are ', end='')
+            print(correct_answer)
 
             answers = SessionAnswer.objects.all().filter(sessionQuestion = question).order_by('answer__priority')
             for answer in answers:
@@ -611,7 +611,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     question.finished = True
                     question.save()
                     answers.delete()
-                    return Response({'status': 'all ok'})
+                return Response({'status': 'all ok'})
             else:
                 if incorrect_chosen > 0:
                     print(intermediate_correct)
