@@ -9,7 +9,8 @@ from rest_framework.decorators import action
 from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
-    SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer
+    SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer, \
+    SessionStatsSerializer
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -216,6 +217,18 @@ class SessionViewSet(viewsets.ModelViewSet):
         return self.queryset'''
 
 
+class SessionStatsViewSet(viewsets.ModelViewSet):
+    queryset = CourseSession.objects.all()
+    serializer_class = SessionStatsSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        if self.request.method == 'GET':
+            session = CourseSession.objects.all().filter(course__user = self.request.user,
+                                                         course__token = self.request.query_params.get('token'), finished = True)
+            return session
+
 class SessionQuestionViewSet(viewsets.ModelViewSet):
     queryset = SessionQuestion.objects.all()
     serializer_class = SessionQuestionSerializer
@@ -233,6 +246,7 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
 
             if current_question >= session.course.questions_number:
                 session.finished = True
+                session.save()
                 queryset = SessionQuestion.objects.none()
                 print('test finished!')
                 return queryset

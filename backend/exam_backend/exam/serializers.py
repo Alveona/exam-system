@@ -194,6 +194,31 @@ class CourseAddedSerializer(serializers.ModelSerializer):
 
 
 class SessionStatsSerializer(serializers.ModelSerializer):
+    perfect_mark = serializers.SerializerMethodField()
+    good_mark = serializers.SerializerMethodField()
+    satisfactory_mark = serializers.SerializerMethodField()
+    session_q = serializers.SerializerMethodField()
+
+    def get_perfect_mark(self, obj):
+        return obj.course.perfect_mark
+
+    def get_good_mark(self, obj):
+        return obj.course.good_mark
+
+    def get_satisfactory_mark(self, obj):
+        return obj.course.satisfactory_mark
+
+    def get_session_q(self, obj):
+        #return SessionQuestion.objects.all().filter(session = obj)
+        serializer = SessionQuestionStatsSerializer(instance = SessionQuestion.objects.all().filter(session = obj), many=True)
+        return serializer.data
+
+    class Meta:
+        model = CourseSession
+        fields = ('perfect_mark', 'good_mark', 'satisfactory_mark', 'session_q')
+
+
+class SessionQuestionStatsSerializer(serializers.ModelSerializer):
     weight_sum = serializers.SerializerMethodField()
 
     def get_weight_sum(self, obj):
@@ -204,7 +229,7 @@ class SessionStatsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SessionQuestion
-        field = ('order_number', 'result' 'weight')
+        fields = ('order_number', 'result', 'weight_sum')
 
 
 class SessionSerializer(serializers.ModelSerializer):
@@ -217,9 +242,9 @@ class SessionSerializer(serializers.ModelSerializer):
 
         # DEBUG :
         ''''''''''''
-        CourseSession.objects.all().delete()
-        SessionQuestion.objects.all().delete()
-        SessionAnswer.objects.all().delete()
+        #CourseSession.objects.all().delete()
+        #SessionQuestion.objects.all().delete()
+        #SessionAnswer.objects.all().delete()
         ''''''''''''
 
         course = Course.objects.all().get(token=self.context['request'].data['token'])
