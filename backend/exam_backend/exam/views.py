@@ -457,19 +457,21 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                 return Response({'status': 'all ok'})
             else:
                 print('your answer is incorrect')
-                print('previous number of attempts is ', end='')
-                print(question.attempts_number)
+
                 #print(correct_answer.current_result)
-                question.attempts_number = question.attempts_number - 1
-                if question.attempts_number == 0:
-                    question.result = 0
-                    question.finished = True
+                if question.attempts_number:
+                    print('previous number of attempts is ', end='')
+                    print(question.attempts_number)
+                    question.attempts_number = question.attempts_number - 1
+                    if question.attempts_number == 0:
+                        question.result = 0
+                        question.finished = True
+                        question.save()
+                        correct_answer.delete()
+                        return Response({'status': 'attempts are over'})
+                    print('current number of attempts is ', end='')
+                    print(question.attempts_number)
                     question.save()
-                    correct_answer.delete()
-                    return Response({'status': 'attempts are over'})
-                print('current number of attempts is ', end='')
-                print(question.attempts_number)
-                question.save()
                 print('current result before division: ', end='')
                 print(correct_answer.current_result)
                 correct_answer.current_result = correct_answer.current_result / 2
@@ -531,19 +533,21 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                 print(intermediate_correct)
                 print('question ' + str(answers.filter(answer__priority = intermediate_correct + 1)) +' failed')
                 print('your answer is incorrect')
-                print('previous number of attempts is ', end='')
-                print(question.attempts_number)
+
                 # print(correct_answer.current_result)
-                question.attempts_number = question.attempts_number - 1
-                if question.attempts_number == 0:
-                    question.result = 0
-                    question.finished = True
+                if question.attempts_number:
+                    print('previous number of attempts is ', end='')
+                    print(question.attempts_number)
+                    question.attempts_number = question.attempts_number - 1
+                    if question.attempts_number == 0:
+                        question.result = 0
+                        question.finished = True
+                        question.save()
+                        answers.delete()
+                        return Response({'status': 'attempts are over'})
+                    print('current number of attempts is ', end='')
+                    print(question.attempts_number)
                     question.save()
-                    answers.delete()
-                    return Response({'status': 'attempts are over'})
-                print('current number of attempts is ', end='')
-                print(question.attempts_number)
-                question.save()
                 for answer in answers:
                     answer.current_result = answer.current_result / 2
                     print('current result of answer is ' + str(answer.current_result))
@@ -617,20 +621,23 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     print(intermediate_correct)
                     print('question ' + str(answers.filter(answer__priority = intermediate_correct + 1)) +' failed')
                     print('your answer is incorrect')
-                    print('previous number of attempts is ', end='')
-                    print(question.attempts_number)
+
                     # print(correct_answer.current_result)
-                    question.attempts_number = question.attempts_number - 1
-                    if question.attempts_number == 0:
-                        for answer in answers:
-                            question.result += answer.result
-                        question.finished = True
+                    if question.attempts_number:
+                        print('previous number of attempts is ', end='')
+                        print(question.attempts_number)
+
+                        question.attempts_number = question.attempts_number - 1
+                        if question.attempts_number == 0:
+                            for answer in answers:
+                                question.result += answer.result
+                            question.finished = True
+                            question.save()
+                            answers.delete()
+                            return Response({'status': 'attempts are over'})
+                        print('current number of attempts is ', end='')
+                        print(question.attempts_number)
                         question.save()
-                        answers.delete()
-                        return Response({'status': 'attempts are over'})
-                    print('current number of attempts is ', end='')
-                    print(question.attempts_number)
-                    question.save()
                     for answer in answers:
                         if answer.blocked == False:
                             answer.current_result = answer.current_result / 2
@@ -655,20 +662,22 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     print(intermediate_correct)
                     print('question ' + str(answers.filter(answer__priority=intermediate_correct + 1)) + ' failed')
                     print('your answer is incorrect')
-                    print('previous number of attempts is ', end='')
-                    print(question.attempts_number)
+
                     # print(correct_answer.current_result)
-                    question.attempts_number = question.attempts_number - 1
-                    if question.attempts_number == 0:
-                        for answer in answers:
-                            question.result += answer.result
-                        question.finished = True
+                    if question.attempts_number:
+                        print('previous number of attempts is ', end='')
+                        print(question.attempts_number)
+                        question.attempts_number = question.attempts_number - 1
+                        if question.attempts_number == 0:
+                            for answer in answers:
+                                question.result += answer.result
+                            question.finished = True
+                            question.save()
+                            answers.delete()
+                            return Response({'status': 'attempts are over'})
+                        print('current number of attempts is ', end='')
+                        print(question.attempts_number)
                         question.save()
-                        answers.delete()
-                        return Response({'status': 'attempts are over'})
-                    print('current number of attempts is ', end='')
-                    print(question.attempts_number)
-                    question.save()
                     for i in range(1, intermediate_correct):
                         answer = answers.get(answer__priority = i, answer__correct = True)
                         if answer:
