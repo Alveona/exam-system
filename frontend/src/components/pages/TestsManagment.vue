@@ -89,8 +89,8 @@
 	    computed: {
 	    	success_message: function() {
 	          if (!this.tests.length)
-	          	return 'В вашем профиле нет созданных вопросов.'
-	          else return 'Добавлено ' + this.tests.length + ' вопросов:'
+	          	return 'В вашем профиле нет созданных тестов.'
+	          else return 'Добавлено ' + this.tests.length + ' тестов:'
 	    	}
 	    }
 	}

@@ -32,7 +32,6 @@
 			            :disabled="!enabledAttempts"
 			            label="Количество попыток"
 			            v-model="attempts"
-			            :rules="rulesAttempts"
               			clearable
               			box
               			hint="Если не указать, то закончатся, когда обнулятся баллы"
@@ -62,7 +61,7 @@
 			            class="fileBtn"
 	                    accept="image/*"
 	                    ref="fileInput"
-                        @input="getUploadedImage"
+                        @input="getUploadedQImage($event)"
 			            :dis="!enabledImage"
 			            :checked="enabledImage"
 			            :label="imageLoadText"
@@ -77,7 +76,7 @@
 			            class="fileBtn"
 	                    accept="audio/*"
 	                    ref="fileInput"
-                        @input="getUploadedAudio"
+                        @input="getUploadedQAudio($event)"
 			            :dis="!enabledAudio"
 			            :checked="enabledAudio"
 			            :label="audioLoadText"
@@ -119,20 +118,22 @@
 						:currentType="currentType"
 						:countAnswers="countAnswers"
 						:answers="answers"
-  						v-on:update:countAnswers="countAnswers = $event"
-  						v-on:push="pushAnswer()"
+  						@update:countAnswers="countAnswers = $event"
+  						@push="pushAnswer()"
+  						@update:answersAudio="getUploadedAudio($event)"
+  						@update:answersImage="getUploadedImage($event)"
 					></add-answers>
 				</v-flex>
 							    
 				<v-flex xs12>
 					<v-alert
 			        :value="alert"
-			        :type="success ? success : error"
+			        :type="successSet ? 'success' : 'error'"
 			      	>
 			        {{message}}
 
-				    <v-btn v-if="success" to="/questions" flat>Вернутьcя к вопросам</v-btn>
-				    <v-btn v-if="!success" @click.native="onSubmit()" flat>Попробовать еще раз</v-btn>
+				    <v-btn v-if="successSet" to="/questions" flat>Вернутьcя к вопросам</v-btn>
+				    <v-btn v-if="!successSet" @click.native="onSubmit()" flat>Попробовать еще раз</v-btn>
 			      </v-alert>
 		      </v-flex>	
 
@@ -182,6 +183,8 @@
       			difficulty: 1,
       			currentType: 1,
 				countAnswers: 1,
+				attempts: '',
+				timer: '',
 
       			selectedType: [],
       			answerTypes: [
@@ -199,10 +202,10 @@
         		
 				message: '',
 				alert: false,
-				success: false,
+				successSet: false,
 
 				questionId: '',
-				answers: [''],
+				answers: [],
 
                 image: '',
                 imageLoadText: 'Изображение к вопросу',
@@ -212,11 +215,31 @@
 		    }
 		  },
 		methods: {
-            getUploadedImage(e) {
+            getUploadedQImage(e) {
                 this.image = e
             },
-            getUploadedAudio(e) {
+            getUploadedQAudio(e) {
                 this.audio = e
+            },
+            getUploadedAudio(obj) {
+            	for (var i = 0; i < this.answers.length; ++i)
+            		if (i == obj.index)
+            		{
+            			this.answers[i].audio = obj.audio
+            			this.answers[i].push(null)
+            			this.answers[i].pop()
+            			return
+            		}
+            },
+            getUploadedImage(obj) {
+            	for (var i = 0; i < this.answers.length; ++i)
+            		if (i == obj.index)
+            		{
+            			this.answers[i].image = obj.image
+            			this.answers[i].push(null)
+            			this.answers[i].pop()
+            			return
+            		}
             },
             onSubmit() {
                  let formData = new FormData()
@@ -230,6 +253,10 @@
                  formData.set('difficulty', this.difficulty)
                  formData.set('image', this.image)
                  formData.set('audio', this.audio)
+                 var comment = null
+                 if (this.currentType == 1)
+					comment = this.answers[0].comment
+                 formData.set('comment', comment)
 
                  axios.post(`${TestingSystemAPI}/api/questions/`, formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
@@ -238,29 +265,46 @@
 	               .then((response) => {
 	               		console.log(response)
 	               		this.questionId = response.data.id
-	               		console.log(this.questionId)
-	               		console.log(this.answers.length)
-	               		console.log(this.answers)
 	               		for (var i = 0; i < this.answers.length; ++i)
 	               			this.answers[i].question = this.questionId
-	               			axios.post(`${TestingSystemAPI}/api/answers/`, this.answers, {
-					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-					          params: {}
-					        })
-			               .then(response => {
-			               		this.success = true
-			                    this.alert = true
-			                    this.message = 'Вопрос успешно добавлен.'
-			                })
-			               .catch(error => {
-			               		this.success = false
-			                    this.alert = true
-			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-			                })
+
+
+                 		let answersData = new FormData()
+
+		                for (var i = 0; i < this.answers.length; i++)
+		                {
+		                 	answersData.append('image', this.answers[i].image)
+		                 	answersData.append('audio', this.answers[i].audio)
+		                 	answersData.append('text', this.answers[i].text)
+		                 	answersData.append('priority', this.answers[i].priority)
+		                 	answersData.append('correct', this.answers[i].correct)
+		                 	if (this.currentType == 2 && !this.answers[i].correct)
+		                 	{
+		                 		answersData.append('weight', 0)
+		                 		alert('hi')
+		                 	}
+		                 	else answersData.append('weight', this.answers[i].weight)
+		                 	answersData.append('hint', this.answers[i].hint)
+		                 	answersData.append('question', this.questionId)
+		                 }
+
+               			axios.post(`${TestingSystemAPI}/api/answers/`, answersData, {
+				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				          params: {}
+				        })
+		               .then(response => {
+		               		this.successSet = true
+		                    this.alert = true
+		                    this.message = 'Вопрос успешно добавлен.'
+
+		                })
+		               .catch(error => {
+		                    this.alert = true
+		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+		                })
 						
 	                })
 	               .catch(error => {
-	               		this.success = false
 	                    this.alert = true
 	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 	                })
@@ -275,12 +319,12 @@
 				this.answers.push({
                 	image: null,
                 	audio: null,
-                	text: '',
+                	text: null,
                 	priority: this.answers.length+1,
                 	correct: isTrue,
                 	weight: 256,
-                	hint: '',
-                	comment: '',
+                	hint: null,
+                	comment: null,
                 	question: 0,
 					enabledAudio: false,
 					enabledImage: false
@@ -299,31 +343,32 @@
        				this.countAnswers = 2
 
        			this.answers.splice(0)
-       			while (this.answers.length < val)
+       			while (this.answers.length < this.countAnswers)
        					this.pushAnswer()
 				console.log('countAnswers: '+ this.countAnswers)
             	console.log('array len: ' + this.answers.length)
        		},
        		enabledImage: function(val) {
        			if (!val)
-       				this.image = null
+       				this.image = ''
        		},
        		enabledAudio: function(val) {
        			if (!val)
-       				this.audio = null
-       		}
-       },
-       computed: {
+       				this.audio = ''
+       		},
        		attempts: function(val) {
-       			if (this.enabledAttempts)
-       				return val
-       			else return null
+   				if (this.enabledAttempts)
+       				this.attempts = val
+       			else this.attempts = null
        		},
        		timer: function(val) {
-       			if (this.enabledTimer)
-       				return val
-       			else return null
+   				if (this.enabledTimer)
+       				this.timer = val
+       			else this.timer = null
        		}
+       },
+       mounted() {
+       		this.pushAnswer()
        }
 	}
 </script>

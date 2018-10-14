@@ -1,7 +1,7 @@
 <template>
 	<v-layout row wrap>
 		<v-flex xs12>
-			<p class="title text-md-center"> Имя теста</p>
+			<p class="title text-md-center"> {{response.name}}</p>
 		</v-flex>
 		<v-layout row wrap>
         	<v-flex xs12 sm4 class="px-4 py-4">
@@ -9,56 +9,65 @@
 		        	<v-img 
 		        	class="mb-3"
 		        	:aspect-ratio="16/9" 
-		            src="https://images.pexels.com/photos/46710/pexels-photo-46710.jpeg?auto=compress&cs=tinysrgb&h=350"
+		            :src="response.image"
 		            position="center center"
 		            >
 		            </v-img>
 		        </v-flex>
 	            <v-flex xs12>
-	            <v-btn v-if="response.subscribed" round color="primary" dark block large>
-					 Пройти тест
-				</v-btn>
-				<v-btn v-if="!response.subscribed" round color="success" dark block large>
-					 Подписаться
-				</v-btn>
-				<v-btn v-else round color="error" dark block large>
-					 Отписаться
-				</v-btn>
-			  </v-flex>	
+
+	            	<v-flex xs12>
+						<v-alert
+				        :value="alert"
+				        :type="successReq ? 'success' : 'error'"
+				        >
+					        {{alert_message}}
+
+					      	<v-tooltip v-if="!successReq" top>
+						        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+						        <span>Обновить</span>
+						    </v-tooltip>
+					    </v-alert>
+			        </v-flex>	
+
+		            <v-btn v-if="response.subscribed" round color="primary" :to="{ name: 'testing', params: { token: $route.params.token } }" dark block large>
+						 Пройти тест
+					</v-btn>
+					<v-btn v-if="!response.subscribed" @click.native="subscribe()" round color="success" dark block large>
+						 Подписаться
+					</v-btn>
+					<v-btn v-else round color="error" @click.native="unsubscribe()" dark block large>
+						 Отписаться
+					</v-btn>
+				</v-flex>	
 	        </v-flex>
 
 	        <v-flex xs12 sm8>
+	          <v-flex xs12>
+	              <p><strong>Ссылка:</strong> http://web.ru/tests/{{$route.params.token}}</p>
+	          </v-flex>
 			  <v-flex xs12>
-	              <p>Автор: {{response.author}}</p>
+	              <p><strong>Автор:</strong> {{response.author}}</p>
 	          </v-flex>
 	          <v-flex xs12>
-	              <p>Статус: 
+	          	<p>
 	              	<span v-if="!response.subscribed">Не подписан на тест</span>
-	              	<span v-else>Использованные попытки: {{response.attempts}} / {{response.max_attempts}}</span>
+	              	<span v-else><strong>Использованные попытки:</strong> {{response.current_attempt}} / {{response.attempts}}</span>
 	              </p>
 	          </v-flex>
               <v-flex xs12>
-	            <p>Curabitur magna eros, lacinia sed magna eu, aliquet vestibulum dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ut leo dignissim risus pharetra feugiat. Proin volutpat felis massa, sit amet volutpat odio interdum et. Vestibulum imperdiet sapien quis euismod tempor. Mauris tristique id eros ac facilisis. Ut consectetur dictum tincidunt. Duis a convallis nulla, quis sodales lectus. Sed in enim sit amet quam rhoncus rhoncus. Integer ut consectetur magna. Nunc auctor viverra est, et volutpat neque aliquet in. Suspendisse dapibus tristique tincidunt. Mauris ut mi ultrices, rhoncus felis quis, tempor orci. Morbi congue enim quis tellus tristique vestibulum. Proin pharetra velit sed eros sollicitudin molestie.
-
-				Donec blandit dui auctor, euismod nulla sit amet, volutpat dui. Fusce lorem purus, fringilla sed justo in, posuere ornare tellus. Suspendisse sed justo a augue bibendum dignissim. Quisque consequat mattis dolor, id pellentesque neque ultricies in. Nullam a massa ante. Aliquam erat volutpat. Suspendisse ac tempor metus. Vivamus sed sem non turpis semper euismod. Donec tincidunt eu enim id volutpat. Vivamus dictum ullamcorper pellentesque. Integer eget ipsum ut massa vestibulum eleifend id gravida lectus.
+	            <p>{{response.description}}
 				</p>
 	      	  </v-flex>
 	        </v-flex>
 	    </v-layout>
-	        
-		<v-snackbar 
-		:timeout="timeout"
-        bottom="bottom"
-        color="red lighten-1"
-        v-model="snackbar"
-        >
-	      {{ message }}
-	    </v-snackbar>
+	       
 	</v-layout>
 </template>
 
 <script>
     import Axios from 'axios'
+	import router from '@/router'
 	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
 
@@ -67,29 +76,71 @@
 	export default {
 		data() {
 			return {
-				tests: [],
-				timeout: 0,
-				message: '',
+				alert_message: '',
+				alert: false,
+				successReq: false,
 				response: []
 			}
 		},
 		methods: {
             getTestData()
             {
+		        console.log(this.$route.params.token)
             	Axios.get(`${TestingSystemAPI}/api/courses/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-		          params: { 'test_token' : $route.params.token}
+		          params: { 'token' : this.$route.params.token}
 		        }).then(({data}) => {
-		          this.response = data
+		          this.response = data[0]
+		          this.alert = false
+		          this.successReq = true
+		        }).catch(error => {
+		          this.alert = true
+		          this.alert_message = 'Не удалось получить данные теста.'
+		          this.successReq = false
+		          console.log(error)
+		        })
+            },
+            subscribe() {
+            	var token = { 'token' : this.$route.params.token }
+            	Axios.post(`${TestingSystemAPI}/api/course-subsc/`, token, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        }).then(({data}) => {
+		          this.alert = true
+		          this.alert_message = 'Вы успешно подписались!'
+		          this.successReq = true
+		          this.response.subscribed = true
 		        }).catch(error => {
 		          this.snackbar = true
-		          this.message = 'Не удалось получить данные теста'
+		          this.alert_message = 'Не удалось подписаться.'
+		          this.successReq = false
 
 		          console.log(error)
 		        })
-            }
+            },
+            unsubscribe() {
+            	var token = { 'token' : this.$route.params.token }
+            	Axios.post(`${TestingSystemAPI}/api/course-subsc/`, token, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        }).then(({data}) => {
+		          this.alert = true
+		          this.alert_message = 'Вы успешно подписались!'
+		          this.successReq = true
+		          this.response.subscribed = false
+		        }).catch(error => {
+		          this.alert = true
+		          this.alert_message = 'Не удалось отписаться.'
+		          this.successReq = false
+
+		          console.log(error)
+		        })
+            },
+			reloadPage() {
+				window.location.reload(true)
+			}
 		},
-		mount(){
+		mounted(){
 			this.getTestData()
 		}
 	}

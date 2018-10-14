@@ -4,6 +4,7 @@
 			<p class="display-1">Добавленные тесты</p>
 		</v-flex>
 		<v-flex xs12>
+			<v-label>{{notify}}</v-label>
 			 <created-test
 				v-for="test in tests"
 				:token="test.token"
@@ -45,6 +46,7 @@
 			return {
 				tests: [],
 				message: '',
+				notify: '',
 				alert: false
 			}
 		},
@@ -55,6 +57,9 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.tests = data
+		          if (this.tests.length == 0)
+		          	this.notify = 'Нет добавленных тестов.'
+		          else this.notify = 'Вы добавили ' + this.tests.length + ' тестов:'
 		        }).catch(error => {
 		          this.alert = true
 		          this.message = 'Не удалось получить список тестов. Проверьте подключение к сети.'

@@ -29,17 +29,16 @@
 		        </v-flex>
 
 				<v-flex xs12>
-					<p>Всего отмечено: {{questionsChecks.length}}</p>
+					<v-label>Всего отмечено: {{questionsChecks.length}}</v-label>
 					<div class="content-wrapper">
 						<added-question
-						v-for="question in questions"
-						:title="question.title"
-						:text="question.text"
-						:type="question.answer_type"
+						:collection="questions"
 						:withchecks="1"
-						:questionsChecks="questionsChecks[indexOf(question)]"
+						:questionsChecks="questionsChecks"
+						@update:questionsChecks="questionsChecks = $event"
+						@update:collection="toggleShow($event)"
 						></added-question>
-						<p v-if="error">Не удалось загрузить список вопросов.</p>
+						<v-label v-if="error">Не удалось загрузить список вопросов.</v-label>
 					</div>
 				</v-flex>
 
@@ -145,7 +144,7 @@
 		          ></v-text-field>
 		        </v-flex>	
 				<v-flex xs12>
-					<v-btn round color="success" dark large>
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
 						 Создать тест
 					</v-btn>
 				</v-flex>	        		        
@@ -187,6 +186,7 @@
 			    attempts: '',
 			    questions_number: '',
 			    author: '',
+			    description: '',
 			    perfect_mark: 75,
 			    good_mark: 50,
 			    satisfactory_mark: 25,
@@ -204,6 +204,10 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data
+		          for (var i = 0; i < this.questions.length; ++i)
+		          {
+		          	this.questions[i].show = false
+		          }
 		        }).catch(error => {
 		          this.error = true
 		          //this.message = 'Не удалось получить список вопросов'
@@ -217,8 +221,8 @@
             onSubmit() {
                  let formData = new FormData()
 
-                 formData.set('name', this.token)
-                 formData.set('title', this.title)
+                 formData.set('name', this.title)
+                 formData.set('token', this.token)
                  formData.set('attempts', this.attempts)
                  formData.set('questions_number', this.questions_number)
                  formData.set('author', this.author)
@@ -227,6 +231,10 @@
                  formData.set('perfect_mark', this.perfect_mark)
                  formData.set('good_mark', this.good_mark)
                  formData.set('satisfactory_mark', this.satisfactory_mark)
+                 for (var i = 0; i < this.questionsChecks.length; i++)
+                 	formData.append('questions', this.questionsChecks[i])
+
+                 console.log(formData)
 
                  Axios.post(`${TestingSystemAPI}/api/courses/`, formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
@@ -298,6 +306,43 @@
 				transl['ю']='yu'
 				transl['я']='ya'
 				transl[' ']='_'
+				transl['А']='a'
+				transl['Б']='b'
+				transl['В']='v'
+				transl['Г']='g'
+				transl['Д']='d'
+				transl['Е']='e'
+				transl['Ё']='yo'
+				transl['Ж']='zh'
+				transl['З']='z'
+				transl['И']='i'
+				transl['Й']='j'
+				transl['К']='k'
+				transl['Л']='l'
+				transl['М']='m'
+				transl['Н']='n'
+				transl['О']='o'
+				transl['П']='p'
+				transl['Р']='r'
+				transl['С']='s'
+				transl['Т']='t'
+				transl['У']='u'
+				transl['Ф']='f'
+				transl['Х']='kh'
+				transl['Ц']='c'
+				transl['Ч']='ch'
+				transl['Ш']='sh'
+				transl['Щ']='shch'
+				transl['Ъ']=''
+				transl['Ы']='i'
+				transl['Ь']=''
+				transl['Э']='e'
+				transl['Ю']='yu'
+				transl['Я']='ya'
+				transl['/']=''
+				transl['\\']=''
+
+
 				var result=''
 			    for (var i=0; i < text.length; i++) {
 			        if(transl[text[i]]!=undefined)  
@@ -306,7 +351,17 @@
 			        	result += text[i]
     			}
 			    return result
-            }
+            },
+			toggleShow(id) {
+				for (var i = 0; i < this.questions.length; ++i)
+					if (this.questions[i].id == id)
+					{
+						this.questions[i].show = !this.questions[i].show
+						this.questions.push(null)
+						this.questions.pop()
+						return
+					}
+			}
 		},
 		mounted(){
 			this.getAddedQuestions()

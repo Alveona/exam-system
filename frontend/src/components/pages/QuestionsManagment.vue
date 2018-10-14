@@ -16,14 +16,9 @@
 		<v-flex xs12>
 			<p v-if="successLoad">{{success_message}}</p>
 			<added-question
-			v-for="question in questions"
-				:id="question.id"
-				:title="question.title"
-				:text="question.text"
-				:type="question.answer_type"
 				:withchecks="0"
-				:element="questions.indexOf(question)"
 				:collection="questions"
+				@update:collection="toggleShow($event)"
 			></added-question>
 		</v-flex>
 
@@ -32,7 +27,7 @@
 	        :value="alert"
 	        type="error"
 	      >
-	        {{message}}
+	        {{alert_message}}
 
 		      	<v-tooltip top>
 			        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
@@ -69,6 +64,11 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data
+		          for (var i = 0; i < this.questions.length; ++i)
+		          {
+		          	this.questions[i].show = false
+					console.log(this.questions[i].show)
+		          }
 		          this.successLoad = true
 		        }).catch(error => {
 		          this.alert = true
@@ -79,6 +79,16 @@
 			},
 			reloadPage() {
 				window.location.reload(true)
+			},
+			toggleShow(id) {
+				for (var i = 0; i < this.questions.length; ++i)
+					if (this.questions[i].id == id)
+					{
+						this.questions[i].show = !this.questions[i].show
+						this.questions.push(null)
+						this.questions.pop()
+						return
+					}
 			}
 		},
 	    mounted () {
