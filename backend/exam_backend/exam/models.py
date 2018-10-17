@@ -57,7 +57,7 @@ class Answer(models.Model):
     image = models.ImageField(upload_to='answers/', null=True, verbose_name='Изображение')
     audio = models.FileField(upload_to='answers_audio/', null=True)
     hint = models.CharField(max_length=255, null=True)
-    priority = models.IntegerField(null=True)
+    priority = models.IntegerField(blank = True, null=True)
 
     #def __str__(self):
         #return '%s' % (self.id)
@@ -87,7 +87,7 @@ class SessionAnswer(models.Model):  # erased after question finished (i.e. writt
     sessionQuestion = models.ForeignKey(SessionQuestion, on_delete=models.CASCADE, null=True)
     blocked = models.BooleanField(default=False)
     current_result = models.IntegerField(null = True)
-
+    will_send_hint = models.BooleanField(default=False)
 
 # док по intermediate models:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships

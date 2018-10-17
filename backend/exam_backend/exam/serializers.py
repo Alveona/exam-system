@@ -81,7 +81,39 @@ class AnswerInCourseSerializer(serializers.ModelSerializer):
 
 class AnswerSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = Answer
+        fields = '__all__'
 
+class AnswerFormDataSerializer(serializers.ModelSerializer):
+    '''
+    def create(self, validated_data):
+        print(validated_data)
+
+        question_to_parse = validated_data['question']
+        print(question_to_parse)
+        for q in question_to_parse:
+            print(q)
+        text_to_parse = validated_data['text']
+        correct_to_parse = validated_data['correct']
+        weight_to_parse = validated_data['weight']
+        audio_to_parse = validated_data['audio']
+        hint_to_parse = validated_data['hint']
+        priority_to_parse = validated_data['priority']
+
+
+        list_of_created_ids = []
+        for i in range(0, len(question_to_parse)-1):
+            answer = Answer(question = question_to_parse[i], text = text_to_parse[i],
+                            correct = correct_to_parse[i], weight = weight_to_parse[i],
+                            audio = audio_to_parse[i], hint = hint_to_parse[i],
+                            priority = priority_to_parse[i])
+            answer.save()
+            print(answer)
+            list_of_created_ids.append(answer.id)
+        queryset = Answer.objects.all().filter(id__in = list_of_created_ids)
+        return queryset
+    '''
     class Meta:
         model = Answer
         fields = '__all__'
@@ -93,7 +125,11 @@ class CourseSerializer(serializers.ModelSerializer):
         'url': {'view_name': 'courses', 'lookup_field': 'token'}
     }
 
+    current_attempt = serializers.SerializerMethodField()
+
     def create(self, validated_data):
+        questions_to_parse = validated_data['questions']
+        print(questions_to_parse)
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
                         token=validated_data['token'],
@@ -104,9 +140,8 @@ class CourseSerializer(serializers.ModelSerializer):
         course.satisfactory_mark = self.context['request'].data['satisfactory_mark']
         course.save()
         #questions = self.context['request'].data['questions']
-        questions_to_parse = validated_data['questions']
-        print(questions_to_parse)
-        print(type(questions_to_parse))
+        #questions_to_parse = validated_data['questions']
+
         if questions_to_parse:
             for question in questions_to_parse:
                 course.questions.add(question)
@@ -127,10 +162,9 @@ class CourseSerializer(serializers.ModelSerializer):
         pass  # TODO
 
     class Meta:
-        # TODO RETURN 'SUBSCRIBED' FIELD IN JSON
         model = Course
         fields = ('id', 'name', 'description', 'author', 'token', 'image'
-                  , 'questions_number', 'attempts', 'subscribed', 'questions')
+                  , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt')
 
     def get_subscribed(self, obj):
         print(obj)
@@ -143,8 +177,18 @@ class CourseSerializer(serializers.ModelSerializer):
             return False
         return True
 
+    def get_current_attempt(self, obj):
+        sessions = CourseSession.objects.all().filter(course=obj,
+                                                      user=self.context['request'].user, finished=True)
+        attempts = [s.attempt_number for s in [session for session in sessions]]
+        if attempts:
+            return max(attempts)
+        else:
+            return 0
+
 
 class RelationSerializer(serializers.ModelSerializer):
+
     def create(self, validated_data):
         course = Course.objects.all().get(token=self.context['request'].data['token'])
         print(course)
@@ -158,6 +202,13 @@ class RelationSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {'user': {'required': False}, 'course': {'required': False}}
         validators = []  # Remove a default "unique together" constraint.
+
+class RelationUnsubscribeSerializer(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = UserCourseRelation
+        field = '__all__'
 
 
 class CourseCreatedSerializer(serializers.ModelSerializer):
@@ -174,6 +225,45 @@ class CourseAddedSerializer(serializers.ModelSerializer):
         fields = ('token', 'name', 'user', 'description', 'image')
 
 
+class SessionStatsSerializer(serializers.ModelSerializer):
+    perfect_mark = serializers.SerializerMethodField()
+    good_mark = serializers.SerializerMethodField()
+    satisfactory_mark = serializers.SerializerMethodField()
+    session_q = serializers.SerializerMethodField()
+
+    def get_perfect_mark(self, obj):
+        return obj.course.perfect_mark
+
+    def get_good_mark(self, obj):
+        return obj.course.good_mark
+
+    def get_satisfactory_mark(self, obj):
+        return obj.course.satisfactory_mark
+
+    def get_session_q(self, obj):
+        #return SessionQuestion.objects.all().filter(session = obj)
+        serializer = SessionQuestionStatsSerializer(instance = SessionQuestion.objects.all().filter(session = obj), many=True)
+        return serializer.data
+
+    class Meta:
+        model = CourseSession
+        fields = ('perfect_mark', 'good_mark', 'satisfactory_mark', 'session_q')
+
+
+class SessionQuestionStatsSerializer(serializers.ModelSerializer):
+    weight_sum = serializers.SerializerMethodField()
+
+    def get_weight_sum(self, obj):
+        question = obj.question
+        answers = Answer.objects.all().filter(question = question)
+        weight_sum = sum([answer.weight for answer in answers])
+        return weight_sum
+
+    class Meta:
+        model = SessionQuestion
+        fields = ('order_number', 'result', 'weight_sum')
+
+
 class SessionSerializer(serializers.ModelSerializer):
     '''perfect_mark = serializers.SerializerMethodField()
     good_mark = serializers.SerializerMethodField()
@@ -184,13 +274,12 @@ class SessionSerializer(serializers.ModelSerializer):
 
         # DEBUG :
         ''''''''''''
-        CourseSession.objects.all().delete()
-        SessionQuestion.objects.all().delete()
-        SessionAnswer.objects.all().delete()
+        #CourseSession.objects.all().delete()
+        #SessionQuestion.objects.all().delete()
+        #SessionAnswer.objects.all().delete()
         ''''''''''''
 
         course = Course.objects.all().get(token=self.context['request'].data['token'])
-        # print(course.questions)
         not_finished_session = CourseSession.objects.all().filter(course=course,
                                                                   user=self.context['request'].user, finished=False)
         print('not finished session: ', end='')
@@ -203,7 +292,7 @@ class SessionSerializer(serializers.ModelSerializer):
             print('existing sessions: ', end='')
             print(sessions)
 
-            attempts = [attempt_number for attempt_number in [session for session in sessions]]
+            attempts = [s.attempt_number for s in [session for session in sessions]]
             if attempts:
                 number_of_attempts = max(attempts)
             else:
@@ -222,16 +311,19 @@ class SessionSerializer(serializers.ModelSerializer):
                 question = secrets.choice(list_of_questions)
                 session_q = SessionQuestion(question=question,
                                             session=session, order_number=1,
-                                            result=0, attempts_number=0,
+                                            result=0, attempts_number=question.attempts_number,
                                             finished=False)
                 print('s_q: ', end='')
                 print(session_q)
                 session_q.save()
-
-                list_of_all_answers = Answer.objects.all().filter(question=question)
-                print('list of all answers: ', end='')
-                print(list_of_all_answers)
-                list_of_answers = random.sample(set(list_of_all_answers), question.answers_number)
+                list_of_correct_answers = list(Answer.objects.all().filter(question = question, correct = True))
+                print('correct list: ' + str(list_of_correct_answers))
+                list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct = False))
+                print('incorrect list: ' + str(list_of_incorrect_answers))
+                list_of_answers = list_of_correct_answers
+                list_of_answers += random.sample(set(list_of_incorrect_answers),
+                                                           question.answers_number - len(list_of_correct_answers))
+                random.shuffle(list_of_answers)
                 print('list of answers: ', end='')
                 print(list_of_answers)
                 for answer in list_of_answers:
@@ -250,6 +342,30 @@ class SessionSerializer(serializers.ModelSerializer):
 class SessionQuestionSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
 
+    hint = serializers.SerializerMethodField()
+    audio_hint = serializers.SerializerMethodField()
+
+    def get_hint(self, obj):
+        object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True)
+        #print('obj from hint: ' + str(object))
+        if object.first():
+            return object.first().answer.hint
+        else:
+            return ''
+
+    def get_audio_hint(self, obj):
+        object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True)
+        if object.first():
+            if object.first().answer.audio:
+                #return object.first().answer.audio
+                #return None
+                print(object.first().answer.audio)
+                return str('http://172.20.10.2:8000/media/' + str(object.first().answer.audio))
+            else:
+                return None
+        else:
+            return None
+
     class Meta:
         model = SessionQuestion
         fields = '__all__'
@@ -257,48 +373,20 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
 class SessionAnswerSerializer(serializers.ModelSerializer):
     answer = AnswerInCourseSerializer(read_only=True)
+    '''hint = serializers.SerializerMethodField()
+    audio_hint = serializers.SerializerMethodField()
+    
+    def get_hint(self, obj):
+        if obj.will_send_hint == True:
+            return obj.answer.hint
+        else:
+            return ''
 
-    # hint = serializers.SerializerMethodField()
-    # audio_hint = serializers.SerializerMethodField()
-
-    def create(self, validated_data):
-        # course =    CourseSession.objects.all().get(user = self.request.user, course__token =
-        # self.context['request'].data['token'], finished = False)
-        question = SessionQuestion.objects.all().get(id=self.context['request'].data['id'])
-        answers_list = self.context['request'].data['answers']
-        print(answers_list)
-        print('answer_type: ', end='')
-        print(question.question.answer_type)
-        answers_of_question = SessionAnswer.objects.all().filter(sessionQuestion=question, blocked = False)
-        if question.question.answer_type == 1:
-            print(SessionAnswer.objects.all().get(sessionQuestion=question))
-            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question)
-            print('correct answer is ', end='')
-            print(correct_answer.answer.text)
-            if answers_list[0] == correct_answer.answer.text:
-                print('your answer is correct')
-                correct_answer.blocked = True
-                correct_answer.save()
-                question.result += correct_answer.current_result
-                question.save()
-
-                return None
-            else:
-                print('your answer is incorrect')
-                print('previous number of attempts is ', end='')
-                print(question.attempts_number)
-                question.attempts_number = question.attempts_number - 1
-                print('current number of attempts is ', end='')
-                print(question.attempts_number)
-                question.save()
-                correct_answer.current_result = correct_answer.current_result / 2
-                correct_answer.save()
-                return None
-
-
-    # def get_hint(self, obj):
-
-    # def get_audio_hint(self, obj):
+    def get_audio_hint(self, obj):
+        if obj.will_send_hint == True:
+            return obj.answer.audio
+        else:
+            return None'''
 
     class Meta:
         model = SessionAnswer

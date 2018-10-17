@@ -20,12 +20,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'o7bf)lh&=qoyb2got@6)c4acc63ek0)vnk2#ey=d)l3zk5l&qr'
+SECRET_KEY = '' # TODO CHANGE
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "exserver", "10.0.1.4"]
+ALLOWED_HOSTS = ["127.0.0.1", "exserver", "10.0.1.4", "172.20.10.2"]
+INTERNAL_IPS = ["127.0.0.1", "exserver", "10.0.1.4", "172.20.10.2"]
 
 #CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',
     'rest_framework',
     'rest_registration',
     'exam',
@@ -58,12 +60,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 CORS_ORIGIN_WHITELIST = (
     'localhost:8000',
     '10.0.1.4',
-    'exserver'
+    'exserver',
+    '172.20.10.2'
 )
 CORS_ALLOW_METHODS = (
         'GET',
@@ -103,7 +107,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'exam0_db',
         'USER': 'root',
-        'PASSWORD': 'x4D9VxLpgE',
+        'PASSWORD': '', # TODO CHANGE
     }
 }
 
@@ -157,7 +161,7 @@ REST_REGISTRATION = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
