@@ -1,26 +1,27 @@
 <template>
-	<v-layout row>
+	<v-layout row wrap>
+		<v-flex xs12>
+	  <v-layout row wrap v-for="question in collection">
       	<v-flex xs1 v-if="withchecks">
       		<v-layout xs12 justify-center align-center fill-height>
-          		<v-checkbox v-model="questionsChecks" hide-details class="shrink mr-2"></v-checkbox>
+          		<v-checkbox v-model="questionsChecks" :value="question.id" @change="$emit('update:questionsChecks', questionsChecks)" hide-details class="shrink mr-2"></v-checkbox>
      	 	</v-layout>
     	</v-flex>
 	    <v-flex v-if="withchecks ? 'xs11' : 'xs12'">
 	        <v-card class="questionItem">  
-	          <v-card-title primary-title to="{ name: 'editquestion', params: { id: id }}">
-	              <div class="headline">{{title}}
+	          <v-card-title primary-title :to="{ name: 'editquestion', params: { id: question.id }}">
+	              <div class="headline">{{question.title}}
 	              	<span>(Тип ответа: </span>
-					<span v-if="type==1">ввод значения)</span>
-					<span v-else-if="type==2">выбор одного правильного)</span>
-					<span v-else-if="type==3">выбор нескольких правильных)</span>
-					<span v-if="withchecks">{{questionsChecks.length}}</span>
+					<span v-if="question.answer_type==1">ввод значения)</span>
+					<span v-else-if="question.answer_type==2">выбор одного правильного)</span>
+					<span v-else-if="question.answer_type==3">выбор нескольких правильных)</span>
 	              </div>
 	          </v-card-title>
 	  
 				<v-flex xs12>
 					<v-alert
 			        :value="alert"
-			        :type="successDelete ? success : error"
+			        :type="successDelete ? 'success' : 'error'"
 			      >
 			        {{alert_message}}
 
@@ -32,23 +33,23 @@
 		      </v-flex>	
 
 	          <v-card-actions>
-	            <v-btn icon @click="show = !show">
-	              <v-icon>{{ show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
+	            <v-btn icon @click="$emit('update:collection', question.id)">
+	              <v-icon>{{ question.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
 	            </v-btn>
-	            <v-btn v-if="!withchecks" to="{ name: 'editquestion', params: { id: id }}" icon><v-icon>edit</v-icon></v-btn>
-	            <v-btn v-if="!withchecks" @click.native="deleteQuestion(id)" icon><v-icon>delete</v-icon></v-btn>
+	            <v-btn v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>
+	            <v-btn v-if="!withchecks" @click.native="deleteQuestion(question.id)" icon><v-icon>delete</v-icon></v-btn>
 	          </v-card-actions>
 	  
 	          <v-slide-y-transition>
-	            <v-card-text v-show="show">
+	            <v-card-text v-show="question.show">
 	            	<p class="wrappedText">
-		              {{text}}
+		              {{question.text}}
 		          </p>
 	            </v-card-text>
 	          </v-slide-y-transition>
 
 	          <v-snackbar 
-		        bottom="bottom"
+		        top="top"
 		        color="green lighten-1"
 		        v-model="snackbar"
 		        >
@@ -57,7 +58,8 @@
 
 	        </v-card>
 	    </v-flex>
-
+	  </v-layout>
+	</v-flex>
     </v-layout>
 </template>
 
@@ -70,16 +72,14 @@
 	const TestingSystemAPI = connection.server
 
 	export default {
-		props: ['id', 'title', 'text', 'type', 'withchecks', 'questionsChecks', 'element', 'collection'],
+		props: ['withchecks', 'questionsChecks', 'collection'],
 		data() {
 			return {
-				show: false,
 				alert: false,
 				alert_message: '',
 				snackbar: false,
 				snackbar_message: '',
-				successDelete: '',
-				questionsChecks: []
+				successDelete: ''
 			}
 		},
 		methods: {
@@ -102,7 +102,7 @@
 			},
 			reloadPage() {
 				window.location.reload(true)
-			}			
+			}
 		}
 	}
 </script>

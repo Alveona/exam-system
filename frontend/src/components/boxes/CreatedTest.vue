@@ -1,8 +1,9 @@
 <template>
 	<v-layout row wrap>
       <v-flex xs12>
-        <v-card class="testItem px-2 py-2">  
-        	<v-layout row wrap>
+        <v-card class="testItem px-2 py-2" >  
+        	<router-link tag="div" :to="{ name: 'testpage', params: { token: token }}">
+        	<v-layout row wrap class="pointerBlock">
 	        	<v-flex xs12 sm4>
 		        	<v-img
 		        	class="mb-2"
@@ -14,7 +15,7 @@
 		      </v-flex>
 
 				<v-flex xs12 sm8>
-		          <v-card-title :to="{ name: 'testpage', params: { token: token }}" primary-title>
+		          <v-card-title primary-title>
 		            <div>
 		              <div class="headline">{{title}}</div>
 		              <div v-if="added">Автор: {{author}}</div>
@@ -23,12 +24,13 @@
 		      </v-flex>
 
 			</v-layout>
+		</router-link>
 				<v-divider light></v-divider>
 
 				<v-flex xs12>
 					<v-alert
 			        :value="alert"
-			        :type="successDelete ? success : error"
+			        :type="successDelete ? 'success' : 'error'" 
 			      >
 			        {{message}}
 
@@ -74,7 +76,6 @@
 		data() {
 			return {
 				show: false,
-				added: false,
 				successDelete: false,
 				alert: false,
 				message: ''
@@ -108,5 +109,8 @@
 <style>
 	.testItem{
 		margin-top: 10px
+	}
+	.pointerBlock{
+		cursor:pointer;
 	}
 </style>

@@ -75,12 +75,13 @@
 
 	            <v-flex xs12 sm6 xl3>
 	    			<v-layout align-center>
-			          	<v-checkbox v-model="enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
+			          	<v-checkbox v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
 			            <file-input 
 		                    accept="audio/*"
 		                    ref="fileInput"
-                        	@input="getUploadedAudio(answer)"
-				            :dis="!enabledAudio"
+                        	@input="getUploadedAudio($event, answers.indexOf(answer))"
+				            :dis="!answer.enabledAudio"
+				            :checked="answer.enabledAudio"
 				            :label="audioLoadText"
 			            ></file-input>
 			        </v-layout>
@@ -151,9 +152,8 @@
 			            <file-input 
 			            class="fileBtn"
 	                    accept="audio/*"
-	                    v-model="answer.audio"
 	                    ref="fileInput"
-                        @input="getUploadedAudio(answer)"
+                        @input="getUploadedAudio($event, answers.indexOf(answer))"
                         :checked="answer.enabledAudio"
 			            :dis="!answer.enabledAudio"
 			            :label="audioLoadText"
@@ -167,8 +167,7 @@
 			            class="fileBtn"
 	                    accept="image/*"
 	                    ref="fileInput"
-	                    v-model="answer.image"
-                        @input="getUploadedImage(answer)"
+                        @input="getUploadedImage($event, answers.indexOf(answer))"
                         :checked="answer.enabledImage"
 			            :dis="!answer.enabledImage"
 			            :label="imageLoadText"
@@ -248,12 +247,6 @@
 			}
 		},
 		methods: {
-            getUploadedImage(e, answer) {
-                answer.image = e
-            },
-            getUploadedAudio(e, answer) {
-                answer.audio = e
-            },
 			incLCA() {
 				this.localCountAnswers++
 				this.$emit('push')
@@ -284,10 +277,18 @@
 				return false
 			},
 			checkRadios() {
+				if (this.currentType != 2)
+					return
 				for (var i = 0; i < this.answers.length; ++i)
 					if (i == this.oneAnswerRadios)
 						this.answers[i].correct = true
 					else this.answers[i].correct = false
+			},
+			getUploadedAudio(e, index) {
+				this.$emit('update:answersAudio', {'audio' : e, 'index': index})
+			},
+			getUploadedImage(e, index) {
+				this.$emit('update:answersImage', {'image' : e, 'index': index})
 			}
 		},
 		computed: {
@@ -298,6 +299,12 @@
 				set(v){
 					this.$emit('update:countAnswers', v)
 				}
+			}
+		},
+		watch: {
+			currentType: function(val) {
+				if (val == 2)
+					this.checkRadios()
 			}
 		}
 	}

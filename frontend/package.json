@@ -17,6 +17,7 @@
     "node-sass": "^4.9.3",
     "sass-loader": "^7.1.0",
     "vue": "^2.5.2",
+    "vue-audio": "0.0.12",
     "vue-cookie": "^1.1.4",
     "vue-router": "^3.0.1",
     "vuetify": "^1.2.5"
