@@ -332,6 +332,7 @@ class SessionSerializer(serializers.ModelSerializer):
                     session_a.save()
                     print('s_a created: ', end='')
                     print(session_a)
+                    print(' for answer ' + str(answer))
         return session
 
     class Meta:
@@ -360,7 +361,10 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
                 #return object.first().answer.audio
                 #return None
                 print(object.first().answer.audio)
-                return str('http://172.20.10.2:8000/media/' + str(object.first().answer.audio))
+                request = self.context.get('request')
+                audio_url = object.first().answer.audio.url
+                #return str('http://172.20.10.2:8000/media/' + str(object.first().answer.audio))
+                return request.build_absolute_uri(audio_url)
             else:
                 return None
         else:
