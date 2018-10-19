@@ -143,11 +143,24 @@
               		clearable
 		          ></v-text-field>
 		        </v-flex>	
+
 				<v-flex xs12>
 					<v-btn round color="success" @click.native="onSubmit()" dark large>
 						 Создать тест
 					</v-btn>
 				</v-flex>	        		        
+			    
+				<v-flex xs12>
+					<v-alert
+			        :value="alert"
+			        :type="successSet ? 'success' : 'error'"
+			      	>
+			        {{message}}
+
+				    <v-btn v-if="successSet" to="/tests" flat>Вернутьcя к тестам</v-btn>
+				    <v-btn v-if="!successSet" @click.native="onSubmit()" flat>Попробовать еще раз</v-btn>
+			      </v-alert>
+		      </v-flex>	
 
 			</v-layout>
 		</v-container>
@@ -180,6 +193,9 @@
 			    questions: [],
 			    questionsChecks: [],
 			    error : false,
+			    successSet: false,
+			    alert: false,
+			    message: '',
 
 			    title: '',
 			    token: '',
@@ -205,12 +221,9 @@
 		        }).then(({data}) => {
 		          this.questions = data
 		          for (var i = 0; i < this.questions.length; ++i)
-		          {
 		          	this.questions[i].show = false
-		          }
 		        }).catch(error => {
 		          this.error = true
-		          //this.message = 'Не удалось получить список вопросов'
 
 		          console.log(error)
 		        })
@@ -253,21 +266,21 @@
 					          params: {}
 					        })
 			               .then(response => {
-			               		this.success = true
+			               		this.successSet = true
 			                    this.alert = true
-			                    this.message = 'Вопрос успешно добавлен.'
+			                    this.message = 'Тест успешно добавлен.'
 			                })
 			               .catch(error => {
-			               		this.success = false
+			               		this.successSet = false
 			                    this.alert = true
-			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+			                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
 			                })
 						
 	                })
 	               .catch(error => {
-	               		this.success = false
+	               		this.successSet = false
 	                    this.alert = true
-	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
 	                })
             },
             textToTranslit(text) {

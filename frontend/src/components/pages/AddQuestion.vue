@@ -299,6 +299,7 @@
 
 		                })
 		               .catch(error => {
+		               		this.successSet = false
 		                    this.alert = true
 		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 		                })
