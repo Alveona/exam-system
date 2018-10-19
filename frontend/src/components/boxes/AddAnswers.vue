@@ -212,6 +212,7 @@
 
 				<v-flex xs12>
 		          <v-text-field
+		            v-model="answersQty"
 		            type="number"
 		            label="Количество ответов, включаемых в вопрос"
 		            :rules="rulesMaxAns"
@@ -229,7 +230,7 @@
     import FileInput from '@/components/other/FileLoader'
 
 	export default {
-		props: ['currentType', 'countAnswers', 'answers'],
+		props: ['currentType', 'countAnswers', 'answers', 'answersQty'],
 		components: { FileInput },
 		data() {
 			return {
@@ -283,6 +284,8 @@
 					if (i == this.oneAnswerRadios)
 						this.answers[i].correct = true
 					else this.answers[i].correct = false
+				this.answers.push(null)
+				this.answers.pop()
 			},
 			getUploadedAudio(e, index) {
 				this.$emit('update:answersAudio', {'audio' : e, 'index': index})
@@ -313,6 +316,13 @@
 			currentType: function(val) {
 				if (val == 2)
 					this.checkRadios()
+			},
+			countAnswers: function(val) {
+				this.answersQty = val
+				this.$emit('update:answersQty', this.answersQty)
+			},
+			answersQty: function(val) {
+				this.$emit('update:answersQty', val)
 			}
 		}
 	}

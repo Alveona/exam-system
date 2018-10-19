@@ -46,8 +46,8 @@
 		            <v-btn icon @click="show = !show">
 		              <v-icon>{{ show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
 		            </v-btn>
-		            <v-btn v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>
-		            <v-btn v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>
+		            <!--<v-btn v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>-->
+		            <!--<v-btn v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>-->
 		          </v-card-actions>
 		      </v-flex>
 

@@ -57,8 +57,8 @@
 	              	<span v-else><strong>Использованные попытки:</strong> {{response.current_attempt}} / {{response.attempts}}</span>
 	              </p>
 	          </v-flex>
-              <v-flex xs12>
-	            <p>{{response.description}}
+              <v-flex xs12 class="wrapText">
+	            <p >{{response.description}}
 				</p>
 	      	  </v-flex>
 	        </v-flex>
@@ -165,4 +165,7 @@
 </script>
 
 <style>
+.wrapText{
+	word-wrap: break-word;
+}
 </style>

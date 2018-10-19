@@ -41,17 +41,20 @@
 		    </v-data-table>
 		</v-flex>
 
-		<v-flex xs12 sm6 class="px-2">
+		<v-flex xs12 sm6 offset-sm3 class="px-2">
 			<v-btn round color="primary" to="/" dark block large>
 				 На главную
 			</v-btn>
 		</v-flex>
-
+		
+		<!--
 		<v-flex xs12 sm6 class="px-2">
 			<v-btn round color="success" to="/stats" dark block large>
 				 Статистика прохождений
 			</v-btn>
 		</v-flex>		
+		-->
+
 	</v-layout>
 </template>
 

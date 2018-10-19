@@ -118,7 +118,9 @@
 						:currentType="currentType"
 						:countAnswers="countAnswers"
 						:answers="answers"
+						:answersQty="answersQty"
   						@update:countAnswers="countAnswers = $event"
+  						@update:answersQty="answersQty = $event"
   						@push="pushAnswer()"
   						@update:answersAudio="getUploadedAudio($event)"
   						@update:answersImage="getUploadedImage($event)"
@@ -185,6 +187,7 @@
 				countAnswers: 1,
 				attempts: '',
 				timer: '',
+				answersQty: '',
 
       			selectedType: [],
       			answerTypes: [
@@ -249,7 +252,7 @@
                  formData.set('attempts_number', this.attempts)
                  formData.set('timer', this.timer)
                  formData.set('answer_type', this.currentType)
-                 formData.set('answers_number', this.countAnswers)
+                 formData.set('answers_number', this.answersQty)
                  formData.set('difficulty', this.difficulty)
                  formData.set('image', this.image)
                  formData.set('audio', this.audio)
@@ -279,9 +282,7 @@
 		                 	answersData.append('priority', this.answers[i].priority)
 		                 	answersData.append('correct', this.answers[i].correct)
 		                 	if (this.currentType == 2 && !this.answers[i].correct)
-		                 	{
 		                 		answersData.append('weight', 0)
-		                 	}
 		                 	else answersData.append('weight', this.answers[i].weight)
 		                 	answersData.append('hint', this.answers[i].hint)
 		                 	answersData.append('question', this.questionId)
@@ -316,7 +317,7 @@
 				var weight = 256
 				if (this.currentType == 1)
 					isTrue = true
-				if (this.currentType != 1)
+				if (this.currentType == 3)
 					weight = 0
 				this.answers.push({
                 	image: null,

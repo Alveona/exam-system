@@ -36,8 +36,8 @@
 	            <v-btn icon @click="$emit('update:collection', question.id)">
 	              <v-icon>{{ question.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
 	            </v-btn>
-	            <v-btn v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>
-	            <v-btn v-if="!withchecks" @click.native="deleteQuestion(question.id)" icon><v-icon>delete</v-icon></v-btn>
+	            <!--<v-btn v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>-->
+	            <!--<v-btn v-if="!withchecks" @click.native="deleteQuestion(question.id)" icon><v-icon>delete</v-icon></v-btn>-->
 	          </v-card-actions>
 	  
 	          <v-slide-y-transition>

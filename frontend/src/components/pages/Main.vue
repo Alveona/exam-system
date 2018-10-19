@@ -67,8 +67,9 @@
         </v-btn>
   
         <v-card>
+
           <v-list>
-            <v-list-tile>
+            <v-list-tile @click="">
               <v-icon class="mr-3">
                 account_circle
               </v-icon>
@@ -108,8 +109,8 @@
 	      	{ icon: 'done', text: 'Добавленные тесты', link: '/' },
 	        { icon: 'help_outline', text: 'Управление вопросами', link: '/questions' },
 	        { icon: 'toc', text: 'Управление тестами', link: '/tests' },
-	        { icon: 'trending_up', text: 'Статистика', link: '/stats' },
-	        { icon: 'import_contacts', text: 'Руководство пользователя', link: '/guide' }
+	        //{ icon: 'trending_up', text: 'Статистика', link: '/stats' },
+	        //{ icon: 'import_contacts', text: 'Руководство пользователя', link: '/guide' }
 	      ]
 	    }
 	},

@@ -64,8 +64,8 @@
 		</v-flex>
 
 		<v-flex xs12 v-if="question.hint != '' && question.hint != 'null'"> 
-		  <v-alert v-if="question.hint != '' && question.hint != 'null'"
-	        :value="alert"
+		  <v-alert 
+	        :value="true"
 	        type="warning"
 	      >
 	        {{question.hint}}
