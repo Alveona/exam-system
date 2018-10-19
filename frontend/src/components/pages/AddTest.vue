@@ -38,7 +38,7 @@
 						@update:questionsChecks="questionsChecks = $event"
 						@update:collection="toggleShow($event)"
 						></added-question>
-						<v-label v-if="error">Не удалось загрузить список вопросов.</v-label>
+						<v-label v-if="error">Не удалось получить список вопросов. Проверьте подключение к сети.</v-label>
 					</div>
 				</v-flex>
 

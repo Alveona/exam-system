@@ -19,7 +19,9 @@
 	            	<v-flex xs12>
 						<v-alert
 				        :value="alert"
-				        :type="successReq ? 'success' : 'error'"
+				        :type="successReq ? 'success' : infoReq ? 'info' : 'error'"
+        				transition="scale-transition"
+        				outline
 				        >
 					        {{alert_message}}
 
@@ -108,10 +110,12 @@
 		        }).then(({data}) => {
 		          this.alert = true
 		          this.alert_message = 'Вы успешно подписались!'
+		          this.infoReq = false
 		          this.successReq = true
 		          this.response.subscribed = true
 		        }).catch(error => {
-		          this.snackbar = true
+		          this.alert = true
+		          this.infoReq = false
 		          this.alert_message = 'Не удалось подписаться.'
 		          this.successReq = false
 
@@ -125,12 +129,14 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.alert = true
-		          this.alert_message = 'Вы успешно подписались!'
-		          this.successReq = true
+		          this.alert_message = 'Вы отписались от теста.'
+		          this.infoReq = true
+		          this.successReq = false
 		          this.response.subscribed = false
 		        }).catch(error => {
 		          this.alert = true
 		          this.alert_message = 'Не удалось отписаться.'
+		          this.infoReq = false
 		          this.successReq = false
 
 		          console.log(error)
@@ -138,10 +144,22 @@
             },
 			reloadPage() {
 				window.location.reload(true)
+			},
+			hideAlert() {
+				this.alert = false
+			},
+			startTimer() {
+				setTimeout(this.hideAlert, 4000)
 			}
 		},
 		mounted(){
 			this.getTestData()
+		},
+		watch: {
+			alert: function(val) {
+				if (val)
+					this.startTimer()
+			}
 		}
 	}
 </script>

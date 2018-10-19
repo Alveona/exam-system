@@ -49,19 +49,44 @@
         <span class="hidden-sm-and-down">Service Title</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon large @click.native="signout()">
-        <v-icon size="32px">
-        	clear
-        </v-icon>
-      </v-btn>
-      <v-btn icon large>
-        <v-icon size="32px">
-        	account_circle
-        </v-icon>
-      </v-btn>
-      <v-icon size="16px">
-        	arrow_drop_down
-      </v-icon>
+
+
+      <v-menu
+        v-model="menu"
+        :close-on-content-click="false"
+        offset-x
+      >
+        <v-btn
+          slot="activator"
+          large
+          icon
+        >
+          <v-icon size="32px">
+            more_vert
+          </v-icon>
+        </v-btn>
+  
+        <v-card>
+          <v-list>
+            <v-list-tile>
+              <v-icon class="mr-3">
+                account_circle
+              </v-icon>
+              <v-list-tile-title>Настройки профиля</v-list-tile-title>
+            </v-list-tile>
+  
+            <v-list-tile @click="signout()">
+              <v-icon class="mr-3">
+                power_settings_new
+              </v-icon>
+              <v-list-tile-title>Выйти</v-list-tile-title>
+            </v-list-tile>
+          </v-list>
+  
+        </v-card>
+      </v-menu>
+
+
     </v-toolbar>
 
     <v-content>

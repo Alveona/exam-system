@@ -281,7 +281,6 @@
 		                 	if (this.currentType == 2 && !this.answers[i].correct)
 		                 	{
 		                 		answersData.append('weight', 0)
-		                 		alert('hi')
 		                 	}
 		                 	else answersData.append('weight', this.answers[i].weight)
 		                 	answersData.append('hint', this.answers[i].hint)
@@ -314,15 +313,18 @@
 			},
 			pushAnswer() {
 				var isTrue = false
+				var weight = 256
 				if (this.currentType == 1)
 					isTrue = true
+				if (this.currentType != 1)
+					weight = 0
 				this.answers.push({
                 	image: null,
                 	audio: null,
                 	text: null,
                 	priority: this.answers.length+1,
                 	correct: isTrue,
-                	weight: 256,
+                	weight: weight,
                 	hint: null,
                 	comment: null,
                 	question: 0,

@@ -103,12 +103,11 @@
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 v-if="currentType==3">
-		          <v-text-field
+				<v-flex xs12 sm4 v-if="currentType==3" >
+		          <v-text-field :disabled="answer.correct == 0"
 		            type="number"
 		            label="Максимальный балл"
 		            v-model="answer.weight"
-		            :rules="rules"
 		            required
 		  			clearable
 		          ></v-text-field>
@@ -136,6 +135,7 @@
 		            v-if="currentType==3"
 			        :label="isTrueText"
 			        v-model="answer.correct"
+			        @change="changeCheck(answers.indexOf(answer))"
 			      ></v-switch>
 			      <v-radio 
 			        v-if="currentType==2"
@@ -289,6 +289,14 @@
 			},
 			getUploadedImage(e, index) {
 				this.$emit('update:answersImage', {'image' : e, 'index': index})
+			},
+			changeCheck(index){
+				for (var i = 0; i < this.answers.length; ++i)
+					if (i == index)
+					{
+						this.answers[i].weight = this.answers[i].correct ? 256 : 0
+						return
+					}
 			}
 		},
 		computed: {
