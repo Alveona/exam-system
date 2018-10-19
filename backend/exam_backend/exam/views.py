@@ -626,8 +626,9 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                                 correct_not_chosen += 1
                             break
                 else:  # https://stackoverflow.com/questions/653509/breaking-out-of-nested-loops
-                    found_error = True
+
                     continue
+                found_error = True
                 continue
 
             if intermediate_correct_by_priority == should_be_correct:
@@ -708,18 +709,20 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         print('current number of attempts is ', end='')
                         print(question.attempts_number)
                         question.save()
-                    for i in range(1, intermediate_correct):
+                    for i in range(1, len(answers_dict) + 1):
                         # answer = answers.get(answer__priority = i, answer__correct = True)
-                        answer = answers.get(answer__priority=i)
-                        print('going to block ' + str(answer))
-                        if answer and answer.answer.correct is True:
-                            print('blocked')
-                            answer.blocked = True
-                            answer.save()
+                        answer = answers.filter(answer__priority=i)
+                        if answer:
+                            answer = answer.first()
+                            print('going to block ' + str(answer))
+                            if answers_dict[answer.id] is True and answer.answer.correct is True:
+                                print('blocked')
+                                answer.blocked = True
+                                answer.save()
+                                print('is blocked: ' + str(answer.blocked))
+                                continue
                             print('is blocked: ' + str(answer.blocked))
-                            break
-                        print('is blocked: ' + str(answer.blocked))
-
+                    print('ended blocking')
                     for answer in answers.filter(blocked = False):
                         print(str(answer) + ' is blocked: ' + str(answer.blocked))
                         if answer.blocked is False:
