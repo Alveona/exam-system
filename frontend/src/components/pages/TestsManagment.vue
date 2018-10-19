@@ -33,7 +33,7 @@
 	        :value="alert"
 	        type="error"
 	      >
-	        {{message}}
+	        {{alert_message}}
 
 		      	<v-tooltip top>
 			        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
@@ -59,7 +59,7 @@
 		data() {
 			return {
 				tests: [],
-				message: '',
+				alert_message: '',
 				alert: false,
 				successLoad: false
 			}
@@ -74,7 +74,7 @@
 		          this.successLoad = true
 		        }).catch(error => {
 		          this.alert = true
-		          this.message = 'Не удалось получить список тестов'
+		          this.alert_message = 'Не удалось получить список вопросов. Проверьте подключение к сети.'
 
 		          console.log(error)
 		        })

@@ -72,7 +72,7 @@
 		          this.successLoad = true
 		        }).catch(error => {
 		          this.alert = true
-		          this.message = 'Не удалось получить список вопросов. Проверьте подключение к сети.'
+		          this.alert_message = 'Не удалось получить список вопросов. Проверьте подключение к сети.'
 
 		          console.log(error)
 		        })

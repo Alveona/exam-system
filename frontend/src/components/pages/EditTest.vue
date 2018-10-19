@@ -3,7 +3,7 @@
 		<v-container>
 			<v-layout row wrap>
 				<v-flex xs12>
-					<p class="display-1">Редакирование теста</p>
+					<p class="display-1">Редактирование теста</p>
 				</v-flex>
 
 				<v-flex xs12>

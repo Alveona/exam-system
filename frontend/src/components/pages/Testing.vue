@@ -64,8 +64,8 @@
 		</v-flex>
 
 		<v-flex xs12 v-if="question.hint != '' && question.hint != 'null'"> 
-		  <v-alert
-	        :value="true"
+		  <v-alert v-if="question.hint != '' && question.hint != 'null'"
+	        :value="alert"
 	        type="warning"
 	      >
 	        {{question.hint}}
@@ -111,7 +111,8 @@
 				question: [],
 				resAnswers: [],
 				reqAnswers: [],
-				fullAnswer: null
+				fullAnswer: null,
+				alert: false
 			}
 		},
 		methods: {
@@ -138,10 +139,10 @@
 				            params: { 'id' : this.question.id }
 				        }).then((adata) => {
 
-			                console.log(adata)
 				        	this.resAnswers.splice(0)
 				        	this.reqAnswers.splice(0)
 				            this.resAnswers = adata.data
+				            console.log(this.resAnswers)
 
 				            if (this.question.question.answer_type != 1)
 					            for (var i = 0; i < this.resAnswers.length; ++i)
@@ -182,7 +183,7 @@
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        }).then(({data}) => {
-			        	this.getQuestion()
+						window.location.reload(true) 
 			        }).catch(error => {
 			        	console.log(error)
 			        })
@@ -193,7 +194,7 @@
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        }).then(({data}) => {
-			        	this.getQuestion()
+						window.location.reload(true) 
 			        }).catch(error => {
 			        	console.log(error)
 			        })
@@ -204,7 +205,7 @@
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        }).then(({data}) => {
-			        	this.getQuestion()
+						window.location.reload(true) 
 			        }).catch(error => {
 			        	console.log(error)
 			        })

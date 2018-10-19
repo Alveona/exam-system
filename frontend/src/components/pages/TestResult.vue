@@ -14,13 +14,28 @@
 		        <td class="text-xs-center">{{ props.item.result }}</td>
 		        <td class="text-xs-center">{{ props.item.weight_sum }}</td>
 		      </template>
-		      <template slot="footer">
-		        <td colspan="100%">
+		      <template slot="footer" v-if="getPercent() >= response.perfect_mark" >
+		        <td colspan="100%" class="light-green accent-4">
 		          <strong>Оценка: </strong> 
-		          <span v-if="getPercent() >= this.response.perfect_mark">Отлично</span>
-		          <span v-else-if="getPercent() >= this.response.good_mark">Хорошо</span>
-		          <span v-else-if="getPercent() >= this.response.statisfactory_mark">Удовлетворительно</span>
-		          <span v-else>Неудовлетворительно</span>
+		          <span >Отлично</span>
+		        </td>
+		      </template>
+		       <template slot="footer" v-else-if="getPercent() >= response.good_mark" >
+		        <td colspan="100%" class="yellow lighten-1">
+		          <strong>Оценка: </strong> 
+		          <span>Хорошо</span>
+		        </td>
+		      </template>
+		       <template slot="footer" v-else-if="getPercent() >= response.satisfactory_mark">
+		        <td colspan="100%"  class="orange lighten-1">
+		          <strong>Оценка: </strong> 
+		          <span>Удовлетворительно</span>
+		        </td>
+		      </template>
+		       <template slot="footer" v-else >
+		        <td colspan="100%" class="red lighten-1">
+		          <strong >Оценка: </strong> 
+		          <span>Неудовлетворительно</span>
 		        </td>
 		      </template>
 		    </v-data-table>
@@ -107,3 +122,6 @@
 		}
 	}
 </script>
+
+<style>
+</style>

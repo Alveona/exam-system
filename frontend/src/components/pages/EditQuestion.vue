@@ -1,23 +1,23 @@
 <template>
-	<v-form @submit.prevent="onSubmit">
+	<v-form>
 		<v-container>
 			<v-layout row wrap>
-				<h4 class="display-1">Редактирование вопроса</h4>
+				<h4 class="display-1">Добавление нового вопроса</h4>
 				<v-flex xs12>
 		            <v-text-field
 		              label="Краткое название (будет видно только вам)"
+		              v-model="question.title"
 		              required
               		  clearable
-              		  :rules="rules"
+              		  :rules="rulesTitleLength"
               		  box
 		            ></v-text-field>
 		        </v-flex>
 		        <v-flex xs12>
 			        <v-textarea
-			            name="input-7-1"
 			            label="Формулировка вопроса"
-			            hint="Не более 2000 символов"
-          		  		:rules="rules"
+			            v-model="question.text"
+          		  		:rules="rulesQuestionLength"
 			            required
               			clearable
               			box
@@ -27,11 +27,14 @@
 		          <v-flex xs12 sm6 xl3>
 	        			<v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
-			            <v-text-field type='number' 
+			            <v-text-field 
+			            type='number' 
 			            :disabled="!enabledAttempts"
 			            label="Количество попыток"
+			            v-model="question.attempts"
               			clearable
               			box
+              			hint="Если не указать, то закончатся, когда обнулятся баллы"
 			            ></v-text-field>
 				      </v-layout>
 		          </v-flex>
@@ -41,7 +44,9 @@
 			          	<v-checkbox v-model="enabledTimer" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field type='number' 
 			            :disabled="!enabledTimer"
+			            :rules="rulesTimer"
 			            label="Таймер на вопрос"
+			            v-model="question.timer"
               			clearable
               			box
 			            hint="В секундах"
@@ -56,8 +61,9 @@
 			            class="fileBtn"
 	                    accept="image/*"
 	                    ref="fileInput"
-                        @input="getUploadedImage"
+                        @input="getUploadedQImage($event)"
 			            :dis="!enabledImage"
+			            :checked="enabledImage"
 			            :label="imageLoadText"
 			            ></file-input>
 			        </v-layout>
@@ -70,8 +76,9 @@
 			            class="fileBtn"
 	                    accept="audio/*"
 	                    ref="fileInput"
-                        @input="getUploadedAudio"
+                        @input="getUploadedQAudio($event)"
 			            :dis="!enabledAudio"
+			            :checked="enabledAudio"
 			            :label="audioLoadText"
 			            ></file-input>
 			        </v-layout>
@@ -79,41 +86,63 @@
 
 				<v-flex xs10>
 	              <v-slider
-	                v-model="difficulty"
-	                :max="100"
+			        v-model="question.difficulty"
+	                :max="maxDifficulty"
+	                :min="minDifficulty"
 	                label="Сложность вопроса"
 	              ></v-slider>
 	            </v-flex>
 	            <v-flex xs2>
 	              <v-text-field
-	                v-model="difficulty"
+			        v-model="question.difficulty"
 	                type="number"
+	                :rules="rulesDifficulty"
 	                box
 	              ></v-text-field>
 	            </v-flex>
 
 				<v-flex xs12>
 		          <v-select
-		            v-model="currentType"
-		          	@change="changeAnswerType"
+		            v-model="question.answer_type"
 		            :items="answerTypes"
 		            item-value="id"
 		            item-text="val"
 			        label="Тип ответа"
-      		  		:rules="rules"
 		            box
 		            required
 		           ></v-select>
 		        </v-flex>
-				<add-answers 
-					:currentType="currentType"
-					:countAnswers="countAnswers"
-				></add-answers>
+
+		        <v-flex xs12>
+					<add-answers 
+						:currentType="question.answer_type"
+						:countAnswers="countAnswers"
+						:answers="answers"
+  						@update:countAnswers="countAnswers = $event"
+  						@push="pushAnswer()"
+  						@update:answersAudio="getUploadedAudio($event)"
+  						@update:answersImage="getUploadedImage($event)"
+					></add-answers>
+				</v-flex>
+							    
 				<v-flex xs12>
-					<v-btn round color="success" dark large>
-						 Сохранить вопрос
+					<v-alert
+			        :value="alert"
+			        :type="successSet ? 'success' : 'error'"
+			      	>
+			        {{message}}
+
+				    <v-btn v-if="successSet" to="/questions" flat>Вернутьcя к вопросам</v-btn>
+				    <v-btn v-if="!successSet" @click.native="onSubmit()" flat>Попробовать еще раз</v-btn>
+			      </v-alert>
+		      </v-flex>	
+
+		      <v-flex xs12>
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
+						 Добавить вопрос
 					</v-btn>
 				</v-flex>
+
 			</v-layout>
 		</v-container>
 	</v-form>
@@ -121,6 +150,7 @@
 
 <script>
     import axios from 'axios'
+	import router from '@/router'
     import FileInput from '@/components/other/FileLoader.vue'
     import AddAnswers from '@/components/boxes/AddAnswers.vue'
 	import Authentication from '@/components/pages/Authentication'
@@ -129,7 +159,7 @@
 	const TestingSystemAPI = connection.server
 
 	export default {
-        components: {FileInput, AddAnswers},
+        components: { FileInput, AddAnswers },
 
 		data () {
 		    return {
@@ -138,67 +168,181 @@
 			    enabledImage: false,
 			    enabledAudio: false,
 
-      			difficulty: 0,
+				maxDifficulty: 100,
+        		minDifficulty: 1,
+        		maxAttempts: 100,
+        		minAttempts: 1,
+        		minTimer: 10,
+        		maxTimer: 3600,
+        		maxTitleLength: 100,
+        		minTitleLength: 6,
+        		maxQuestionLength: 2000,
+        		minQuestionLength: 12,
+
       			selectedType: [],
-      			currentType: 1,
-				countAnswers: 1,
       			answerTypes: [
 	      			{ id: 1, val: 'Ввод значения'}, 
 	      			{ id: 2, val : 'Выбор одного варианта'}, 
 	      			{ id: 3, val : 'Выбор нескольких вариантов'}
       			],
-        		rules: [ (value) => !!value || 'Это обязательное поле' ],
+
+        		rulesRequired: [ (value) => !!value || 'Это обязательное поле' ],
+        		rulesTitleLength: [ (str) => (str.length >= this.minTitleLength && str.length <= this.maxTitleLength) || 'Допустимая длина: от '+this.minTitleLength + ' до ' + this.maxTitleLength + ' символов' ],
+        		rulesQuestionLength: [ (str) => (str.length >= this.minQuestionLength && str.length <= this.maxQuestionLength) || 'Допустимая длина: от '+this.minQuestionLength + ' до ' + this.maxQuestionLength + ' символов' ],
+        		rulesDifficulty: [ (value) => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty ],
+        		rulesAttempts: [ (value) => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
+        		rulesTimer: [ (value) => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer ],
+        		
+				message: '',
+				alert: false,
+				successSet: false,
+				getQError: false,
+
+				questionId: '',
+				answers: [],
 
                 image: '',
-                imageTitle: '',
-                imageDescription: '',
                 imageLoadText: 'Изображение к вопросу',
 
                 audio: '',
-                audioTitle: '',
-                audioDescription: '',
                 audioLoadText: 'Голосовое воспроизведение',
 		    }
 		  },
 		methods: {
-            getUploadedImage(e) {
+			getQuestion() {
+				Axios.get(`${TestingSystemAPI}/api/questions/`, {
+		            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		            params: { 'id' : this.$route.params.id }
+		        }).then((qdata) => {
+					this.question = qdata.data[0]
+					Axios.get(`${TestingSystemAPI}/api/answers/`, {
+			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			            params: { 'id' : this.$route.params.id }
+			        }).then((adata) => {
+						this.answers = adata.data[0]
+			        }).catch(error => {
+	                    this.alert = true
+	                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
+	                })
+		        }).catch(error => {
+                    this.alert = true
+                    this.message = 'Не удалось получить данные о вопросе. Проверьте подключение к сети.'
+                })
+			},
+            getUploadedQImage(e) {
                 this.image = e
             },
-            getUploadedAudio(e) {
+            getUploadedQAudio(e) {
                 this.audio = e
+            },
+            getUploadedAudio(obj) {
+            	for (var i = 0; i < this.answers.length; ++i)
+            		if (i == obj.index)
+            		{
+            			this.answers[i].audio = obj.audio
+            			this.answers[i].push(null)
+            			this.answers[i].pop()
+            			return
+            		}
+            },
+            getUploadedImage(obj) {
+            	for (var i = 0; i < this.answers.length; ++i)
+            		if (i == obj.index)
+            		{
+            			this.answers[i].image = obj.image
+            			this.answers[i].push(null)
+            			this.answers[i].pop()
+            			return
+            		}
             },
             onSubmit() {
                  let formData = new FormData()
+
+                 formData.set('text', this.question.text)
+                 formData.set('title', this.question.title)
+                 formData.set('attempts_number', this.question.attempts)
+                 formData.set('timer', this.question.timer)
+                 formData.set('answer_type', this.question.answer_type)
+                 formData.set('answers_number', this.countAnswers) //R U SHURE???
+                 formData.set('difficulty', this.question.difficulty)
                  formData.set('image', this.image)
-                 formData.set('imageTitle', this.imageTitle)
-                 formData.set('imageDescription', this.imageDescription)
-
                  formData.set('audio', this.audio)
-                 formData.set('audioTitle', this.audioTitle)
-                 formData.set('audioDescription', this.audioDescription)
+                 var comment = null
+                 if (this.currentType == 1)
+					comment = this.answers[0].comment
+                 formData.set('comment', comment)
 
-                 axios.post(`${TestingSystemAPI}/api/questions/`, formData)
-	               .then(response => {
-	                    // Any Code
+                 axios.patch(`${TestingSystemAPI}/api/questions/`, formData, {
+			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			          params: {}
+			        })
+	               .then((response) => {
+	               		this.questionId = response.data.id
+	               		for (var i = 0; i < this.answers.length; ++i)
+	               			this.answers[i].question = this.questionId
+
+                 		let answersData = new FormData()
+
+		                for (var i = 0; i < this.answers.length; i++)
+		                {
+		                 	answersData.append('image', this.answers[i].image)
+		                 	answersData.append('audio', this.answers[i].audio)
+		                 	answersData.append('text', this.answers[i].text)
+		                 	answersData.append('priority', this.answers[i].priority)
+		                 	answersData.append('correct', this.answers[i].correct)
+		                 	if (this.currentType == 2 && !this.answers[i].correct)
+		                 		answersData.append('weight', 0)
+		                 	else answersData.append('weight', this.answers[i].weight)
+		                 	answersData.append('hint', this.answers[i].hint)
+		                 	answersData.append('question', this.questionId)
+		                 }
+
+               			axios.patch(`${TestingSystemAPI}/api/answers/`, answersData, {
+				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				          params: {}
+				        })
+		               .then(response => {
+		               		this.successSet = true
+		                    this.alert = true
+		                    this.message = 'Вопрос успешно добавлен.'
+
+		                })
+		               .catch(error => {
+		                    this.alert = true
+		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+		                })
+						
 	                })
 	               .catch(error => {
-	                    // Any Code
+	                    this.alert = true
+	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 	                })
             },
-            getQuestionData()
-            {
-            	Axios.get(`${TestingSystemAPI}/api/questions/`, {
-		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-		          params: {}
-		        }).then(({data}) => {
-		          this.tests = data
-		        }).catch(error => {
-		          this.snackbar = true
-		          this.message = 'Не удалось получить список тестов'
+			reloadPage() {
+				window.location.reload(true)
+			},
+			pushAnswer() {
+				var isTrue = false
+				if (this.currentType == 1)
+					isTrue = true
+				this.answers.push({
+                	image: null,
+                	audio: null,
+                	text: null,
+                	priority: this.answers.length+1,
+                	correct: isTrue,
+                	weight: 256,
+                	hint: null,
+                	comment: null,
+                	question: 0,
+					enabledAudio: false,
+					enabledImage: false
+				})
+				console.log('countAnswers: '+ this.countAnswers)
+            	console.log('array len: ' + this.answers.length)
 
-		          console.log(error)
-		        })
-            }
+            	console.log(this.answers)
+			}
        },
        watch: {
        		currentType: function(val){
@@ -206,10 +350,39 @@
        				this.countAnswers = 1
        			else if (val == 2 || val == 3)
        				this.countAnswers = 2
+
+       			this.answers.splice(0)
+       			while (this.answers.length < this.countAnswers)
+       					this.pushAnswer()
+				console.log('countAnswers: '+ this.countAnswers)
+            	console.log('array len: ' + this.answers.length)
+       		},
+       		enabledImage: function(val) {
+       			if (!val)
+       				this.image = ''
+       		},
+       		enabledAudio: function(val) {
+       			if (!val)
+       				this.audio = ''
+       		},
+       		attempts: function(val) {
+   				if (this.enabledAttempts)
+       				this.attempts = val
+       			else this.attempts = null
+       		},
+       		timer: function(val) {
+   				if (this.enabledTimer)
+       				this.timer = val
+       			else this.timer = null
        		}
        },
+       computed: {
+       		countAnswers: function(val) {
+       			return this.answers.length
+       		},
+       },
        mounted() {
-       		this.getQuestionData()
+       		this.getQuestion()
        }
 	}
 </script>
