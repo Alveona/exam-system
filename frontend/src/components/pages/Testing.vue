@@ -160,6 +160,7 @@
 			          console.log(error)
 			        })
 		        }).catch(error => {
+		        	// ОБРАБОТАТЬ ОКОНЧАНИЕ ПОПЫТОК ТЕСТА
 		        	console.log(error)
 		        })
             	
@@ -196,7 +197,7 @@
 			        }).then(({data}) => {
 						window.location.reload(true) 
 			        }).catch(error => {
-			        	console.log(error)
+						window.location.reload(true) 
 			        })
             },
             stopTest(){
@@ -207,7 +208,7 @@
 			        }).then(({data}) => {
 						window.location.reload(true) 
 			        }).catch(error => {
-			        	console.log(error)
+						window.location.reload(true) 
 			        })
             }
 		},
