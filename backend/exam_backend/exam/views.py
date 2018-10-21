@@ -11,6 +11,7 @@ from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer,
     QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
     SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer, \
     SessionStatsSerializer, AnswerFormDataSerializer
+import heapq
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -407,8 +408,10 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             question.finished = True
             question.save()
             answers.delete()
+            # answers.save()
             return Response({'status': 'skiped'})
         if self.request.data['status'] == 3:
+            print(self.request.data)
             question.result = 0
             question.finished = True
             question.save()
@@ -419,10 +422,14 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             current_question = max([session.order_number for session in
                                     SessionQuestion.objects.all().filter(session=session, finished=True)])
             list_of_questions = course.questions.all()
+            print(list_of_questions)
             question = secrets.choice(list_of_questions)
             previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
             found_suitable_question = False
             while not found_suitable_question:
+                print(found_suitable_question)
+                if session.course.questions_number == 1:
+                    return Response({'status': 'aborted'})
                 for sq in previous_session_questions:
                     if question == sq.question:
                         question = secrets.choice(list_of_questions)
@@ -436,6 +443,10 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                                         result=0, attempts_number=question.attempts_number,
                                         finished=True)
             session_q.save()
+            answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
+            answers.delete()
+            # answers.save()
+            print('going to abort')
             return Response({'status': 'aborted'})
 
         if question.question.answer_type == 1:
@@ -537,8 +548,13 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     answers.delete()
                 return Response({'status': 'all ok'})
             else:
+                priority_list = []
+                for answer in answers:
+                    priority_list.append(answer.answer.priority)
+                print('priority_list: ' + str(priority_list))
+                priority = heapq.nsmallest(intermediate_correct_by_priority + 1, priority_list)
                 print(intermediate_correct_by_priority)
-                print('question ' + str(answers.filter(answer__priority=intermediate_correct_by_priority + 1)) + ' failed')
+                print('question ' + str(answers.filter(answer__priority=priority[-1])) + ' failed')
                 print('your answer is incorrect')
 
                 # print(correct_answer.current_result)
@@ -570,7 +586,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                     answers.delete()
                     return Response({'status': 'all results are zero'})
 
-                incor_ans = answers.get(answer__priority=intermediate_correct_by_priority + 1)
+                incor_ans = answers.get(answer__priority=priority[-1])
                 incor_ans.will_send_hint = True
                 incor_ans.save()
                 return Response({'status': 'something is wrong'})
@@ -598,6 +614,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             answers = SessionAnswer.objects.all().filter(sessionQuestion=question).order_by('answer__priority')
             for answer in answers:
                 answer.will_send_hint = False
+                answer.save()
                 print(
                     str(answer) + ' prior: ' + str(answer.answer.priority) + ' correct: ' + str(answer.answer.correct))
 
@@ -641,9 +658,14 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             else:
                 if incorrect_chosen > 0:
                     print(intermediate_correct_by_priority)
-                    print('question ' + str(answers.filter(answer__priority=intermediate_correct_by_priority + 1)) + ' failed')
+                    priority_list = []
+                    for answer in answers:
+                        priority_list.append(answer.answer.priority)
+                    print('priority_list: ' + str(priority_list))
+                    priority = heapq.nsmallest(intermediate_correct_by_priority + 1, priority_list)
+                    print('curr_priorities: ' + str(priority))
+                    print('question ' + str(answers.filter(answer__priority=priority[-1])) + ' failed')
                     print('your answer is incorrect (some incorrect chosen)')
-
                     # print(correct_answer.current_result)
                     if question.attempts_number:
                         print('previous number of attempts is ', end='')
@@ -660,7 +682,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         print('current number of attempts is ', end='')
                         print(question.attempts_number)
                         question.save()
-                    for answer in answers.filter(blocked = False):
+                    for answer in answers.filter(blocked=False):
                         if answer.blocked is False:
                             answer.current_result = answer.current_result // 2
                             answer.save()
@@ -682,16 +704,21 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         question.save()
                         answers.delete()
                         return Response({'status': 'all results are zero'})
-
-                    incor_ans = answers.get(answer__priority=intermediate_correct_by_priority + 1)
+                    priority = heapq.nsmallest(intermediate_correct_by_priority + 1, priority_list)
+                    incor_ans = answers.get(answer__priority=priority[-1])
                     incor_ans.will_send_hint = True
                     incor_ans.save()
                     return Response({'status': 'incorrect chosen'})
                 else:
                     print('int_cor_by_prior ' + str(intermediate_correct_by_priority))
                     print('int_cor ' + str(intermediate_correct))
-
-                    print('question ' + str(answers.filter(answer__priority=intermediate_correct_by_priority + 1)) + ' failed')
+                    priority_list = []
+                    for answer in answers:
+                        priority_list.append(answer.answer.priority)
+                    print('priority_list: ' + str(priority_list))
+                    priority = heapq.nsmallest(intermediate_correct_by_priority + 1, priority_list)
+                    print('curr_priorities: ' + str(priority))
+                    print('question ' + str(answers.filter(answer__priority=priority[-1])) + ' failed')
                     print('your answer is incorrect (not all chosen)')
 
                     # print(correct_answer.current_result)
@@ -711,7 +738,10 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         question.save()
                     for i in range(1, len(answers_dict) + 1):
                         # answer = answers.get(answer__priority = i, answer__correct = True)
-                        answer = answers.filter(answer__priority=i)
+                        priority = heapq.nsmallest(i, priority_list)
+                        print('curr priority_list: ' + str(priority))
+                        answer = answers.filter(answer__priority=priority[-1])
+                        print('curr priority: ' + str(priority[-1]))
                         if answer:
                             answer = answer.first()
                             print('going to block ' + str(answer))
@@ -723,7 +753,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                                 continue
                             print('is blocked: ' + str(answer.blocked))
                     print('ended blocking')
-                    for answer in answers.filter(blocked = False):
+                    for answer in answers.filter(blocked=False):
                         print(str(answer) + ' is blocked: ' + str(answer.blocked))
                         if answer.blocked is False:
                             answer.current_result = answer.current_result // 2
@@ -747,7 +777,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         answers.delete()
                         return Response({'status': 'all results are zero'})
 
-                    incor_ans = answers.get(answer__priority=intermediate_correct_by_priority + 1)
+                    priority = heapq.nsmallest(intermediate_correct_by_priority + 1, priority_list)
+                    incor_ans = answers.get(answer__priority=priority[-1])
                     incor_ans.will_send_hint = True
                     incor_ans.save()
                     return Response({'status': 'not all corrects chosen'})
