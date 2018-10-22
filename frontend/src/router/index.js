@@ -17,6 +17,7 @@ import EditTest from '@/components/pages/EditTest'
 import TestPage from '@/components/pages/TestPage'
 import Testing from '@/components/pages/Testing'
 import TestResult from '@/components/pages/TestResult'
+import TestEndedAttempts from '@/components/pages/TestEndedAttempts'
 
 //Boxes
 import AddedQuestion from '@/components/boxes/AddedQuestion'
@@ -63,6 +64,10 @@ const router = new Router({
       	path: 'tests/:token/result',
       	component: TestResult,
       	name: 'result'
+      },{
+      	path: 'tests/:token/end',
+      	component: TestEndedAttempts,
+      	name: 'end'
       },{
       	path: 'add/test',
       	component: AddTest
