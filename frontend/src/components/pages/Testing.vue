@@ -23,7 +23,7 @@
 			</v-flex>
 		</v-layout>
 
-		<v-flex xs12 class="mb-4" > 
+		<v-flex xs12 v-if="question.question.audio != null" class="mb-4" > 
 			<vue-audio :file="question.question.audio" :autoPlay="question.audio_hint != null ? false : true"/>
 		</v-flex>
 
@@ -160,7 +160,7 @@
 			          console.log(error)
 			        })
 		        }).catch(error => {
-		        	// ОБРАБОТАТЬ ОКОНЧАНИЕ ПОПЫТОК ТЕСТА
+		        	router.push('/tests/'+this.$route.params.token+'/end')
 		        	console.log(error)
 		        })
             	

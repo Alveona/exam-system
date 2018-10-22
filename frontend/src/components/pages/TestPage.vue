@@ -1,5 +1,15 @@
 <template>
 	<v-layout row wrap>
+		<v-layout row wrap>
+			<v-flex xs12 sm3 md2 class="px-2">
+				<v-btn color="primary" to="/" dark flat large>
+					<v-icon class="mr-1">
+						keyboard_backspace
+					</v-icon>
+					 Вернуться
+				</v-btn>
+			</v-flex>
+		</v-layout>
 		<v-flex xs12>
 			<p class="title text-md-center"> {{response.name}}</p>
 		</v-flex>

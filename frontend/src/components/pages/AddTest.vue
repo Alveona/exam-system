@@ -145,12 +145,6 @@
 		        </v-flex>	
 
 				<v-flex xs12>
-					<v-btn round color="success" @click.native="onSubmit()" dark large>
-						 Создать тест
-					</v-btn>
-				</v-flex>	        		        
-			    
-				<v-flex xs12>
 					<v-alert
 			        :value="alert"
 			        :type="successSet ? 'success' : 'error'"
@@ -162,6 +156,12 @@
 			      </v-alert>
 		      </v-flex>	
 
+				<v-flex xs12>
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
+						 Создать тест
+					</v-btn>
+				</v-flex>	        		        
+			    
 			</v-layout>
 		</v-container>
 	</v-form>
@@ -254,30 +254,11 @@
 			          params: {}
 			        })
 	               .then((response) => {
-	               		console.log(response)
-	               		this.questionId = response.data.id
-	               		console.log(this.questionId)
-	               		console.log(this.answers.length)
-	               		console.log(this.answers)
-	               		for (var i = 0; i < this.answers.length; ++i)
-	               			this.answers[i].question = this.questionId
-	               			axios.post(`${TestingSystemAPI}/api/answers/`, this.answers, {
-					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-					          params: {}
-					        })
-			               .then(response => {
-			               		this.successSet = true
-			                    this.alert = true
-			                    this.message = 'Тест успешно добавлен.'
-			                })
-			               .catch(error => {
-			               		this.successSet = false
-			                    this.alert = true
-			                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
-			                })
-						
+	               		this.successSet = true
+	                    this.alert = true
+	                    this.message = 'Тест успешно добавлен.'
 	                })
-	               .catch(error => {
+	               .catch((error) => {
 	               		this.successSet = false
 	                    this.alert = true
 	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
