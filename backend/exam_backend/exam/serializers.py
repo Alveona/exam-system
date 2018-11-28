@@ -17,7 +17,6 @@ class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
     def create(self, validated_data):
-        # print(self.context['request'].data['data1'])
         users = User.objects.all().filter(username=self.context['request'].data['username'])
         if not users:
             user = User.objects.create_user(username=self.context['request'].data['username'],
@@ -379,7 +378,7 @@ class SessionAnswerSerializer(serializers.ModelSerializer):
     answer = AnswerInCourseSerializer(read_only=True)
     '''hint = serializers.SerializerMethodField()
     audio_hint = serializers.SerializerMethodField()
-    
+
     def get_hint(self, obj):
         if obj.will_send_hint == True:
             return obj.answer.hint
@@ -395,3 +394,8 @@ class SessionAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionAnswer
         fields = '__all__'
+
+class CourseTokenAjaxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ('token')
