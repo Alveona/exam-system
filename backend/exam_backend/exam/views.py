@@ -6,31 +6,15 @@ from rest_framework.response import Response
 from rest_framework import serializers
 import secrets, random
 from rest_framework.decorators import action
-from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
+from .models import Question, Answer, Course, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
-    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
+    QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, \
     SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer, \
-    SessionStatsSerializer, AnswerFormDataSerializer
+    SessionStatsSerializer, AnswerFormDataSerializer, CourseTokenAjaxSerializer
 import heapq
 
 
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'patch', 'delete']
 
-    def get_queryset(self):
-        user = self.request.user
-        if self.request.method == "GET":
-            queryset = Profile.objects.all().filter(user=user)
-            return queryset
-
-
-class RegisterViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    http_method_names = ['post']
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
@@ -295,7 +279,7 @@ class SessionViewSet(viewsets.ModelViewSet):
     ''' def get_queryset(self):
         if self.request.method == 'GET':
             session = CourseSession.objects.all().filter(course__token = self.request.query_params.get('token'), finished = True)
-            #sessions_q = 
+            #sessions_q =
         return self.queryset'''
 
 
@@ -396,8 +380,6 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
     serializer_class = SessionAnswerSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post']
-
-    # answer_to_hint = None
 
     def create(self, request, *args, **kwargs):
         question = SessionQuestion.objects.all().get(id=self.request.data['id'])
@@ -787,3 +769,27 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
         question = SessionQuestion.objects.all().get(id=self.request.query_params.get('id'))
         answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
         return answers
+
+class CourseTokenAjaxViewset(viewsets.ModelViewSet):
+        queryset = Course.objects.all()
+        serializer_class = CourseTokenAjaxSerializer
+        permission_classes = (IsAuthenticated,)
+        http_method_names = ['post']
+
+        def isTokenAvaliable(self, token):
+            token = Course.objects.all().filter(token = token)
+            #print(token.first())
+            if(token.first()):
+                #print('token found')
+                return False
+            else:
+                #print('token not found')
+                return True
+
+
+        def create(self, request, *args, **kwargs):
+            token = self.request.data['token']
+            if self.isTokenAvaliable(token):
+                return Response({'avaliable' : 'true'})
+            else:
+                return Response({'avaliable' : 'false'})
