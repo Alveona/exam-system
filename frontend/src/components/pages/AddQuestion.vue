@@ -1,11 +1,20 @@
 <template>
-	<v-form>
+	<v-form ref="addQform" v-model="valid">
 		<v-container>
 			<v-layout row wrap>
 				<h4 class="display-1">Добавление нового вопроса</h4>
 				<v-flex xs12>
+					<v-card class="elevation-1" color="green lighten-4" >
+						<v-flex xs12 pa-2>
+							<v-btn round color="green lighten-1" dark large outline icon>1</v-btn>
+							<span class="body-1">Сейчас вы создаете новый вопрос, который впоследствие может быть добавлен в ваши курсы. В процессе прохождения теста пользователь сможет отвечать в один момент времени только на один вопрос. </span>
+						</v-flex>
+					</v-card>
+				</v-flex>
+				<v-flex xs12>
 		            <v-text-field
-		              label="Краткое название (будет видно только вам)"
+		              label="Краткое название вопроса"
+          		      hint="Это название будет видно только вам в вашем списке добавленных вопросов для удобства навигации по ним."
 		              v-model="title"
 		              required
               		  clearable
@@ -18,23 +27,34 @@
 			            label="Формулировка вопроса"
 			            v-model="text"
           		  		:rules="rulesQuestionLength"
+          		  		hint="Например, 'Найдите корень уравнения 2x - 5 = 14.'"
 			            required
               			clearable
               			box
 			          ></v-textarea>
 		        </v-flex>
+				<v-flex xs12>
+					<v-card class="elevation-1" color="blue lighten-4" >
+						<v-flex xs12 pa-2>
+							<v-btn round color="info" dark large outline icon>2</v-btn>
+							<span>Следующие поля не являются обязательными. Отметьте галочки напротив тех полей, которые вы хотите указать для вашего нового вопроса.</span>
+						</v-flex>
+					</v-card>
+				</v-flex>
 
 		          <v-flex xs12 sm6 xl3>
 	        			<v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field 
-			            type='number' 
-			            :disabled="!enabledAttempts"
-			            label="Количество попыток"
-			            v-model="attempts"
-              			clearable
-              			box
-              			hint="Если не указать, то закончатся, когда обнулятся баллы"
+				            type='number' 
+				            :disabled="!enabledAttempts"
+	          		  		:rules="rulesAttempts"
+				            label="Количество попыток"
+				            v-model="attempts"
+	              			clearable
+	              			box
+	              			hint="Если не указать, то закончатся, когда обнулятся баллы"
+	              			persistent-hint
 			            ></v-text-field>
 				      </v-layout>
 		          </v-flex>
@@ -101,6 +121,15 @@
 	              ></v-text-field>
 	            </v-flex>
 
+				<v-flex xs12 >
+					<v-card class="elevation-1" color="yellow lighten-4" >
+						<v-flex xs12 pa-2>
+							<v-btn round color="warning" dark large outline icon>3</v-btn>
+							<span>Далее выберите один из трех типов ответов, которые должен дать пользователь на вопрос. Тип "ввод значения" означает, что пользователь должен ввести ответ сам. Тип "выбор одного варианта" означает, что у пользователя будет выбор из нескольких ответов, и он должен указать только один верный. Тип "выбор нескольких вариантов" означает, что у пользователя будет выбор из нескольких ответов, и он должен отметить среди них верные (должно быть от 1 верного варианта до количества, равного количеству вариантов ответов). Далее заполните поля, которые касаются ответа(ов). </span>
+						</v-flex>
+					</v-card>
+				</v-flex>
+
 				<v-flex xs12>
 		          <v-select
 		            v-model="currentType"
@@ -131,15 +160,16 @@
 					<v-alert
 			        :value="alert"
 			        :type="successSet ? 'success' : 'error'"
+        			transition="scale-transition"
 			      	>
 			        {{message}}
 
 				    <v-btn v-if="successSet" to="/questions" flat>Вернутьcя к вопросам</v-btn>
 				    <v-btn v-if="!successSet" @click.native="onSubmit()" flat>Попробовать еще раз</v-btn>
-			      </v-alert>
-		      </v-flex>	
+			        </v-alert>
+		        </v-flex>	
 
-		      <v-flex xs12>
+		        <v-flex xs12>
 					<v-btn round color="success" @click.native="onSubmit()" dark large>
 						 Добавить вопрос
 					</v-btn>
@@ -206,6 +236,7 @@
 				message: '',
 				alert: false,
 				successSet: false,
+				valid: false,
 
 				questionId: '',
 				answers: [],
@@ -245,23 +276,29 @@
             		}
             },
             onSubmit() {
-                 let formData = new FormData()
 
-                 formData.set('text', this.text)
-                 formData.set('title', this.title)
-                 formData.set('attempts_number', this.attempts)
-                 formData.set('timer', this.timer)
-                 formData.set('answer_type', this.currentType)
-                 formData.set('answers_number', this.answersQty)
-                 formData.set('difficulty', this.difficulty)
-                 formData.set('image', this.image)
-                 formData.set('audio', this.audio)
-                 var comment = null
-                 if (this.currentType == 1)
+	        	if (!this.$refs.addQform.validate())
+               		this.successSet = false
+                    this.alert = true
+                    this.message = 'Не все обязательные поля были заполнены.'
+	        		return
+                let formData = new FormData()
+
+                formData.set('text', this.text)
+                formData.set('title', this.title)
+                formData.set('attempts_number', this.attempts)
+                formData.set('timer', this.timer)
+                formData.set('answer_type', this.currentType)
+                formData.set('answers_number', this.answersQty)
+                formData.set('difficulty', this.difficulty)
+                formData.set('image', this.image)
+                formData.set('audio', this.audio)
+                var comment = null
+                if (this.currentType == 1)
 					comment = this.answers[0].comment
-                 formData.set('comment', comment)
+                formData.set('comment', comment)
 
-                 axios.post(`${TestingSystemAPI}/api/questions/`, formData, {
+                axios.post(`${TestingSystemAPI}/api/questions/`, formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        })
@@ -337,6 +374,12 @@
             	console.log('array len: ' + this.answers.length)
 
             	console.log(this.answers)
+			},
+			hideAlert() {
+				this.alert = false
+			},
+			startTimer() {
+				setTimeout(this.hideAlert, 4000)
 			}
        },
        watch: {
@@ -360,6 +403,16 @@
        			if (!val)
        				this.audio = ''
        		},
+       		enabledAttempts: function(val) {
+       			if (val)
+       				this.attempts = 3
+       			else this.attempts = ''
+       		},
+       		enabledTimer: function(val) {
+       			if (val)
+       				this.timer = 60
+       			else this.timer = ''
+       		},
        		attempts: function(val) {
    				if (this.enabledAttempts)
        				this.attempts = val
@@ -369,7 +422,11 @@
    				if (this.enabledTimer)
        				this.timer = val
        			else this.timer = null
-       		}
+       		},
+			alert: function(val) {
+				if (val)
+					this.startTimer()
+			}
        },
        mounted() {
        		this.pushAnswer()
