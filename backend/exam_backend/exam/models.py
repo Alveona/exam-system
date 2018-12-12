@@ -2,17 +2,6 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
-    activity = models.CharField(max_length=255, null=True)  # job or university
-    image = models.ImageField(upload_to='users/', null=True)
-    phone = models.CharField(max_length=16, null=True)
-    group = models.CharField(max_length=255, null=True)
-    #username = models.CharField(max_length=255, default='')  # is meant to be empty
-    #password = models.CharField(max_length=255, default='')  # is meant to be empty
-
-
 class Question(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=255, null=True)
@@ -25,6 +14,7 @@ class Question(models.Model):
     audio = models.FileField(upload_to='questions_audio/', null=True)
     attempts_number = models.IntegerField(null=True)
     timer = models.IntegerField(null=True)  # in seconds
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return '%s' % (self.title)
@@ -40,10 +30,12 @@ class Course(models.Model):
     questions_number = models.IntegerField(null=True)
     attempts = models.IntegerField(null=True)
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
-                                  through='UserCourseRelation', related_name='user')  # нестандартная таблица отношений
+                                  through='UserCourseRelation', related_name='user')  # unusual relation table
     perfect_mark = models.IntegerField(null=True)  # percentage
     good_mark = models.IntegerField(null=True)
     satisfactory_mark = models.IntegerField(null=True)
+    deleted = models.BooleanField(default=False)
+
 
     def __str__(self):
         return '%s' % (self.name)
@@ -82,18 +74,18 @@ class SessionQuestion(models.Model):
         return '%s' % (self.question)
 
 
-class SessionAnswer(models.Model):  # erased after question finished (i.e. written smth in SessionQuestion.Result
+class SessionAnswer(models.Model):  # erased after question finished (i.e. written smth in SessionQuestion.Result)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True)
     sessionQuestion = models.ForeignKey(SessionQuestion, on_delete=models.CASCADE, null=True)
     blocked = models.BooleanField(default=False)
     current_result = models.IntegerField(null = True)
     will_send_hint = models.BooleanField(default=False)
 
-# док по intermediate models:
+# intermediate models doc:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships
 
-class UserCourseRelation(models.Model):  # relation-table с доп. параметрами
+class UserCourseRelation(models.Model):  # relation-table with extra fields
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE, )  # явное указание связи с джанго-юзером
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, )  # явное указание связи с курсом
+                             on_delete=models.CASCADE, )  # implicit link to django user
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, )  # implicit link to django user
     access = models.IntegerField(blank=True)  # 0 - user, 1 - manager

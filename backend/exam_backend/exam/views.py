@@ -32,7 +32,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
             queryset = Question.objects.all().filter(id=self.request.query_params.get('id'),
                                                      user=user)
             return queryset
-        if user.is_superuser:
+        if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
             queryset = Question.objects.all()
             return queryset
         return Question.objects.all().filter(user=user)
@@ -81,7 +81,9 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         return Answer.objects.all().filter(question__user=user)
 
     def create(self, request, *args, **kwargs):
-        # print(self.request.data)
+        # here we parse all answers came after the question
+        # we use form-data as there are files to upload
+        # TODO: look at https://www.django-rest-framework.org/api-guide/parsers/#formparser
         _dict = dict(self.request.data)
         print(_dict)
         question_to_parse = []
@@ -92,7 +94,6 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         hint_to_parse = []
         priority_to_parse = []
         image_to_parse = []
-
         for value in _dict['question']:
             question_to_parse.append(value)
         for value in _dict['text']:
@@ -111,25 +112,24 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         for value in _dict['priority']:
             priority_to_parse.append(value)
         print('len: ' + str(len(question_to_parse)))
-        # list_of_created_ids = []
-        for i in range(0, len(question_to_parse)):
-            print(i)
-            question = Question.objects.all().get(id=question_to_parse[i])
-            answer = Answer(question=question, text=text_to_parse[i],
-                            correct=correct_to_parse[i], weight=weight_to_parse[i],
-                            audio=audio_to_parse[i], hint=hint_to_parse[i],
-                            priority=priority_to_parse[i], image=image_to_parse[i])
-            answer.save()
-            print(answer)
-            # list_of_created_ids.append(answer.id)
 
-        '''
-        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)'''
-        return Response(status=status.HTTP_201_CREATED)
+        successfully_created_answers = [] # used to easily revert all creates if exception occured
+        try:
+            for i in range(0, len(question_to_parse)):
+                question = Question.objects.all().get(id=question_to_parse[i])
+                answer = Answer(question=question, text=text_to_parse[i],
+                                correct=correct_to_parse[i], weight=weight_to_parse[i],
+                                audio=audio_to_parse[i], hint=hint_to_parse[i],
+                                priority=priority_to_parse[i], image=image_to_parse[i])
+                answer.save()
+                successfully_created_answers.append(answer)
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            print('Unable to create object, clearing all them up')
+            for ans in successfully_created_answers:
+                ans.delete()
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -190,8 +190,8 @@ class CourseViewSet(viewsets.ModelViewSet):
         return Course.objects.all()
 
     def destroy(self, request, *args, **kwargs):
+        # if self.request.method == "DELETE":
         instance = self.get_object()
-        print('deleting course')
         UserCourseRelation.objects.all().filter(course=instance).delete()
         CourseSession.objects.all().filter(course=instance).delete()
         Course.objects.all().get(token=instance.token).delete()
@@ -741,7 +741,10 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                             answer.current_result = answer.current_result // 2
                             answer.save()
                         print('current result of answer is ' + str(answer.current_result))
-                        # answer.save() # https://code.djangoproject.com/ticket/27335?cversion=0&cnum_hist=3
+                        # answer.save()
+                        # well, idk why but in case of unnecessary(extra) savings just in case, it drops
+                        # some field's values to default, similar to described here
+                        # https://code.djangoproject.com/ticket/27335?cversion=0&cnum_hist=3
 
                     result_sum = 0
                     blocked_sum = 0
