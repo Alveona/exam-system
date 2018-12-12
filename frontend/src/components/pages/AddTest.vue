@@ -109,7 +109,7 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Отлично'"
-		            :rules="rulesPercents"
+		            :rules="rulesPerfectMark"
 		            hint="В процентах (%)"
 		            v-model="perfect_mark"
 		            box
@@ -122,7 +122,7 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Хорошо'"
-		            :rules="rulesPercents"
+		            :rules="rulesGoodMark"
 		            v-model="good_mark"
 		            hint="В процентах (%)"
 		            box
@@ -136,7 +136,7 @@
 		            type="number"
 		            label="Оценка 'Удовлетворительно'"
 		            v-model="satisfactory_mark"
-		            :rules="rulesPercents"
+		            :rules="rulesSatisfactoryMark"
 		            hint="В процентах (%)"
 		            box
 		            required
@@ -144,12 +144,6 @@
 		          ></v-text-field>
 		        </v-flex>	
 
-				<v-flex xs12>
-					<v-btn round color="success" @click.native="onSubmit()" dark large>
-						 Создать тест
-					</v-btn>
-				</v-flex>	        		        
-			    
 				<v-flex xs12>
 					<v-alert
 			        :value="alert"
@@ -162,6 +156,12 @@
 			      </v-alert>
 		      </v-flex>	
 
+				<v-flex xs12>
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
+						 Создать тест
+					</v-btn>
+				</v-flex>	        		        
+			    
 			</v-layout>
 		</v-container>
 	</v-form>
@@ -186,7 +186,12 @@
                 image: '',
                 imageLoadText: 'Изображение к тесту',
 
-                rulesPercents: [(value)=> (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
+                rulesPerfectMark: [(value) => (value > this.good_mark) || 'Значение должно быть выше, чем значение оценки "Хорошо"',
+                				   (value) => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
+                rulesGoodMark: [(value) => (value < this.perfect_mark && value > this.satisfactory_mark) || 'Значение должно быть между значениями оценок "Отлично" и "Удовлетворительно"', 
+                			    (value) => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
+                rulesSatisfactoryMark: [(value) => (value < this.good_mark) || 'Значение должно быть ниже, чем значение оценки "Хорошо"',
+                						(value) => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
         		rulesAttempts: [ (value) => (value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
 
 			    enabledImage: false,
@@ -209,7 +214,7 @@
 			    max_percent: 100,
 			    min_percent: 0,
         		maxAttempts: 100,
-        		minAttempts: 1,
+        		minAttempts: 0,
 		    }
 		},
 		methods: {
@@ -254,30 +259,11 @@
 			          params: {}
 			        })
 	               .then((response) => {
-	               		console.log(response)
-	               		this.questionId = response.data.id
-	               		console.log(this.questionId)
-	               		console.log(this.answers.length)
-	               		console.log(this.answers)
-	               		for (var i = 0; i < this.answers.length; ++i)
-	               			this.answers[i].question = this.questionId
-	               			axios.post(`${TestingSystemAPI}/api/answers/`, this.answers, {
-					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-					          params: {}
-					        })
-			               .then(response => {
-			               		this.successSet = true
-			                    this.alert = true
-			                    this.message = 'Тест успешно добавлен.'
-			                })
-			               .catch(error => {
-			               		this.successSet = false
-			                    this.alert = true
-			                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
-			                })
-						
+	               		this.successSet = true
+	                    this.alert = true
+	                    this.message = 'Тест успешно добавлен.'
 	                })
-	               .catch(error => {
+	               .catch((error) => {
 	               		this.successSet = false
 	                    this.alert = true
 	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
