@@ -1,5 +1,5 @@
 <template>
-	<v-form @submit.prevent="onSubmit">
+	<v-form v-model="valid" ref="addTform">
 		<v-container>
 			<v-layout row wrap>
 				<v-flex xs12>
@@ -10,8 +10,7 @@
 		            <v-text-field
 		              label="Название"
 		              required
-              		  clearable
-              		  :rules="rules"
+              		  :rules="[rules.required, rules.title]"
               		  v-model="title"
 		            ></v-text-field>
 		        </v-flex>
@@ -21,10 +20,9 @@
 		              label="Ссылка на курс"
 		              placeholder="your-test"
 		              required
-              		  clearable
             		  prefix="/"
               		  v-model="token"
-              		  :rules="rules"
+              		  :rules="[rules.required, rules.token]"
 		            ></v-text-field>
 		        </v-flex>
 
@@ -46,9 +44,8 @@
 			        <v-textarea
 			            label="Описание теста"
 			            v-model="description"
-          		  		:rules="rules"
+          		  		:rules="[rules.required, rules.description]"
 			            required
-              			clearable
               			box
 			          ></v-textarea>
 		        </v-flex>
@@ -57,11 +54,9 @@
 		          <v-text-field
 		            type="number"
 		            label="Количество вопросов"
-		            :rules="rules"
+		            :rules="[rules.q_number_min, rules.q_number_max]"
 		            v-model="questions_number"
-		            hint="Не более, чем число вопросов, выбранных выше"
 		            required
-              		clearable
 		          ></v-text-field>
 		        </v-flex>
 
@@ -70,8 +65,7 @@
 		              label="Автор курса"
 		              v-model="author"
 		              required
-		              :rules="rules"
-              		  clearable
+		              :rules="[rules.required, rules.author]"
 		            ></v-text-field>
 		        </v-flex>
 
@@ -79,10 +73,9 @@
 		          <v-text-field
 		            type="number"
 		            label="Количество попыток"
-		            :rules="rulesAttempts"
+		            :rules="[rules.required, rules.attempts]"
 		            v-model="attempts"
 		            required
-              		clearable
 		          ></v-text-field>
 		        </v-flex>
 
@@ -109,12 +102,11 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Отлично'"
-		            :rules="rulesPerfectMark"
+		            :rules="[rules.required, rules.percents, rules.perfect]"
 		            hint="В процентах (%)"
 		            v-model="perfect_mark"
 		            box
 		            required
-              		clearable
 		          ></v-text-field>
 		        </v-flex>
 
@@ -122,12 +114,11 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Хорошо'"
-		            :rules="rulesGoodMark"
+		            :rules="[rules.required, rules.percents, rules.good]"
 		            v-model="good_mark"
 		            hint="В процентах (%)"
 		            box
 		            required
-              		clearable
 		          ></v-text-field>
 		        </v-flex>
 
@@ -136,11 +127,10 @@
 		            type="number"
 		            label="Оценка 'Удовлетворительно'"
 		            v-model="satisfactory_mark"
-		            :rules="rulesSatisfactoryMark"
+		            :rules="[rules.required, rules.percents, rules.satisfactory]"
 		            hint="В процентах (%)"
 		            box
 		            required
-              		clearable
 		          ></v-text-field>
 		        </v-flex>	
 
@@ -182,17 +172,9 @@
 		data () {
 		    return {
         		rules: [ (value) => !!value || 'Это обязательное поле' ],
-
+        		valid: false,
                 image: '',
                 imageLoadText: 'Изображение к тесту',
-
-                rulesPerfectMark: [(value) => (value > this.good_mark) || 'Значение должно быть выше, чем значение оценки "Хорошо"',
-                				   (value) => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
-                rulesGoodMark: [(value) => (value < this.perfect_mark && value > this.satisfactory_mark) || 'Значение должно быть между значениями оценок "Отлично" и "Удовлетворительно"', 
-                			    (value) => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
-                rulesSatisfactoryMark: [(value) => (value < this.good_mark) || 'Значение должно быть ниже, чем значение оценки "Хорошо"',
-                						(value) => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent],
-        		rulesAttempts: [ (value) => (value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
 
 			    enabledImage: false,
 			    questions: [],
@@ -215,6 +197,31 @@
 			    min_percent: 0,
         		maxAttempts: 100,
         		minAttempts: 0,
+        		maxAuthorLen: 50,
+        		minAuthorLen: 10,
+        		minDescrLen: 50,
+        		maxDescrLen: 2000,
+        		minTitleLen: 8,
+        		maxTitleLen: 100,
+        		minTokenLen: 8,
+        		maxTokenLen: 50,
+
+
+                rules: {
+                	required: value => !!value || 'Это необходимое поле',
+                	percents: value => (value >= this.min_percent && value <= this.max_percent) || 'Введите значение от ' + this.min_percent + ' до ' + this.max_percent,
+                	perfect: value => (value > this.good_mark && value > this.satisfactory_mark) || 'Значение должно быть выше, чем значение оценки "Хорошо"',
+                	good: value => (value < this.perfect_mark && value > this.satisfactory_mark) || 'Значение должно быть между значениями оценок "Отлично" и "Удовлетворительно"',
+                	satisfactory: value => (value < this.good_mark && value < this.perfect_mark) || 'Значение должно быть ниже, чем значение оценки "Хорошо"',
+                	attempts: value => (value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts,
+                	author: value => (value.length >= this.minAuthorLen && value.length <= this.maxAuthorLen) || 'Длина поля должна быть в диапазоне от '+this.minAuthorLen +' до '+this.maxAuthorLen + ' символов',
+                	q_number_min: val => val > 0 || 'Значение должно быть больше 0',
+                	q_number_max: val => val <= this.questionsChecks.length || 'Должно быть не более, чем число вопросов, выбранных выше',
+                	description: val => (val.length >= this.minDescrLen && val.length <= this.maxDescrLen) || 'Длина текста должна быть в диапазоне от '+this.minDescrLen+' до '+this.maxDescrLen + ' символов',
+                	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
+                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина токена должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов',
+                },
+
 		    }
 		},
 		methods: {
@@ -237,6 +244,11 @@
                 this.image = e
             },
             onSubmit() {
+	        	if (!this.$refs.addTform.validate())
+               		this.successSet = false
+                    this.alert = true
+                    this.message = 'Не все обязательные поля были заполнены.'
+	        		return
                  let formData = new FormData()
 
                  formData.set('name', this.title)
@@ -368,7 +380,16 @@
 		watch: {
 			title: function(val) {
 				this.token = this.textToTranslit(val)
-			}
+			},
+			satisfactory_mark: function(val) {
+				console.log('s: '+val + ' g: ' + this.good_mark + ' p: ' + this.perfect_mark)
+			},
+			good_mark: function(val) {
+				console.log('s: '+this.satisfactory_mark + ' g: ' + val + ' p: ' + this.perfect_mark)
+			},
+			perfect_mark: function(val) {
+				console.log('s: '+ this.satisfactory_mark + ' g: ' + this.good_mark + ' p: ' + val)
+			},
 		}
     }
 	
