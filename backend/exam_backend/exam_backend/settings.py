@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_registration',
     'exam',
+    'exam_auth',
 ]
 if DEBUG is True:
      INSTALLED_APPS += ('corsheaders', )
@@ -184,4 +185,3 @@ STATICFILES_DIRS = [
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=14)
 }
-

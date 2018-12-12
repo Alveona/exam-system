@@ -6,31 +6,15 @@ from rest_framework.response import Response
 from rest_framework import serializers
 import secrets, random
 from rest_framework.decorators import action
-from .models import Question, Answer, Course, Profile, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
+from .models import Question, Answer, Course, UserCourseRelation, CourseSession, SessionAnswer, SessionQuestion
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
-    QuestionListSerializer, ProfileSerializer, CourseCreatedSerializer, RelationSerializer, \
+    QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, \
     SessionSerializer, SessionQuestionSerializer, SessionAnswerSerializer, RelationUnsubscribeSerializer, \
     SessionStatsSerializer, AnswerFormDataSerializer, CourseTokenAjaxSerializer
 import heapq
 
 
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'patch', 'delete']
 
-    def get_queryset(self):
-        user = self.request.user
-        if self.request.method == "GET":
-            queryset = Profile.objects.all().filter(user=user)
-            return queryset
-
-
-class RegisterViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    http_method_names = ['post']
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
