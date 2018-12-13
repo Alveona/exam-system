@@ -64,6 +64,7 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data
+		          this.questions.reverse()
 		          for (var i = 0; i < this.questions.length; ++i)
 		          {
 		          	this.questions[i].show = false

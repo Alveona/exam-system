@@ -21,7 +21,7 @@
 				:token="test.token"
 				:title="test.name"
 				:description="test.description"
-				:image="test.image"
+				:image="!!test.image ? test.image : emptyPic"
 				:added="0"
 				:element="tests.indexOf(test)"
 				:collection="tests"
@@ -61,7 +61,8 @@
 				tests: [],
 				alert_message: '',
 				alert: false,
-				successLoad: false
+				successLoad: false,
+				emptyPic: require('@/assets/images/no_image.png')
 			}
 		},
 		methods: {
@@ -71,6 +72,7 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.tests = data
+		          this.tests.reverse()
 		          this.successLoad = true
 		        }).catch(error => {
 		          this.alert = true
