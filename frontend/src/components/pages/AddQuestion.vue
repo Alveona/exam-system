@@ -278,10 +278,12 @@
             onSubmit() {
 
 	        	if (!this.$refs.addQform.validate())
+	        	{
                		this.successSet = false
                     this.alert = true
                     this.message = 'Не все обязательные поля были заполнены.'
 	        		return
+	        	}
                 let formData = new FormData()
 
                 formData.set('text', this.text)
