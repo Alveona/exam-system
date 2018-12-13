@@ -32,14 +32,20 @@ class QuestionViewSet(viewsets.ModelViewSet):
             queryset = Question.objects.all().filter(id=self.request.query_params.get('id'),
                                                      user=user)
             return queryset
-        if user.is_superuser:
+        if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
             queryset = Question.objects.all()
             return queryset
         return Question.objects.all().filter(user=user)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        Answer.objects.all().filter(question=instance.id).delete()
+        if self.request.method == "DELETE":
+            answers = Answer.objects.all().filter(question=instance.id)
+            for ans in answers:
+                ans.deleted = True
+                ans.save()
+        else:
+            Answer.objects.all().filter(question=instance.id).delete()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -70,18 +76,20 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.method == "GET":
             queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
-                                                   question__user=self.request.user)
+                                                   question__user=self.request.user, deleted = False)
             return queryset
-        if self.request.method == "DELETE":
-            print('object deleted')
+        # if self.request.method == "DELETE": # what was going on here?
+            # print('object deleted')
         user = self.request.user
         if user.is_superuser:
-            queryset = Answer.objects.all()
+            queryset = Answer.objects.all().filter(deleted = False)
             return queryset
-        return Answer.objects.all().filter(question__user=user)
+        return Answer.objects.all().filter(question__user=user, deleted = False)
 
     def create(self, request, *args, **kwargs):
-        # print(self.request.data)
+        # here we parse all answers came after the question
+        # we use form-data as there are files to upload
+        # TODO: look at https://www.django-rest-framework.org/api-guide/parsers/#formparser
         _dict = dict(self.request.data)
         print(_dict)
         question_to_parse = []
@@ -92,7 +100,6 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         hint_to_parse = []
         priority_to_parse = []
         image_to_parse = []
-
         for value in _dict['question']:
             question_to_parse.append(value)
         for value in _dict['text']:
@@ -111,25 +118,26 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         for value in _dict['priority']:
             priority_to_parse.append(value)
         print('len: ' + str(len(question_to_parse)))
-        # list_of_created_ids = []
-        for i in range(0, len(question_to_parse)):
-            print(i)
-            question = Question.objects.all().get(id=question_to_parse[i])
-            answer = Answer(question=question, text=text_to_parse[i],
-                            correct=correct_to_parse[i], weight=weight_to_parse[i],
-                            audio=audio_to_parse[i], hint=hint_to_parse[i],
-                            priority=priority_to_parse[i], image=image_to_parse[i])
-            answer.save()
-            print(answer)
-            # list_of_created_ids.append(answer.id)
 
-        '''
-        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)'''
-        return Response(status=status.HTTP_201_CREATED)
+        successfully_created_answers = [] # used to easily revert all creates if exception occured
+        try:
+            for i in range(0, len(question_to_parse)):
+                question = Question.objects.all().get(id=question_to_parse[i])
+                answer = Answer(question=question, text=text_to_parse[i],
+                                correct=correct_to_parse[i], weight=weight_to_parse[i],
+                                audio=audio_to_parse[i], hint=hint_to_parse[i],
+                                priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
+                answer.save()
+                successfully_created_answers.append(answer)
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            # yup, we don't set 'deleted' to them, but directly delete from database because
+            # something went completely wrong so we don't need partically written answers
+            print('Unable to create object, clearing all them up')
+            for ans in successfully_created_answers:
+                ans.delete()
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -149,15 +157,15 @@ class AnswerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.method == "GET":
             queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
-                                                   question__user=self.request.user)
+                                                   question__user=self.request.user, deleted = False)
             return queryset
-        if self.request.method == "DELETE":
-            print('object deleted')
+        # if self.request.method == "DELETE":
+            # print('object deleted')
         user = self.request.user
         if user.is_superuser:
-            queryset = Answer.objects.all()
+            queryset = Answer.objects.all().filter(deleted = False)
             return queryset
-        return Answer.objects.all().filter(question__user=user)
+        return Answer.objects.all().filter(question__user=user, deleted = False)
 
     def create(self, request, *args, **kwargs):
         print(self.request.data)
@@ -190,8 +198,8 @@ class CourseViewSet(viewsets.ModelViewSet):
         return Course.objects.all()
 
     def destroy(self, request, *args, **kwargs):
+        # if self.request.method == "DELETE":
         instance = self.get_object()
-        print('deleting course')
         UserCourseRelation.objects.all().filter(course=instance).delete()
         CourseSession.objects.all().filter(course=instance).delete()
         Course.objects.all().get(token=instance.token).delete()
@@ -317,7 +325,7 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
             # print("No unfinished sessions")
             current_question = max([session.order_number for session in
                                     SessionQuestion.objects.all().filter(session=session, finished=True)])
-
+            print(session.course.questions_number)
             if current_question >= session.course.questions_number:
                 session.finished = True
                 session.save()
@@ -351,9 +359,9 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
             # print(session_q)
             session_q.save()
 
-            list_of_correct_answers = list(Answer.objects.all().filter(question=question, correct=True))
+            list_of_correct_answers = list(Answer.objects.all().filter(question=question, correct=True, deleted = False))
             # print('correct list: ' + str(list_of_correct_answers))
-            list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct=False))
+            list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct=False, deleted = False))
             # print('incorrect list: ' + str(list_of_incorrect_answers))
             list_of_answers = list_of_correct_answers
             list_of_answers += random.sample(set(list_of_incorrect_answers),
@@ -385,7 +393,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
         question = SessionQuestion.objects.all().get(id=self.request.data['id'])
 
         if self.request.data['status'] == 2:
-            answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
+            answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False)
             question.result = 0
             question.finished = True
             question.save()
@@ -425,7 +433,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                                         result=0, attempts_number=question.attempts_number,
                                         finished=True)
             session_q.save()
-            answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
+            answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False)
             answers.delete()
             # answers.save()
             print('going to abort')
@@ -438,8 +446,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print(answers_list)
             print('answer_type: ', end='')
             print(question.question.answer_type)
-            print(SessionAnswer.objects.all().get(sessionQuestion=question))
-            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question)
+            print(SessionAnswer.objects.all().get(sessionQuestion=question, answer__deleted = False))
+            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question, answer__deleted = False)
             correct_answer.will_send_hint = False
             print('correct answer is ', end='')
             print(correct_answer.answer.text)
@@ -502,8 +510,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print('answer_type: ', end='')
             # print(question)
             print(question.question.answer_type)
-            print(SessionAnswer.objects.all().filter(sessionQuestion=question))
-            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question, answer__correct=True)
+            print(SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False))
+            correct_answer = SessionAnswer.objects.all().get(sessionQuestion=question, answer__correct=True, answer__deleted = False)
             print('correct answer is ', end='')
             print(correct_answer.answer.id)
 
@@ -588,12 +596,12 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print('answer_type: ', end='')
             # print(question)
             print(question.question.answer_type)
-            print(SessionAnswer.objects.all().filter(sessionQuestion=question))
-            correct_answer = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__correct=True)
+            print(SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False))
+            correct_answer = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__correct=True, answer__deleted = False)
             print('correct answer are ', end='')
             print(correct_answer)
 
-            answers = SessionAnswer.objects.all().filter(sessionQuestion=question).order_by('answer__priority')
+            answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False).order_by('answer__priority')
             for answer in answers:
                 answer.will_send_hint = False
                 answer.save()
@@ -741,7 +749,10 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                             answer.current_result = answer.current_result // 2
                             answer.save()
                         print('current result of answer is ' + str(answer.current_result))
-                        # answer.save() # https://code.djangoproject.com/ticket/27335?cversion=0&cnum_hist=3
+                        # answer.save()
+                        # well, idk why but in case of unnecessary(extra) savings just in case, it drops
+                        # some field's values to default, similar to described here
+                        # https://code.djangoproject.com/ticket/27335?cversion=0&cnum_hist=3
 
                     result_sum = 0
                     blocked_sum = 0
@@ -767,7 +778,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         question = SessionQuestion.objects.all().get(id=self.request.query_params.get('id'))
-        answers = SessionAnswer.objects.all().filter(sessionQuestion=question)
+        answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False)
         return answers
 
 class CourseTokenAjaxViewset(viewsets.ModelViewSet):

@@ -3,45 +3,13 @@ from django.contrib.auth.models import User
 from django.conf import settings
 import secrets  # used to do a safe random choice of questions
 import random
-from .models import Question, Course, Answer, UserCourseRelation, Profile, CourseSession, \
+from .models import Question, Course, Answer, UserCourseRelation, CourseSession, \
     SessionQuestion, SessionAnswer
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email',)
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-
-    def create(self, validated_data):
-        users = User.objects.all().filter(username=self.context['request'].data['username'])
-        if not users:
-            user = User.objects.create_user(username=self.context['request'].data['username'],
-                                            password=self.context['request'].data['password'])
-        else:
-            return serializers.ValidationError('Username is already taken')
-        profile = Profile(user=user)
-        if 'image' in validated_data:
-            profile.image = validated_data['image']
-        if 'phone' in validated_data:
-            profile.phone = validated_data['phone']
-        if 'group' in validated_data:
-            profile.group = validated_data['group']
-        if 'activity' in validated_data:
-            profile.activity = validated_data['activity']
-        profile.save()
-        return profile
-
-    class Meta:
-        model = Profile
-        fields = '__all__'
 
 
 class QuestionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
+        print(self.context['request'].data)
         question = Question(user=self.context['request'].user, title=validated_data['title'],
                             text=validated_data['text'], answer_type=validated_data['answer_type'])
         if 'timer' in validated_data:
@@ -254,7 +222,7 @@ class SessionQuestionStatsSerializer(serializers.ModelSerializer):
 
     def get_weight_sum(self, obj):
         question = obj.question
-        answers = Answer.objects.all().filter(question = question)
+        answers = Answer.objects.all().filter(question = question, deleted = False)
         weight_sum = sum([answer.weight for answer in answers])
         return weight_sum
 
@@ -270,14 +238,6 @@ class SessionSerializer(serializers.ModelSerializer):
     session_questions = serializers.SerializerMethodField() '''  # TODO STATS
 
     def create(self, validated_data):
-
-        # DEBUG :
-        ''''''''''''
-        #CourseSession.objects.all().delete()
-        #SessionQuestion.objects.all().delete()
-        #SessionAnswer.objects.all().delete()
-        ''''''''''''
-
         course = Course.objects.all().get(token=self.context['request'].data['token'])
         not_finished_session = CourseSession.objects.all().filter(course=course,
                                                                   user=self.context['request'].user, finished=False)
@@ -295,11 +255,14 @@ class SessionSerializer(serializers.ModelSerializer):
             if attempts:
                 number_of_attempts = max(attempts)
             else:
-                number_of_attempts = 0
+                number_of_attempts = 0 # first time in this course
             print('number of attempts: ', end='')
             print(number_of_attempts)
 
-            if number_of_attempts >= course.attempts:
+            # 0 in attempts = inf attempts
+            # so is important to check 'is not None' firstly
+            # because it will not calculate '>=' and compare int to None
+            if course.attempts is not None and number_of_attempts >= course.attempts:
                 raise serializers.ValidationError('Попытки кончились')
             else:
                 session = CourseSession(course=course, attempt_number=number_of_attempts + 1,
@@ -315,9 +278,9 @@ class SessionSerializer(serializers.ModelSerializer):
                 print('s_q: ', end='')
                 print(session_q)
                 session_q.save()
-                list_of_correct_answers = list(Answer.objects.all().filter(question = question, correct = True))
+                list_of_correct_answers = list(Answer.objects.all().filter(question = question, correct = True, deleted = False))
                 print('correct list: ' + str(list_of_correct_answers))
-                list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct = False))
+                list_of_incorrect_answers = list(Answer.objects.all().filter(question=question, correct = False, deleted = False))
                 print('incorrect list: ' + str(list_of_incorrect_answers))
                 list_of_answers = list_of_correct_answers
                 list_of_answers += random.sample(set(list_of_incorrect_answers),
@@ -346,7 +309,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
     audio_hint = serializers.SerializerMethodField()
 
     def get_hint(self, obj):
-        object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True)
+        object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
         #print('obj from hint: ' + str(object))
         if object.first():
             return object.first().answer.hint
@@ -354,7 +317,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
             return ''
 
     def get_audio_hint(self, obj):
-        object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True)
+        object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True, answer__deleted = False)
         if object.first():
             if object.first().answer.audio:
                 #return object.first().answer.audio
