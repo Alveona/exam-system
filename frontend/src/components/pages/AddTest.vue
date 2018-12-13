@@ -1,5 +1,5 @@
 <template>
-	<v-form v-model="valid" ref="addTform">
+	<v-form ref="addTform">
 		<v-container>
 			<v-layout row wrap>
 				<v-flex xs12>
@@ -73,7 +73,7 @@
 		          <v-text-field
 		            type="number"
 		            label="Количество попыток"
-		            :rules="[rules.required, rules.attempts]"
+		            :rules="[rules.attempts]"
 		            v-model="attempts"
 		            required
 		          ></v-text-field>
@@ -245,10 +245,12 @@
             },
             onSubmit() {
 	        	if (!this.$refs.addTform.validate())
+	        	{
                		this.successSet = false
                     this.alert = true
                     this.message = 'Не все обязательные поля были заполнены.'
 	        		return
+	        	}
                  let formData = new FormData()
 
                  formData.set('name', this.title)
