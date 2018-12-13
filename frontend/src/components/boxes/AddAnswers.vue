@@ -292,7 +292,7 @@
         		rulesMaxAns: [ (value) => ((value >= 2) && (value <= this.localCountAnswers) && (value <= this.maxIncludedAnswers))  || 'Должно быть не больше количества элементов, добавленных выше, и не превышать '+ this.maxIncludedAnswers],
         		rulesDuplicatePriority: [(value) => !this.findDuplicates(value) || 'Такое значение уже есть у другого ответа',
         								 (value) => !!value || 'Это обязательное поле'],
-       			rulesWeight: [(value) => value || 'Это обязательное поле'],
+       			rulesWeight: [(value) => value >= 0 || 'Это обязательное поле'],
         		oneAnswerRadios: 0,
         		maxAnswers:15,
         		minAnswers: 2,

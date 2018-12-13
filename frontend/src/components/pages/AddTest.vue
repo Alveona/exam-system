@@ -22,7 +22,9 @@
 		              required
             		  prefix="/"
               		  v-model="token"
-              		  :rules="[rules.required, rules.token]"
+              		  :rules="[rules.tokenValid, rules.token]"
+              		  :append-icon="validToken ? 'done' : 'block'"
+              		  :error="!validToken"
 		            ></v-text-field>
 		        </v-flex>
 
@@ -159,6 +161,7 @@
 
 <script>
     import Axios from 'axios'
+	import router from '@/router'
     import FileInput from '@/components/other/FileLoader'
     import AddedQuestion from '@/components/boxes/AddedQuestion'
 	import Authentication from '@/components/pages/Authentication'
@@ -184,7 +187,6 @@
 			    alert: false,
 			    message: '',
 			    checkTokenObserver: false,
-			    checkTokenDelay: 1000,
 
 			    title: '',
 			    token: '',
@@ -207,7 +209,7 @@
         		maxTitleLen: 100,
         		minTokenLen: 8,
         		maxTokenLen: 50,
-
+        		validToken: true,
 
                 rules: {
                 	required: value => !!value || 'Это необходимое поле',
@@ -221,15 +223,31 @@
                 	q_number_max: val => val <= this.questionsChecks.length || 'Должно быть не более, чем число вопросов, выбранных выше',
                 	description: val => (val.length >= this.minDescrLen && val.length <= this.maxDescrLen) || 'Длина текста должна быть в диапазоне от '+this.minDescrLen+' до '+this.maxDescrLen + ' символов',
                 	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
-                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина токена должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов',
+                	tokenValid: async (val) => await this.getTokenAnswer() || 'Такая ссылка уже существует! Выберите другой вариант.',
+                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина токена должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов'
                 },
 
 		    }
 		},
 		methods: {
+			async getTokenAnswer(){
+				var ans = false
+				await this.checkToken()
+				.then(
+					res=>{
+						ans = res
+						if (ans == 'true')
+							this.validToken = true
+						else this.validToken = false
+					}, 
+					err => {
+						console.log(err)
+					}
+				)
+				return this.validToken
+			},
 			getAddedQuestions() {
 				Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
-					//Axios.get('https://jsonplaceholder.typicode.com/posts', {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -246,8 +264,11 @@
             getUploadedImage(e) {
                 this.image = e
             },
+            goBack() {
+            	router.push('/tests')
+            },
             onSubmit() {
-	        	if (!this.$refs.addTform.validate())
+	        	if (!this.$refs.addTform.validate() || !this.validToken)
 	        	{
                		this.successSet = false
                     this.alert = true
@@ -288,9 +309,6 @@
 	                    this.alert = true
 	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
 	                })
-            },
-            goBack() {
-            	router.push('/tests')
             },
             textToTranslit(text) {
             	var transl = []
@@ -384,20 +402,21 @@
 						return
 					}
 			},
-			checkToken(token) {
-				const data = { 'token' : token}
-				Axios.post(`${TestingSystemAPI}/api/token-check/`, data, {
+			async checkToken() {
+				const data = { 'token' : this.token}
+				const req = await Axios.post(`${TestingSystemAPI}/api/token-check/`, data, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			    })
                 .then((response) => {
-                	console.log(response)
+					this.checkTokenObserver = false;
+                	return response.data.avaliable
                 })
                 .catch((error) => {
-               		
+					this.checkTokenObserver = false;
+					return false
                 })
-				this.checkTokenObserver = true;
-
+                return req
 			}
 		},
 		mounted(){
@@ -418,13 +437,6 @@
 			},
 			questionsChecks: function(val) {
 				this.questions_number = val.length
-			},
-			token: function(val) {
-				if (!this.checkTokenObserver)
-				{
-					setTimeout(this.checkToken(val), this.checkTokenDelay)
-					this.checkTokenObserver = true;
-				}
 			}
 		}
     }
