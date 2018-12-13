@@ -371,7 +371,7 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
             # print(list_of_answers)
             for answer in list_of_answers:
                 session_a = SessionAnswer(sessionQuestion=session_q, blocked=False, answer=answer,
-                                          current_result=answer.weight, answer__deleted = False)
+                                          current_result=answer.weight)
                 session_a.save()
                 print('s_a created: ', end='')
                 print(session_a)

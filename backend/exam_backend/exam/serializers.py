@@ -9,6 +9,7 @@ from .models import Question, Course, Answer, UserCourseRelation, CourseSession,
 
 class QuestionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
+        print(self.context['request'].data)
         question = Question(user=self.context['request'].user, title=validated_data['title'],
                             text=validated_data['text'], answer_type=validated_data['answer_type'])
         if 'timer' in validated_data:
@@ -237,14 +238,6 @@ class SessionSerializer(serializers.ModelSerializer):
     session_questions = serializers.SerializerMethodField() '''  # TODO STATS
 
     def create(self, validated_data):
-
-        # DEBUG :
-        ''''''''''''
-        #CourseSession.objects.all().delete()
-        #SessionQuestion.objects.all().delete()
-        #SessionAnswer.objects.all().delete()
-        ''''''''''''
-
         course = Course.objects.all().get(token=self.context['request'].data['token'])
         not_finished_session = CourseSession.objects.all().filter(course=course,
                                                                   user=self.context['request'].user, finished=False)
@@ -266,7 +259,10 @@ class SessionSerializer(serializers.ModelSerializer):
             print('number of attempts: ', end='')
             print(number_of_attempts)
 
-            if number_of_attempts >= course.attempts and course.attempts != 0: # 0 in attempts = inf attempts
+            # 0 in attempts = inf attempts
+            # so is important to check 'is not None' firstly
+            # because it will not calculate '>=' and compare int to None
+            if course.attempts is not None and number_of_attempts >= course.attempts:
                 raise serializers.ValidationError('Попытки кончились')
             else:
                 session = CourseSession(course=course, attempt_number=number_of_attempts + 1,
@@ -294,7 +290,7 @@ class SessionSerializer(serializers.ModelSerializer):
                 print(list_of_answers)
                 for answer in list_of_answers:
                     session_a = SessionAnswer(sessionQuestion=session_q, blocked=False, answer=answer,
-                                              current_result = answer.weight, answer__deleted = False)
+                                              current_result = answer.weight)
                     session_a.save()
                     print('s_a created: ', end='')
                     print(session_a)
