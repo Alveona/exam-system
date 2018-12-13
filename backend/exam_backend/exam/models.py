@@ -42,7 +42,8 @@ class Course(models.Model):
 
 
 class Answer(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
+    # setting null to prevent auto deletion when question is deleted (we have 'deleted' field)
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, null=True)
     text = models.TextField(blank=True, null=True)
     correct = models.BooleanField(default=False)
     weight = models.IntegerField(blank=True, null=True)
