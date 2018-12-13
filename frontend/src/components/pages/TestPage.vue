@@ -19,7 +19,7 @@
 		        	<v-img 
 		        	class="mb-3"
 		        	:aspect-ratio="16/9" 
-		            :src="response.image"
+		            :src="!!response.image ? response.image : emptyPic"
 		            position="center center"
 		            >
 		            </v-img>
@@ -91,7 +91,8 @@
 				alert_message: '',
 				alert: false,
 				successReq: false,
-				response: []
+				response: [],
+				emptyPic: require('@/assets/images/no_image.png')
 			}
 		},
 		methods: {

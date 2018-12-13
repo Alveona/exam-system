@@ -102,7 +102,7 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Отлично'"
-		            :rules="[rules.required, rules.percents, rules.perfect]"
+		            :rules="[rules.percents, rules.perfect]"
 		            hint="В процентах (%)"
 		            v-model="perfect_mark"
 		            box
@@ -114,7 +114,7 @@
 		          <v-text-field
 		            type="number"
 		            label="Оценка 'Хорошо'"
-		            :rules="[rules.required, rules.percents, rules.good]"
+		            :rules="[rules.percents, rules.good]"
 		            v-model="good_mark"
 		            hint="В процентах (%)"
 		            box
@@ -127,7 +127,7 @@
 		            type="number"
 		            label="Оценка 'Удовлетворительно'"
 		            v-model="satisfactory_mark"
-		            :rules="[rules.required, rules.percents, rules.satisfactory]"
+		            :rules="[rules.percents, rules.satisfactory]"
 		            hint="В процентах (%)"
 		            box
 		            required
@@ -183,6 +183,8 @@
 			    successSet: false,
 			    alert: false,
 			    message: '',
+			    checkTokenObserver: false,
+			    checkTokenDelay: 1000,
 
 			    title: '',
 			    token: '',
@@ -232,6 +234,7 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.questions = data
+		          this.questions.reverse()
 		          for (var i = 0; i < this.questions.length; ++i)
 		          	this.questions[i].show = false
 		        }).catch(error => {
@@ -251,6 +254,8 @@
                     this.message = 'Не все обязательные поля были заполнены.'
 	        		return
 	        	}
+	        	if (this.successSet)
+	        		return
                  let formData = new FormData()
 
                  formData.set('name', this.title)
@@ -276,12 +281,16 @@
 	               		this.successSet = true
 	                    this.alert = true
 	                    this.message = 'Тест успешно добавлен.'
+	                    setTimeout(this.goBack, 1200)
 	                })
 	               .catch((error) => {
 	               		this.successSet = false
 	                    this.alert = true
 	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
 	                })
+            },
+            goBack() {
+            	router.push('/tests')
             },
             textToTranslit(text) {
             	var transl = []
@@ -374,6 +383,21 @@
 						this.questions.pop()
 						return
 					}
+			},
+			checkToken(token) {
+				const data = { 'token' : token}
+				Axios.post(`${TestingSystemAPI}/api/token-check/`, data, {
+			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			          params: {}
+			    })
+                .then((response) => {
+                	console.log(response)
+                })
+                .catch((error) => {
+               		
+                })
+				this.checkTokenObserver = true;
+
 			}
 		},
 		mounted(){
@@ -392,6 +416,16 @@
 			perfect_mark: function(val) {
 				console.log('s: '+ this.satisfactory_mark + ' g: ' + this.good_mark + ' p: ' + val)
 			},
+			questionsChecks: function(val) {
+				this.questions_number = val.length
+			},
+			token: function(val) {
+				if (!this.checkTokenObserver)
+				{
+					setTimeout(this.checkToken(val), this.checkTokenDelay)
+					this.checkTokenObserver = true;
+				}
+			}
 		}
     }
 	

@@ -6,7 +6,7 @@
 				<v-flex xs12>
 					<v-card class="elevation-1" color="green lighten-4" >
 						<v-flex xs12 pa-2>
-							<v-btn round color="green lighten-1" dark large outline icon>1</v-btn>
+							<v-btn round color="black" dark large outline icon>1</v-btn>
 							<span class="body-1">Сейчас вы создаете новый вопрос, который впоследствие может быть добавлен в ваши курсы. В процессе прохождения теста пользователь сможет отвечать в один момент времени только на один вопрос. </span>
 						</v-flex>
 					</v-card>
@@ -34,9 +34,9 @@
 			          ></v-textarea>
 		        </v-flex>
 				<v-flex xs12>
-					<v-card class="elevation-1" color="blue lighten-4" >
+					<v-card class="elevation-1" color="green lighten-4" >
 						<v-flex xs12 pa-2>
-							<v-btn round color="info" dark large outline icon>2</v-btn>
+							<v-btn round color="black" dark large outline icon>2</v-btn>
 							<span>Следующие поля не являются обязательными. Отметьте галочки напротив тех полей, которые вы хотите указать для вашего нового вопроса.</span>
 						</v-flex>
 					</v-card>
@@ -122,9 +122,9 @@
 	            </v-flex>
 
 				<v-flex xs12 >
-					<v-card class="elevation-1" color="yellow lighten-4" >
+					<v-card class="elevation-1" color="green lighten-4" >
 						<v-flex xs12 pa-2>
-							<v-btn round color="warning" dark large outline icon>3</v-btn>
+							<v-btn round color="black" dark large outline icon>3</v-btn>
 							<span>Далее выберите один из трех типов ответов, которые должен дать пользователь на вопрос. Тип "ввод значения" означает, что пользователь должен ввести ответ сам. Тип "выбор одного варианта" означает, что у пользователя будет выбор из нескольких ответов, и он должен указать только один верный. Тип "выбор нескольких вариантов" означает, что у пользователя будет выбор из нескольких ответов, и он должен отметить среди них верные (должно быть от 1 верного варианта до количества, равного количеству вариантов ответов). Далее заполните поля, которые касаются ответа(ов). </span>
 						</v-flex>
 					</v-card>
@@ -217,7 +217,7 @@
 				countAnswers: 1,
 				attempts: '',
 				timer: '',
-				answersQty: '',
+				answersQty: 1,
 
       			selectedType: [],
       			answerTypes: [
@@ -284,6 +284,8 @@
                     this.message = 'Не все обязательные поля были заполнены.'
 	        		return
 	        	}
+	        	if (this.successSet)
+	        		return
                 let formData = new FormData()
 
                 formData.set('text', this.text)
@@ -335,6 +337,7 @@
 		               		this.successSet = true
 		                    this.alert = true
 		                    this.message = 'Вопрос успешно добавлен.'
+		                    setTimeout(this.goBack, 1200)
 
 		                })
 		               .catch(error => {
@@ -346,11 +349,15 @@
 	                })
 	               .catch(error => {
 	                    this.alert = true
+		               	this.successSet = false
 	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 	                })
             },
 			reloadPage() {
 				window.location.reload(true)
+			},
+			goBack() {
+				router.push('/questions')
 			},
 			pushAnswer() {
 				var isTrue = false

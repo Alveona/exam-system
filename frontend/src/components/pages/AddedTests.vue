@@ -12,7 +12,7 @@
 				:author="test.author"
 				:added="1"
 				:description="test.description"
-				:image="test.image"
+				:image="!!test.image ? test.image : emptyPic"
 			></created-test>
 		</v-flex>
 		<v-flex xs12>
@@ -47,7 +47,8 @@
 				tests: [],
 				message: '',
 				notify: '',
-				alert: false
+				alert: false,
+				emptyPic: require('@/assets/images/no_image.png')
 			}
 		},
 		methods: {
@@ -57,6 +58,7 @@
 		          params: {}
 		        }).then(({data}) => {
 		          this.tests = data
+		          this.tests.reverse()
 		          if (this.tests.length == 0)
 		          	this.notify = 'Нет добавленных тестов.'
 		          else this.notify = 'Вы добавили ' + this.tests.length + ' тестов:'
