@@ -2,26 +2,39 @@
 	<v-form ref="addTform">
 		<v-container>
 			<v-layout row wrap>
-				<v-flex xs12>
-					<p class="display-1">Создание нового теста</p>
-				</v-flex>
+					<h4 class="display-1">Создание нового теста</h4>
+					<v-tooltip bottom v-model="showTestTooltip">
+				        <v-btn slot="activator" @click="showTestTooltip = !showTestTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Сейчас вы создаете новый тест. В него потребуется добавить из списка уже созданные вами вопросы, которые будут встречаться при прохождении в случайном порядке. </span>
+					</v-tooltip>
 
 				<v-flex xs12 sm6>
+					<v-label>Название теста</v-label>
+					<v-tooltip bottom v-model="showTitleTooltip">
+				        <v-btn slot="activator" @click="showTitleTooltip = !showTitleTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Например, 'Концепции современного естествознания'</span>
+		        	</v-tooltip>
 		            <v-text-field
-		              label="Название"
 		              required
               		  :rules="[rules.required, rules.title]"
               		  v-model="title"
+              		  solo
 		            ></v-text-field>
 		        </v-flex>
 
   				<v-flex xs12 sm6>
+  					<v-label>Ссылка на курс</v-label>
+					<v-tooltip bottom v-model="showLinkTooltip">
+				        <v-btn slot="activator" @click="showLinkTooltip = !showLinkTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>По введенной ссылке любой желающий сможет подписаться на тест и начать проходить его. Если вам не нравится автоматически сгенерированный вариант на основе названия курса, вы можете изменить его.</span>
+		        	</v-tooltip>
 		            <v-text-field
-		              label="Ссылка на курс"
 		              placeholder="your-test"
 		              required
             		  prefix="/"
+            		  solo
               		  v-model="token"
+              		  :hint="validToken ? '' : 'Такая ссылка уже существует! Выберите другой вариант.'"
               		  :rules="[rules.tokenValid, rules.token]"
               		  :append-icon="validToken ? 'done' : 'block'"
               		  :error="!validToken"
@@ -43,41 +56,60 @@
 				</v-flex>
 
 				<v-flex xs12>
+  					<v-label>Описание</v-label>
+					<v-tooltip bottom v-model="showDescriptionTooltip">
+				        <v-btn slot="activator" @click="showDescriptionTooltip = !showDescriptionTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Дайте развернутое пояснение содержимого курса. Например, какие темы отражены в вопросах, на кого он расчитан, по каким ресурсам можно подготовиться к нему и т.д.</span>
+		        	</v-tooltip>
 			        <v-textarea
-			            label="Описание теста"
 			            v-model="description"
           		  		:rules="[rules.required, rules.description]"
 			            required
-              			box
+              			solo
 			          ></v-textarea>
 		        </v-flex>
 
 		        <v-flex xs12 sm6>
+  					<v-label>Количество вопросов</v-label>
+					<v-tooltip bottom v-model="showQNumTooltip">
+				        <v-btn slot="activator" @click="showQNumTooltip = !showQNumTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Данное значение отражает реальное количество вопросов, которые будут включены в тест при прохождении. Если это значение ниже, чем количество вопросов, выбранных из списка выше, то в прохождение будут случайным выбором включены не все вопросы, выбранные из списка выше.</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="number"
-		            label="Количество вопросов"
 		            :rules="[rules.q_number_min, rules.q_number_max]"
 		            v-model="questions_number"
 		            required
+		            solo
 		          ></v-text-field>
 		        </v-flex>
 
 	     		<v-flex xs12 sm6>
+  					<v-label>Автор курса</v-label>
+					<v-tooltip bottom v-model="showAuthorTooltip">
+				        <v-btn slot="activator" @click="showAuthorTooltip = !showAuthorTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Например, Иванов Иван Иванович</span>
+		        	</v-tooltip>
 		            <v-text-field
-		              label="Автор курса"
 		              v-model="author"
 		              required
 		              :rules="[rules.required, rules.author]"
+		              solo
 		            ></v-text-field>
 		        </v-flex>
 
 		        <v-flex xs12 sm6>
+  					<v-label>Количество попыток</v-label>
+					<v-tooltip bottom v-model="showAttemptsTooltip">
+				        <v-btn slot="activator" @click="showAttemptsTooltip = !showAttemptsTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Опциональное поле. Если оставить пустым - попытки неограниченны.</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="number"
-		            label="Количество попыток"
 		            :rules="[rules.attempts]"
 		            v-model="attempts"
 		            required
+		            solo
 		          ></v-text-field>
 		        </v-flex>
 
@@ -96,42 +128,51 @@
 			        </v-layout>
 			      </v-flex>
 
-					<v-flex xs12>
-				      <h4 class="title" d-block>Оценки за курс:</h4>
+				  <v-flex xs12>
+				      <h4 class="title" d-block>Оценки за курс (в процентах):</h4>
 				  </v-flex>
 
 		        <v-flex xs12 sm4>
+  					<v-label>Отлично</v-label>
+					<v-tooltip bottom v-model="showPerfectTooltip">
+				        <v-btn slot="activator" @click="showPerfectTooltip = !showPerfectTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Нижний порог, с которого начинается 'Отлично'</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="number"
-		            label="Оценка 'Отлично'"
 		            :rules="[rules.percents, rules.perfect]"
-		            hint="В процентах (%)"
 		            v-model="perfect_mark"
-		            box
+		            solo
 		            required
 		          ></v-text-field>
 		        </v-flex>
 
 		        <v-flex xs12 sm4>
+  					<v-label>Хорошо</v-label>
+					<v-tooltip bottom v-model="showGoodTooltip">
+				        <v-btn slot="activator" @click="showGoodTooltip = !showGoodTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Нижний порог, с которого начинается 'Хорошо'</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="number"
-		            label="Оценка 'Хорошо'"
 		            :rules="[rules.percents, rules.good]"
 		            v-model="good_mark"
-		            hint="В процентах (%)"
-		            box
+		            solo
 		            required
 		          ></v-text-field>
 		        </v-flex>
 
 		        <v-flex xs12 sm4>
+  					<v-label>Удовлетворительно</v-label>
+					<v-tooltip bottom v-model="showSatisTooltip">
+				        <v-btn slot="activator" @click="showSatisTooltip = !showSatisTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Нижний порог, с которого начинается 'Удовлетворительно'</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="number"
-		            label="Оценка 'Удовлетворительно'"
 		            v-model="satisfactory_mark"
 		            :rules="[rules.percents, rules.satisfactory]"
-		            hint="В процентах (%)"
-		            box
+		            solo
 		            required
 		          ></v-text-field>
 		        </v-flex>	
@@ -174,7 +215,6 @@
 
 		data () {
 		    return {
-        		rules: [ (value) => !!value || 'Это обязательное поле' ],
         		valid: false,
                 image: '',
                 imageLoadText: 'Изображение к тесту',
@@ -187,6 +227,17 @@
 			    alert: false,
 			    message: '',
 			    checkTokenObserver: false,
+
+			    showTestTooltip: false,
+			    showTitleTooltip: false,
+			    showSatisTooltip: false,
+			    showGoodTooltip: false,
+			    showPerfectTooltip: false,
+			    showAttemptsTooltip: false,
+			    showAuthorTooltip: false,
+			    showQNumTooltip: false,
+			    showLinkTooltip: false,
+			    showDescriptionTooltip: false,
 
 			    title: '',
 			    token: '',
@@ -201,7 +252,7 @@
 			    min_percent: 0,
         		maxAttempts: 100,
         		minAttempts: 0,
-        		maxAuthorLen: 50,
+        		maxAuthorLen: 70,
         		minAuthorLen: 10,
         		minDescrLen: 50,
         		maxDescrLen: 2000,
@@ -223,8 +274,8 @@
                 	q_number_max: val => val <= this.questionsChecks.length || 'Должно быть не более, чем число вопросов, выбранных выше',
                 	description: val => (val.length >= this.minDescrLen && val.length <= this.maxDescrLen) || 'Длина текста должна быть в диапазоне от '+this.minDescrLen+' до '+this.maxDescrLen + ' символов',
                 	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
-                	tokenValid: async (val) => await this.getTokenAnswer() || 'Такая ссылка уже существует! Выберите другой вариант.',
-                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина токена должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов'
+                	tokenValid: async (val) => await this.getTokenAnswer() || '',
+                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина ссылки должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов'
                 },
 
 		    }

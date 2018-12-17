@@ -16,7 +16,7 @@
 		<v-layout row wrap>
         	<v-flex xs12 sm4 class="px-4 py-4">
         		<v-flex xs12>
-		        	<v-img 
+		        	<v-img
 		        	class="mb-3"
 		        	:aspect-ratio="16/9" 
 		            :src="!!response.image ? response.image : emptyPic"
@@ -25,7 +25,6 @@
 		            </v-img>
 		        </v-flex>
 	            <v-flex xs12>
-
 	            	<v-flex xs12>
 						<v-alert
 				        :value="alert"
