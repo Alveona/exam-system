@@ -29,6 +29,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         question.save()
         return question
 
+
     class Meta:
         model = Question
         fields = '__all__'
@@ -41,6 +42,10 @@ class QuestionListSerializer(serializers.ModelSerializer):
 
 
 class AnswerInCourseSerializer(serializers.ModelSerializer):
+    def get_text(self, obj):
+        if obj.question.answer_type == 1:
+            return ''
+        return obj.text
     class Meta:
         model = Answer
         fields = ('id', 'text', 'weight', 'image', 'priority')
@@ -135,7 +140,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_subscribed(self, obj):
         print(obj)
-        course = Course.objects.all().get(token=obj.token)
+        course = Course.objects.all().filter(token=obj.token).first()
         print(course)
         subscribed_course = UserCourseRelation.objects.all().filter(access=0, course=course,
                                                                     user=self.context['request'].user)
@@ -157,7 +162,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class RelationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        course = Course.objects.all().get(token=self.context['request'].data['token'])
+        course = Course.objects.all().filter(token=self.context['request'].data['token']).first()
         print(course)
         relation = UserCourseRelation(user=self.context['request'].user,
                                       course=course, access=0)
@@ -238,7 +243,7 @@ class SessionSerializer(serializers.ModelSerializer):
     session_questions = serializers.SerializerMethodField() '''  # TODO STATS
 
     def create(self, validated_data):
-        course = Course.objects.all().get(token=self.context['request'].data['token'])
+        course = Course.objects.all().filter(token=self.context['request'].data['token']).first()
         not_finished_session = CourseSession.objects.all().filter(course=course,
                                                                   user=self.context['request'].user, finished=False)
         print('not finished session: ', end='')

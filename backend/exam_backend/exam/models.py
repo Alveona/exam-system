@@ -3,12 +3,12 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 class Question(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
-    title = models.CharField(max_length=255, null=True)
-    text = models.TextField(null=True)
-    answer_type = models.IntegerField(null=True, verbose_name='Тип вопроса')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True)
+    title = models.CharField(max_length=255)
+    text = models.TextField()
+    answer_type = models.IntegerField(verbose_name='Тип вопроса')
     image = models.ImageField(upload_to='questions/', null=True, verbose_name='Изображение')
-    difficulty = models.IntegerField(null=True, verbose_name='Сложность')
+    difficulty = models.IntegerField(verbose_name='Сложность')
     comment = models.CharField(max_length=255, blank=True)
     answers_number = models.IntegerField(null=True)
     audio = models.FileField(upload_to='questions_audio/', null=True)
@@ -21,13 +21,13 @@ class Question(models.Model):
 
 
 class Course(models.Model):
-    name = models.CharField(max_length=255, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=255, null=True)
+    name = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    author = models.CharField(max_length=255)
     token = models.CharField(max_length=255)
     image = models.ImageField(upload_to='courses/', blank=True, null=True, verbose_name='Изображение')
     questions = models.ManyToManyField(Question, blank=True)
-    questions_number = models.IntegerField(null=True)
+    questions_number = models.IntegerField()
     attempts = models.IntegerField(null=True)
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                   through='UserCourseRelation', related_name='user')  # unusual relation table
@@ -42,7 +42,8 @@ class Course(models.Model):
 
 
 class Answer(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
+    # setting null to prevent auto deletion when question is deleted (we have 'deleted' field)
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, null=True)
     text = models.TextField(blank=True, null=True)
     correct = models.BooleanField(default=False)
     weight = models.IntegerField(blank=True, null=True)
