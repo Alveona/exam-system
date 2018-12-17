@@ -40,13 +40,47 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if self.request.method == "DELETE":
+            print('del')
+            # if it is delete request, then mark answer as 'deleted' and delete only question
             answers = Answer.objects.all().filter(question=instance.id)
             for ans in answers:
                 ans.deleted = True
                 ans.save()
+                instance.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             Answer.objects.all().filter(question=instance.id).delete()
+        # otherwise delete question with constraints
         self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        question = self.get_object()
+        answers = Answer.objects.all().filter(question = question)
+        answers.delete() # we assume that there will be new answers after question
+
+        question.title = validated_data['title']
+        question.text = validated_data['text']
+        question. answer_type = validated_data['answer_type']
+        # question = Question(user=self.context['request'].user, title=validated_data['title'],
+        #                     text=validated_data['text'], answer_type=validated_data['answer_type'])
+        if 'timer' in validated_data:
+            question.timer = validated_data['timer']
+        if 'attempts_number' in validated_data:
+            if question.attemtps_number is None or question.attempts_number <= validated_data['attempts_number']:
+                question.attempts_number = validated_data['attempts_number']
+        if 'answers_number' in validated_data:
+            question.answers_number = validated_data['answers_number']
+        if 'difficulty' in validated_data:
+            question.difficulty = validated_data['difficulty']
+        if 'comment' in validated_data:
+            question.comment = validated_data['comment']
+        if 'image' in validated_data:
+            question.image = validated_data['image']
+        if 'audio' in validated_data:
+            question.audio = validated_data['audio']
+        question.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
@@ -186,7 +220,7 @@ class AnswerViewSet(viewsets.ModelViewSet):
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
-    lookup_field = 'token'
+    lookup_field = 'token' # used to allow delete on /api/courses/<token>/
     serializer_class = CourseSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -452,8 +486,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print('correct answer is ', end='')
             print(correct_answer.answer.text)
             print('your answer is ', end='')
-            print(answers_list[0])
-            if answers_list[0] == correct_answer.answer.text:
+            print(answers_list[0] if len(answers_list) >= 1 else None)
+            if len(answers_list) >= 1 and answers_list[0] == correct_answer.answer.text:
                 print('your answer is correct')
                 correct_answer.blocked = True
                 correct_answer.save()
@@ -772,14 +806,17 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
 
                     priority = heapq.nsmallest(intermediate_correct_by_priority + 1, priority_list)
                     incor_ans = answers.get(answer__priority=priority[-1])
-                    incor_ans.will_send_hint = True
-                    incor_ans.save()
+                    if incor_ans:
+                        incor_ans.will_send_hint = True
+                        incor_ans.save()
                     return Response({'status': 'not all corrects chosen'})
 
     def get_queryset(self):
         question = SessionQuestion.objects.all().get(id=self.request.query_params.get('id'))
-        answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False)
-        return answers
+        if question:
+            answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False)
+            return answers
+        return Answer.objects.none()
 
 class CourseTokenAjaxViewset(viewsets.ModelViewSet):
         queryset = Course.objects.all()
@@ -801,6 +838,6 @@ class CourseTokenAjaxViewset(viewsets.ModelViewSet):
         def create(self, request, *args, **kwargs):
             token = self.request.data['token']
             if self.isTokenAvaliable(token):
-                return Response({'avaliable' : 'true'})
+                return Response({'avaliable' : 'true'}) # TODO change to bool
             else:
                 return Response({'avaliable' : 'false'})
