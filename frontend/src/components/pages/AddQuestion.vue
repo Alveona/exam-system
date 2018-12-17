@@ -2,58 +2,58 @@
 	<v-form ref="addQform" v-model="valid">
 		<v-container>
 			<v-layout row wrap>
-				<h4 class="display-1">Добавление нового вопроса</h4>
+				<h4 class="display-1">Создание нового вопроса</h4>
+				<v-tooltip bottom v-model="showQuestionTooltip">
+			        <v-btn slot="activator" @click="showQuestionTooltip = !showQuestionTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+			        <span>Сейчас вы создаете новый вопрос, который впоследствие может быть добавлен в ваши курсы. В процессе прохождения теста пользователь сможет отвечать в один момент времени только на один вопрос.</span>
+				</v-tooltip>
 				<v-flex xs12>
-					<v-card class="elevation-1" color="green lighten-4" >
-						<v-flex xs12 pa-2>
-							<v-btn round color="black" dark large outline icon>1</v-btn>
-							<span class="body-1">Сейчас вы создаете новый вопрос, который впоследствие может быть добавлен в ваши курсы. В процессе прохождения теста пользователь сможет отвечать в один момент времени только на один вопрос. </span>
-						</v-flex>
-					</v-card>
-				</v-flex>
-				<v-flex xs12>
+					<v-label>Краткое название вопроса</v-label>
+					<v-tooltip bottom v-model="showTitleTooltip">
+				        <v-btn slot="activator" @click="showTitleTooltip = !showTitleTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Поле будет видно только вам в списке добавленных вопросов для удобства навигации по ним.</span>
+		        	</v-tooltip>
 		            <v-text-field
-		              label="Краткое название вопроса"
-          		      hint="Это название будет видно только вам в вашем списке добавленных вопросов для удобства навигации по ним."
 		              v-model="title"
+		              placeholder="Например, 'Задание по линейным уравнениям'"
 		              required
               		  clearable
-              		  :rules="rulesTitleLength"
-              		  box
+              		  :rules="[rules.title]"
+              		  solo
 		            ></v-text-field>
 		        </v-flex>
 		        <v-flex xs12>
+					<v-label>Формулировка вопроса</v-label>
+					<v-tooltip bottom v-model="showTextTooltip">
+				        <v-btn slot="activator" @click="showTextTooltip = !showTextTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Поле формулировки вопроса должно содержать полную постановку задачи.</span>
+		        	</v-tooltip>
 			        <v-textarea
-			            label="Формулировка вопроса"
+			            placeholder="Например, 'Найдите корень уравнения 2x - 5 = 14.'"
 			            v-model="text"
-          		  		:rules="rulesQuestionLength"
-          		  		hint="Например, 'Найдите корень уравнения 2x - 5 = 14.'"
+          		  		:rules="[rules.question]"
 			            required
               			clearable
-              			box
+              			solo
 			          ></v-textarea>
 		        </v-flex>
-				<v-flex xs12>
-					<v-card class="elevation-1" color="green lighten-4" >
-						<v-flex xs12 pa-2>
-							<v-btn round color="black" dark large outline icon>2</v-btn>
-							<span>Следующие поля не являются обязательными. Отметьте галочки напротив тех полей, которые вы хотите указать для вашего нового вопроса.</span>
-						</v-flex>
-					</v-card>
-				</v-flex>
-
 		          <v-flex xs12 sm6 xl3>
-	        			<v-layout align-center>
+	        	  	  <v-layout align-center>
+	        	  	  	<v-label>Количество попыток</v-label>
+						<v-tooltip bottom v-model="showAttemptsTooltip">
+					        <v-btn slot="activator" @click="showAttemptsTooltip = !showAttemptsTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					        <span>Необязательное поле. Если не указать количество попыток, то они закончатся, когда обнулятся баллы.</span>
+			        	</v-tooltip>
+			          </v-layout>
+	        	  	  <v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field 
 				            type='number' 
 				            :disabled="!enabledAttempts"
-	          		  		:rules="rulesAttempts"
-				            label="Количество попыток"
+	          		  		:rules="[rules.attempts]"
 				            v-model="attempts"
 	              			clearable
-	              			box
-	              			hint="Если не указать, то закончатся, когда обнулятся баллы"
+	              			solo
 	              			persistent-hint
 			            ></v-text-field>
 				      </v-layout>
@@ -61,15 +61,20 @@
 
 		          <v-flex xs12 sm6 xl3>
         			<v-layout align-center>
+	        	  	  	<v-label>Таймер на вопрос</v-label>
+						<v-tooltip bottom v-model="showTimerTooltip">
+					        <v-btn slot="activator" @click="showTimerTooltip = !showTimerTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					        <span>Необязательное поле. Если не указать таймер - время на ответ будет неограниченно. Значение указывается в секундах</span>
+			        	</v-tooltip>
+			          </v-layout>
+	        	  	  <v-layout align-center>
 			          	<v-checkbox v-model="enabledTimer" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field type='number' 
 			            :disabled="!enabledTimer"
-			            :rules="rulesTimer"
-			            label="Таймер на вопрос"
+			            :rules="[rules.timer]"
 			            v-model="timer"
               			clearable
-              			box
-			            hint="В секундах"
+              			solo
 			            ></v-text-field>
 			        </v-layout>
 			      </v-flex>
@@ -116,30 +121,26 @@
 	              <v-text-field
 			        v-model="difficulty"
 	                type="number"
-	                :rules="rulesDifficulty"
-	                box
+	                :rules="[rules.difficulty]"
+	                solo
 	              ></v-text-field>
 	            </v-flex>
 
-				<v-flex xs12 >
-					<v-card class="elevation-1" color="green lighten-4" >
-						<v-flex xs12 pa-2>
-							<v-btn round color="black" dark large outline icon>3</v-btn>
-							<span>Далее выберите один из трех типов ответов, которые должен дать пользователь на вопрос. Тип "ввод значения" означает, что пользователь должен ввести ответ сам. Тип "выбор одного варианта" означает, что у пользователя будет выбор из нескольких ответов, и он должен указать только один верный. Тип "выбор нескольких вариантов" означает, что у пользователя будет выбор из нескольких ответов, и он должен отметить среди них верные (должно быть от 1 верного варианта до количества, равного количеству вариантов ответов). Далее заполните поля, которые касаются ответа(ов). </span>
-						</v-flex>
-					</v-card>
-				</v-flex>
-
 				<v-flex xs12>
-		          <v-select
-		            v-model="currentType"
-		            :items="answerTypes"
-		            item-value="id"
-		            item-text="val"
-			        label="Тип ответа"
-		            box
-		            required
-		           ></v-select>
+	    	  	  	<v-label>Тип ответов</v-label>
+					<v-tooltip bottom v-model="showTypeTooltip">
+				        <v-btn slot="activator" @click="showTypeTooltip = !showTypeTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Выберите один из трех типов ответов, которые должен дать пользователь на вопрос. Тип "ввод значения" означает, что пользователь должен ввести ответ сам. Тип "выбор одного варианта" означает, что у пользователя будет выбор из нескольких ответов, и он должен указать только один верный. Тип "выбор нескольких вариантов" означает, что у пользователя будет выбор из нескольких ответов, и он должен отметить среди них верные (должно быть от 1 верного варианта до количества, равного количеству вариантов ответов). </span>
+		        	</v-tooltip>
+		            <v-select
+			            v-model="currentType"
+			            :items="answerTypes"
+			            item-value="id"
+			            item-text="val"
+				        label="Тип ответа"
+			            solo
+			            required
+		            ></v-select>
 		        </v-flex>
 
 		        <v-flex xs12>
@@ -218,6 +219,12 @@
 				attempts: '',
 				timer: '',
 				answersQty: 1,
+				showTitleTooltip: false,
+				showTextTooltip: false,
+				showAttemptsTooltip:false,
+				showTimerTooltip:false,
+				showQuestionTooltip:false,
+				showTypeTooltip:false,
 
       			selectedType: [],
       			answerTypes: [
@@ -226,12 +233,14 @@
 	      			{ id: 3, val : 'Выбор нескольких вариантов'}
       			],
 
-        		rulesRequired: [ (value) => !!value || 'Это обязательное поле' ],
-        		rulesTitleLength: [ (str) => (str.length >= this.minTitleLength && str.length <= this.maxTitleLength) || 'Допустимая длина: от '+this.minTitleLength + ' до ' + this.maxTitleLength + ' символов' ],
-        		rulesQuestionLength: [ (str) => (str.length >= this.minQuestionLength && str.length <= this.maxQuestionLength) || 'Допустимая длина: от '+this.minQuestionLength + ' до ' + this.maxQuestionLength + ' символов' ],
-        		rulesDifficulty: [ (value) => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty ],
-        		rulesAttempts: [ (value) => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
-        		rulesTimer: [ (value) => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer ],
+                rules: {
+                	required: value => !!value || 'Это необходимое поле',
+                	title: str => (str.length >= this.minTitleLength && str.length <= this.maxTitleLength) || 'Допустимая длина: от '+this.minTitleLength + ' до ' + this.maxTitleLength + ' символов',
+                	question: str => (str.length >= this.minQuestionLength && str.length <= this.maxQuestionLength) || 'Допустимая длина: от '+this.minQuestionLength + ' до ' + this.maxQuestionLength + ' символов',
+                	difficulty: value => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty,
+                	attempts: value => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts,
+                	timer: value => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer,
+                },
         		
 				message: '',
 				alert: false,
@@ -312,7 +321,6 @@
 	               		for (var i = 0; i < this.answers.length; ++i)
 	               			this.answers[i].question = this.questionId
 
-
                  		let answersData = new FormData()
 
 		                for (var i = 0; i < this.answers.length; i++)
@@ -377,7 +385,8 @@
                 	comment: null,
                 	question: 0,
 					enabledAudio: false,
-					enabledImage: false
+					enabledImage: false,
+					show: false,
 				})
 				console.log('countAnswers: '+ this.countAnswers)
             	console.log('array len: ' + this.answers.length)

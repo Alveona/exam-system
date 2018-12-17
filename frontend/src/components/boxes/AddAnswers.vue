@@ -3,47 +3,32 @@
 
 		<v-layout row wrap v-if="currentType == 2 || currentType == 3">
 
-			<v-flex xs12  mb-3 v-if="currentType == 2">
-				<v-card class="elevation-1" color="green lighten-4" >
-					<v-flex xs12 pa-2>
-						<p><v-btn round color="black" dark large outline icon>4</v-btn>
-						<span>Самым важным этапом является добавление вариантов ответов в вопрос. 
-						Данная система тестирования такова, что она позволяет не только выполнить срез знаний пользователя, но и заставить его подумать и научиться, если он не очень качественно знает материал. Пользователю предоставляются дополнительные попытки на ответ в случае неверных ответов. Но с каждым неверным ответом количество возможных баллов, которые можно получить из каждого ответа, делятся пополам, если они не были отмечены верно. Также имеется опциональная возможность добавить подсказки пользователю.</span></p>
-						<p>К каждому варианту ответа укажите текст ответа, отметьте, верен ли этот вариант ответа и обозначьте приоритет проверки.</p>
-						<p>Поля подсказок, аудиоподсказок и изображений к ответам являются опциональными.</p>
-						<p>Вы можете добавить не более 15 вариантов ответа к одному вопросу.</p>
-					</v-flex>
-				</v-card>
-			</v-flex>
-
-			<v-flex xs12  mb-3 v-if="currentType == 3">
-				<v-card class="elevation-1" color="green lighten-4" >
-					<v-flex xs12 pa-2>
-						<p><v-btn round color="black" dark large outline icon>4</v-btn>
-						<span>Самым важным этапом является добавление вариантов ответов в вопрос. 
-						Данная система тестирования такова, что она позволяет не только выполнить срез знаний пользователя, но и заставить его подумать и научиться, если он не очень качественно знает материал. Пользователю предоставляются дополнительные попытки на ответ в случае неверных или неполных ответов. Но с каждым неверным ответом количество возможных баллов, которые можно получить из каждого ответа, делятся пополам, если они не были отмечены верно. Также имеется опциональная возможность добавить подсказки пользователю.</span></p>
-						<p>К каждому варианту ответа укажите текст ответа, отметьте, верен ли этот вариант ответа и обозначьте приоритет проверки.</p>
-						<p>Приоритет проверки означает, в каком порядке в случае неверного ответа будет воспроизводиться подсказка для пользователя. Приоритеты должна начинаться с 1 и идти по порядку. Этим значениям и будет соответствовать порядок проверки вариантов ответа на правильность. Например, пользователь указал как верные ответы, которым соответствуют приоритеты 2 и 4. Если ответ с приоритетом 1 являлся верным, а пользователь его не отметил - пользователю будет выведена подсказка, соответствующая ответу с приоритетом 1. А если этот ответ и был неверен, проверка перейдет к ответу с приоритетом 2 и проверит его. Если наш ответ с приоритетом 2, который отметил пользователь, был бы неверным - то пользователю была бы показана подсказка к ответу с приоритетом 2. А если этот ответ действительно верен, то проверка пойдет дальше. Таким образом, внимательно расставьте приоритеты к ответам (например, от самых простых вариантов ответа до самых сложных). Как правило, обычно бывает уместным первыми приоритетами указывать неверные ответы, так как за них не начисляются баллы, а последними приоритетами - верные, по мере увеличения баллов за ответ.</p>
-						<p>Поля подсказок, аудиоподсказок и изображений к ответам являются опциональными.</p>
-						<p>Вы можете добавить не более 15 вариантов ответа к одному вопросу.</p>
-					</v-flex>
-				</v-card>
-			</v-flex>
-
 			<v-flex v-if="currentType == 2" xs12>
+        	  	<v-label>Максимальный балл за ответ</v-label>
+				<v-tooltip bottom v-model="showWeight2typeTooltip">
+			        <v-btn slot="activator" @click="showWeight2typeTooltip = !showWeight2typeTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+			        <span>Данная система тестирования такова, что она позволяет не только выполнить срез знаний пользователя, но и заставить его подумать и научиться, если он не очень качественно знает материал. Пользователю предоставляются дополнительные попытки на ответ в случае неверных ответов. Но с каждым неверным ответом количество возможных баллов, которые можно получить из каждого ответа, делятся пополам, если они не были отмечены верно.</span>
+	        	</v-tooltip>
 	          <v-text-field
                 type="number"
                 class="mr-2"
-                label="Максимальный балл за ответ"
                 value="256"
-	            :rules="rules"
-                box
+	            :rules="[rules.weight]"
+                solo
                 required
 	          ></v-text-field>
 	        </v-flex>
 
 			<v-flex xs12>
-				<h4 v-if="currentType != 1" class="title">Ответы: </h4>
+				<div class="title">
+					<span v-if="currentType != 1">
+						Ответы: 
+					</span>
+					<v-tooltip bottom v-model="showAnswersTooltip">
+				        <v-btn slot="activator" @click="showAnswersTooltip = !showAnswersTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <p>Самым важным этапом является добавление вариантов ответов в вопрос. К каждому варианту ответа укажите текст ответа, отметьте, верен ли этот вариант ответа и обозначьте приоритет проверки. Вы можете добавить не более 15 вариантов ответа к одному вопросу. Нужно учитывать, что в процессе прохождения теста, тестируемому может быть показано только до 8 вариантов, которые будут выбраны случайно из всех добавленных. При этом гарантируется, что все правильные варианты будут показаны.</p>
+		        	</v-tooltip>
+				</div>
 			</v-flex>
 	    </v-layout>
 
@@ -53,60 +38,72 @@
 
 			<v-layout row wrap v-if="currentType==1">
 
-				<v-flex xs12 mb-3>
-					<v-card class="elevation-1" color="green lighten-4" >
-						<v-flex xs12 pa-2>
-							<p><v-btn round color="black" dark large outline icon>4</v-btn>
-							<span>На данном этапе заполните данные об ответе. Текст правильного ответа и максимальный балл - обязательны для заполнения. Комментарий к формату ответа - опциональное поле, позволяющее помочь избежать неприятных ошибок, связанных с введением пользователем ответа в формате, не совпадающем с вашей задумкой. Например, можно указать здесь "Ответ введите кириллицей с маленькой буквы, каждое новое слово через пробел". </span></p>
-							<p>Данная система тестирования такова, что она позволяет не только выполнить срез знаний пользователя, но и заставить его подумать и научиться, если он не очень качественно знает материал. Пользователю предоставляются дополнительные попытки на ответ в случае неверных или неполных ответов. Но с каждым неверным ответом количество возможных баллов, которые можно получить из ответа, делятся пополам, если ответ не был введен верно. Также имеется опциональная возможность добавить подсказку, которая будет помогать пользователю.</p>
-						</v-flex>
-					</v-card>
-				</v-flex>
-
-				<v-flex xs12>
-					<h4 class="title mb-2">Ответ: </h4>
-				</v-flex>
+			<v-flex xs12>
+				<h4 class="title mb-2">Ответ: </h4>
+			</v-flex>
 				<v-flex xs12 sm6>
+	        	  	<v-label>Правильный ответ</v-label>
+					<v-tooltip bottom v-model="showAnswerTooltop">
+				        <v-btn slot="activator" @click="showAnswerTooltop = !showAnswerTooltop" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Ответ может быть как числовым, так и текстовым. Ожидается, что ответ тестируемого должен полностью совпасть со значением, указанным в данном поле.</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            class="mr-2"
 		            type="text"
-		            label="Правильный ответ"
+		            solo
 		            v-model="answer.text"
-		            :rules="rules"
+		            :rules="[rules.required, rules.answer]"
 		            required
 		  			clearable
 		          ></v-text-field>
 		        </v-flex>
 
 				<v-flex xs12 sm6>
+					<v-label>Комментарий к формату ответа</v-label>
+					<v-tooltip bottom v-model="showCommentTooltip">
+				        <v-btn slot="activator" @click="showCommentTooltip = !showCommentTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Опциональное поле. Помогает избежать неприятных ошибок, связанных с введением пользователем ответа в формате, не совпадающем с вашей задумкой. Например, можно указать здесь: "Ответ введите кириллицей с маленькой буквы, каждое новое слово через пробел".</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            class="ml-2"
 		            type="text"
 		            v-model="answer.comment"
-		            label="Комментарий к формату ответа"
-		            hint="Например, 'Округлить до двух знаков после запятой'"
+		            :rules="[rules.comment]"
+		            solo
 		  			clearable
 		          ></v-text-field>
 		        </v-flex>
 
 		        <v-flex xs12 sm6>
+					<v-label>Максимальный балл за ответ</v-label>
+					<v-tooltip bottom v-model="showWeightTooltip">
+				        <v-btn slot="activator" @click="showWeightTooltip = !showWeightTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Данная система тестирования такова, что она позволяет не только выполнить срез знаний пользователя, но и заставить его подумать и научиться, если он не очень качественно знает материал. Пользователю предоставляются дополнительные попытки на ответ в случае неверных или неполных ответов. Но с каждым неверным ответом количество возможных баллов, которые можно получить из ответа, делятся пополам, если ответ не был введен верно.</span>
+		        	</v-tooltip>
 	              <v-text-field
 	                type="number"
 	                class="mr-2"
-	                label="Максимальный балл за ответ"
 	                v-model="answer.weight"
-		            :rules="rules"
+	                value="0"
+		            :rules="[rules.weight]"
 	                required
+	                solo
 	              ></v-text-field>
 	            </v-flex>
 
 	            <v-flex xs12 sm6>
+	            	<v-label>Текстовая подсказка</v-label>
+					<v-tooltip bottom v-model="showHintTooltip">
+				        <v-btn slot="activator" @click="showHintTooltip = !showHintTooltip" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Опциональное поле. Если тестируемый ответит неверно, то всплывет подсказка, которая должна содержать намек на то, как правильно находить решение. В идеале постарайтесь, чтобы подсказка не слишком сильно облегчала задачу, но и позволяла тестируемому дать направление для размышлений. Также есть возможность загрузить аудиоподсказку, дополняющую или дублирующую текстовую.</span>
+		        	</v-tooltip>
 	              <v-text-field
 	                type="text"
 	                class="ml-2"
-	                label="Текстовая подсказка"
 	                v-model="answer.hint"
+	                :rules="[rules.hint]"
 	                clearable
+	                solo
 	              ></v-text-field>
 	            </v-flex>
 
@@ -128,45 +125,65 @@
 			</v-layout>
 
 			<v-layout row wrap v-else-if="currentType == 2 || currentType == 3">
+				<div class="divider"></div>
 
 				<v-flex xs12>
+					<v-label>Текст ответа</v-label>
 				  <div class="ansPrefix title">{{answers.indexOf(answer) + 1}}.</div>
 		          <v-text-field
 		            type="text"
-		            label="Текст ответа"
 		            v-model="answer.text"
-		            :rules="rules"
+		            :rules="[rules.required, rules.answer]"
 		            required
+		            solo
 		  			clearable
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 v-if="currentType==3" >
-		          <v-text-field :disabled="answer.correct == 0"
+				<v-flex xs12 sm4 px-1 v-if="currentType==3" >
+
+					<v-label>Максимальный балл</v-label>
+					<v-tooltip bottom >
+				        <v-btn slot="activator"  icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Данная система тестирования такова, что она позволяет не только выполнить срез знаний пользователя, но и заставить его подумать и научиться, если он не очень качественно знает материал. Пользователю предоставляются дополнительные попытки на ответ в случае неверных или неполных ответов. Но с каждым неверным ответом количество возможных баллов, которые можно получить из каждого ответа, делятся пополам, если они не были отмечены верно.</span>
+		        	</v-tooltip>
+		          <v-text-field :disabled="!answer.correct"
 		            type="number"
-		            label="Максимальный балл"
+		            :rules="[rules.weight]"
 		            v-model="answer.weight"
-		            :rules="rulesWeight"
+		            :value="0"
 		            required
+		            solo
 		  			clearable
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 >
+				<v-flex xs12 sm4 px-1>
+					<v-label>Приоритет проверки</v-label>
+					<v-tooltip bottom >
+				        <v-btn slot="activator" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Приоритет проверки означает, в каком порядке в случае неверного ответа будет воспроизводиться подсказка для пользователя. Приоритеты должна начинаться с 1 и идти по порядку. Этим значениям и будет соответствовать порядок проверки вариантов ответа на правильность. Например, пользователь указал как верные ответы, которым соответствуют приоритеты 2 и 4. Если ответ с приоритетом 1 являлся верным, а пользователь его не отметил - пользователю будет выведена подсказка, соответствующая ответу с приоритетом 1. А если этот ответ и был неверен, проверка перейдет к ответу с приоритетом 2 и проверит его. Если наш ответ с приоритетом 2, который отметил пользователь, был бы неверным - то пользователю была бы показана подсказка к ответу с приоритетом 2. А если этот ответ действительно верен, то проверка пойдет дальше. Таким образом, внимательно расставьте приоритеты к ответам (например, от самых простых вариантов ответа до самых сложных). Как правило, обычно бывает уместным первыми приоритетами указывать неверные ответы, так как за них не начисляются баллы, а последними приоритетами - верные, по мере увеличения баллов за ответ.</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="number"
-		            label="Приоритет проверки"
 		            v-model="answer.priority"
-		            :rules="rulesDuplicatePriority"
+		            :rules="[rules.priority,rules.duplicatePriority]"
+		            solo
 		            required
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4>
+				<v-flex xs12 sm4 px-1>
+					<v-label>Текстовая подсказка</v-label>
+					<v-tooltip bottom >
+				        <v-btn slot="activator" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Опциональное поле. Если тестируемый ответит неверно, то всплывет подсказка, которая должна содержать намек на то, как правильно находить решение. В идеале постарайтесь, чтобы подсказка не слишком сильно облегчала задачу, но и позволяла тестируемому дать направление для размышлений. Также есть возможность загрузить аудиоподсказку, дополняющую или дублирующую текстовую.</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            type="text"
-		            label="Подсказка"
 		            v-model="answer.hint"
+		            :rules="[rules.hint]"
+		            solo
 		          ></v-text-field>
 				</v-flex>
 
@@ -179,14 +196,14 @@
 			      ></v-switch>
 			      <v-radio 
 			        v-if="currentType==2"
-			        class="mx-3 my-3"
+			        class="ma-3"
 			        v-model="answers.indexOf(answer)"
-			        @change="checkRadios()"
-			      	:label="isTrueText" 
+			        @change="checkRadios($event)"
+			      	:label="isTrueText"
 			      ></v-radio>
 				</v-flex>
 
-				  <v-flex xs12 sm4 xl3>
+				  <v-flex xs12 sm4 xl3 mb-3>
 	    			<v-layout align-center>
 			          	<v-checkbox v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
 			            <file-input 
@@ -200,7 +217,7 @@
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
-		          <v-flex xs12 sm4 xl3>
+		          <v-flex xs12 sm4 xl3 mb-3>
 	    			<v-layout align-center>
 			          	<v-checkbox v-model="answer.enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
 			            <file-input 
@@ -224,52 +241,54 @@
 
 				<v-layout column align-center justify-center>
 					<v-flex xs12 class="mb-3" >
-						<v-btn 
-						v-if="localCountAnswers < maxAnswers" 
-						icon 
-						color="success" 
-						@click="incLCA()" 
-						dark
-						large
-						><v-icon size="32px">
+						<v-tooltip bottom>
+							<v-btn 
+							slot="activator"
+							v-if="localCountAnswers < maxAnswers" 
+							fab
+							color="success" 
+							@click="incLCA()" 
+							dark
+							class="elevation-3"
+							><v-icon size="32px">
 								plus_one
 							</v-icon>
-						 </v-btn>
+							</v-btn>
+							<span>Добавить вариант ответа</span>
+						</v-tooltip>
 
-						 <v-btn 
-						 v-if="localCountAnswers > minAnswers" 
-						 icon 
-						 color="error" 
-						 @click="decLCA()" 
-						 dark
-						 large
-						><v-icon size="32px">
+						<v-tooltip bottom>
+							<v-btn 
+							slot="activator"
+							v-if="localCountAnswers > minAnswers" 
+							fab
+							color="error" 
+							@click="decLCA()" 
+							dark
+							class="elevation-3"
+							><v-icon size="32px">
 								close
 							</v-icon>
-						 </v-btn>
+							</v-btn>
+							<span>Удалить последний вариант ответа</span>
+						</v-tooltip>
 					</v-flex>	
 				</v-layout>
 
-
-				<v-flex xs12 mb-3>
-					<v-card class="elevation-1" color="green lighten-4" >
-						<v-flex xs12 pa-2>
-							<v-btn round color="black" dark large outline icon>5</v-btn>
-							<span>Заключительным этапом введите количество вариантов ответа, которые будут включаться за один раз в вопрос пользователю. Эти варианты будут каждый раз случайно выбираться из тех, что вы добавили выше. Вы можете указать не более 8 вариантов ответа и не более, чем количество вариантов, добавленных выше.</span>
-						</v-flex>
-					</v-card>
-				</v-flex>
-
+				<div class="divider"></div>
 				<v-flex xs12>
+					<v-label>Количество ответов, включаемых в вопрос</v-label>
+					<v-tooltip bottom v-model="showQtyTooltip">
+				        <v-btn slot="activator" @click="showQtyTooltip = !showQtyTooltip" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Поле показывает, сколько вариантов ответов из добавленных выше (случайным выбором) будет предложено тестируемому для ответа. Максимально допустимое значение - 8.</span>
+		        	</v-tooltip>
 		          <v-text-field
 		            v-model="answersQty"
 		            type="number"
-		            label="Количество ответов, включаемых в вопрос"
-		            :rules="rulesMaxAns"
+		            :rules="[rules.maxAns]"
 		            :value="countAnswers"
-		            hint="Из добавленных выше"
 		            required
-		            box
+		            solo
 		          ></v-text-field>
 		        </v-flex>
 		</v-layout>
@@ -288,15 +307,36 @@
 				isTrueText: 'Ответ верен',
                 imageLoadText: 'Изображение к ответу',
 				audio: '',
-        		rules: [ (value) => !!value || 'Это обязательное поле' ],
-        		rulesMaxAns: [ (value) => ((value >= 2) && (value <= this.localCountAnswers) && (value <= this.maxIncludedAnswers))  || 'Должно быть не больше количества элементов, добавленных выше, и не превышать '+ this.maxIncludedAnswers],
-        		rulesDuplicatePriority: [(value) => !this.findDuplicates(value) || 'Такое значение уже есть у другого ответа',
-        								 (value) => !!value || 'Это обязательное поле'],
-       			rulesWeight: [(value) => value >= 0 || 'Это обязательное поле'],
+
+                rules: {
+                	required: value => !!value || 'Это необходимое поле',
+                	maxAns: value => ((value >= 2) && (value <= this.localCountAnswers) && (value <= this.maxIncludedAnswers))  || 'Введите значение не больше количества элементов, добавленных выше, и также не превышающее '+ this.maxIncludedAnswers,
+                	weight: value => (value >= this.minWeight && value <= this.maxWeight) || 'Введите значение в диапазоне от '+this.minWeight+' до '+this.maxWeight,
+                	priority: value => (value >= this.minPriority && value <= this.maxPriority) || 'Введите значение в диапазоне от '+this.minPriority+' до '+ this.maxPriority,
+                	duplicatePriority: value => !this.findDuplicates(value) || 'Такое значение уже есть у другого ответа',
+                	answer: value => (!value || (!!value && value.length <= this.maxAnswerLength)) || 'Максимальная длина поля '+this.maxAnswerLength+' символов',
+                	comment: value => (!value || (!!value && value.length <= this.maxCommentLength)) || 'Максимальная длина поля '+this.maxCommentLength+' символов',
+                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов'
+                },
         		oneAnswerRadios: 0,
         		maxAnswers:15,
         		minAnswers: 2,
-        		maxIncludedAnswers: 8
+        		maxAnswerLength:100,
+        		maxCommentLength: 150,
+        		maxHintLength: 300,
+        		minWeight: 0,
+        		maxWeight: 1000,
+        		minPriority: 1,
+        		maxPriority: 15,
+        		maxIncludedAnswers: 8,
+        		showAnswerTooltop: false,
+        		showCommentTooltip: false,
+        		showWeightTooltip: false,
+        		showHintTooltip: false,
+        		showWeight2typeTooltip: false,
+        		showAnswersTooltip: false,
+        		showQtyTooltip: false,
+
 			}
 		},
 		methods: {
@@ -329,15 +369,13 @@
 						else found = true
 				return false
 			},
-			checkRadios() {
+			checkRadios(arg) {
 				if (this.currentType != 2)
 					return
 				for (var i = 0; i < this.answers.length; ++i)
-					if (i == this.oneAnswerRadios)
+					if (i == arg)
 						this.answers[i].correct = true
 					else this.answers[i].correct = false
-				this.answers.push(null)
-				this.answers.pop()
 			},
 			getUploadedAudio(e, index) {
 				this.$emit('update:answersAudio', {'audio' : e, 'index': index})
@@ -346,13 +384,12 @@
 				this.$emit('update:answersImage', {'image' : e, 'index': index})
 			},
 			changeCheck(index, e){
-				if (e)
-					for (var i = 0; i < this.answers.length; ++i)
-						if (i == index)
-						{
-							this.answers[i].weight = this.answers[i].correct ? 256 : 0
-							return
-						}
+				for (var i = 0; i < this.answers.length; ++i)
+					if (i == index)
+					{
+						this.answers[i].weight = this.answers[i].correct ? 256 : 0
+						return
+					}
 			}
 		},
 		computed: {
@@ -384,8 +421,13 @@
 <style>
 	.ansPrefix{
 		position: relative;
-		left:-10px;
-		top: 20px;
+		left:-20px;
 		float:left;
+	}
+	.divider{
+		height:1px;
+		width:100%;
+		background: #bbb;
+		margin-bottom:15px;
 	}
 </style>

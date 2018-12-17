@@ -40,22 +40,58 @@
 
 	<v-flex v-else-if="question.question.answer_type == 2" xs12>
 		<v-radio-group>
-			<v-radio
-	          v-for="answer in resAnswers"
-	          :label="answer.answer.text"
-	          :value="answer.id"
-	          @change="changeRadio(answer.id)"
-	        ></v-radio>
+			<v-layout wrap col >
+				<v-flex xs12 sm6 md4 px-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
+			        <v-img 
+			        	:src="answer.answer.image"
+		        		:aspect-ratio="16/9" 
+			            position="center center"
+			        ></v-img>
+			        <p class="testingRadioLabel">
+				    	<v-label>{{answer.answer.text}}</v-label>
+				    </p>
+					<v-radio
+					  class="testingRadio"
+			          :value="answer.id"
+			          @change="changeRadio(answer.id)"
+			        ></v-radio>
+				</v-flex>
+				<v-flex xs12 v-else>
+					<v-radio
+					  :label="answer.answer.text"
+			          :value="answer.id"
+			          @change="changeRadio(answer.id)"
+			        ></v-radio>
+			    </v-flex>
+			</v-layout>
 	    </v-radio-group>
 	</v-flex>
 
 	<v-flex v-else-if="question.question.answer_type == 3" xs12>
-		<v-checkbox 
-		  v-for="answer in resAnswers"
-		  :label="answer.answer.text" 
-		  :value="answer.id"
-		  @change="changeCheck(answer.id)"
-		></v-checkbox>
+		<v-layout wrap col>
+			<v-flex xs12 sm6 md4 px-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
+		        <v-img 
+		        	:src="answer.answer.image"
+	        		:aspect-ratio="16/9" 
+		            position="center center"
+		        ></v-img>
+		        <p class="testingRadioLabel">
+			    	<v-label >{{answer.answer.text}}</v-label>
+			    </p>
+				<v-checkbox 
+			 	  class="testingRadio"
+				  :value="answer.id"
+				  @change="changeCheck(answer.id)"
+				></v-checkbox>
+			</v-flex>
+			<v-flex xs12 v-else>
+				<v-checkbox 
+				  :label="answer.answer.text"
+				  :value="answer.id"
+				  @change="changeCheck(answer.id)"
+				></v-checkbox>
+			</v-flex>
+		</v-layout>
 	</v-flex>
 
 
@@ -63,7 +99,7 @@
 		<vue-audio :file="question.audio_hint" :autoPlay="true"/>
 	</v-flex>
 
-	<v-flex xs12 v-if="question.hint != '' && question.hint != 'null'"> 
+	<v-flex xs12 v-if="!!question.hint"> 
 	  <v-alert 
         :value="true"
         type="warning"
