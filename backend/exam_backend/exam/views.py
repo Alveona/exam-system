@@ -486,8 +486,8 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print('correct answer is ', end='')
             print(correct_answer.answer.text)
             print('your answer is ', end='')
-            print(answers_list[0])
-            if answers_list[0] == correct_answer.answer.text:
+            print(answers_list[0] if len(answers_list) >= 1 else None)
+            if len(answers_list) >= 1 and answers_list[0] == correct_answer.answer.text:
                 print('your answer is correct')
                 correct_answer.blocked = True
                 correct_answer.save()
@@ -549,7 +549,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             print('correct answer is ', end='')
             print(correct_answer.answer.id)
 
-            answers = SessionAnswer.objects.all().filter(sessionQuestion=question).order_by('answer__priority')
+            answers SessionAnswer.objects.all().filter(sessionQuestion=question).order_by('answer__priority')
             for answer in answers:
                 answer.will_send_hint = False
                 print(
