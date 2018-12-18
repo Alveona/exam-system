@@ -34,4 +34,5 @@ urlpatterns = [
     path('api/', include(register_urlpatterns)),
     path('api/', include('exam.urls')),
     path('api/', include('exam_auth.urls')),
+    path('api/', include('exam_manage.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

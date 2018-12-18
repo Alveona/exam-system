@@ -45,8 +45,10 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'rest_registration',
+    'exam_manage',
     'exam',
     'exam_auth',
+
 ]
 if DEBUG is True:
      INSTALLED_APPS += ('corsheaders', )
@@ -106,7 +108,7 @@ WSGI_APPLICATION = 'exam_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'exam0_db',
+        'NAME': 'exam3_db',
         'USER': 'root',
         'PASSWORD': 'x4D9VxLpgE', # TODO CHANGE
     }
