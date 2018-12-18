@@ -336,7 +336,6 @@
         		showWeight2typeTooltip: false,
         		showAnswersTooltip: false,
         		showQtyTooltip: false,
-
 			}
 		},
 		methods: {

@@ -3,53 +3,60 @@
       <v-flex xs12>
         <v-card class="testItem px-2 py-2" >  
         	<router-link tag="div" :to="{ name: 'testpage', params: { token: token }}">
-        	<v-layout row wrap class="pointerBlock">
-	        	<v-flex xs12 sm4>
-		        	<v-img
-		        	class="mb-2"
-		        	:aspect-ratio="16/9" 
-		            :src="image"
-		            position="center center"
-		          >
-		          </v-img>
-		      </v-flex>
+	        	<v-layout row wrap class="pointerBlock">
+		        	<v-flex xs12 sm4>
+			        	<v-img
+			        	class="mb-2"
+			        	:aspect-ratio="16/9" 
+			            :src="image"
+			            position="center center"
+			          >
+			          </v-img>
+			      </v-flex>
 
-				<v-flex xs12 sm8>
-		          <v-card-title primary-title>
-		            <div>
-		              <div class="headline">{{title}}</div>
-		              <div v-if="added">Автор: {{author}}</div>
-		            </div>
-		          </v-card-title>
-		      </v-flex>
+					<v-flex xs12 sm8>
+			          <v-card-title primary-title>
+			            <div>
+			              <div class="headline">{{title}}</div>
+			              <div v-if="added">Автор: {{author}}</div>
+			            </div>
+			          </v-card-title>
+			      </v-flex>
 
-			</v-layout>
-		</router-link>
+				</v-layout>
+			</router-link>
 				<v-divider light></v-divider>
 
 				<v-flex xs12>
-					<v-alert
-			        :value="alert"
-			        :type="successDelete ? 'success' : 'error'" 
-			      >
-			        {{message}}
-
-			      	<v-tooltip v-if="!successDelete" top>
-				        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
-				        <span>Обновить</span>
-				    </v-tooltip>
-			      </v-alert>
-		      </v-flex>	
-
-				<v-flex xs12>
 		          <v-card-actions>
-		            <v-btn icon @click="show = !show">
+				  <v-tooltip bottom>
+		            <v-btn slot="activator" icon @click="show = !show">
 		              <v-icon>{{ show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
 		            </v-btn>
+		            <span>{{show ? 'Скрыть описание' : 'Показать описание'}}</span>
+		          </v-tooltip>
 		            <!--<v-btn v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>-->
-		            <!--<v-btn v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>-->
-		          </v-card-actions>
+
+				  <v-tooltip bottom>
+		            <v-btn slot="activator" v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>
+		            <span>Удалить тест</span>
+		          </v-tooltip>
+		        </v-card-actions>
 		      </v-flex>
+
+				<v-flex xs12>
+					<v-alert
+			          :value="alert"
+			          :type="successDelete ? 'success' : 'error'"
+			        >
+			        {{message}}
+
+				      	<v-tooltip v-if="!successDelete" top>
+					        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+					        <span>Обновить</span>
+					    </v-tooltip>
+				    </v-alert>
+		        </v-flex>	
 
 				<v-flex xs12 >
 		          <v-slide-y-transition>
@@ -58,6 +65,17 @@
 		            </v-card-text>
 		          </v-slide-y-transition>
 		      </v-flex>
+		      <v-snackbar
+			        v-model="snackbar"
+			        :color="successDelete ? 'green lighten-1' : 'red lighten-1'"
+			      >
+			        {{message}}
+
+		      	<v-tooltip v-if="!successDelete" top>
+			        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+			        <span>Обновить</span>
+			    </v-tooltip>
+		      </v-snackbar>
         </v-card>
       </v-flex>
     </v-layout>
@@ -78,6 +96,7 @@
 				show: false,
 				successDelete: false,
 				alert: false,
+				snackbar: false,
 				message: ''
 			}
 		},
