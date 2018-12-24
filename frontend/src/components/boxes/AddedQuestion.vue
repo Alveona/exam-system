@@ -1,69 +1,71 @@
 <template>
 	<v-layout row wrap>
 		<v-flex xs12>
-	  <v-layout row wrap v-for="question in collection">
-	    <v-flex xs12>
-	        <v-card class="questionItem">  
-	          <v-card-title primary-title :to="{ name: 'editquestion', params: { id: question.id }}">
-	          	<v-flex xs1 v-if="withchecks">
-	          	<v-checkbox v-model="questionsChecks" :value="question.id" @change="$emit('update:questionsChecks', questionsChecks)" hide-details class="shrink mr-2"></v-checkbox>
-	          </v-flex>
-	          <v-flex v-if="withchecks ? 'xs11' : 'xs12'">
-	              <span class="headline">{{question.title}}
-	              	<v-tooltip bottom>
-	              	<v-btn icon slot="activator">
-	              		<v-icon color="light-blue darken-1">info</v-icon>
-	              	</v-btn>
-	              	<span> {{question.answer_type==1 ? 'Тип ответа: ввод значения' : question.answer_type==2 ? 'Тип ответа: выбор одного правильного' : 'Тип ответа: выбор нескольких правильных'}} </span>
-	              </v-tooltip>
-	              </span>
-	          </v-flex>
-			  <v-spacer></v-spacer>
-			  
-	            <v-btn icon @click="$emit('update:collection', question.id)">
-	              <v-icon>{{ question.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
-	            </v-btn>
-	          </v-card-title>
-	  
-				<v-flex xs12>
-					<v-alert
-			        :value="alert"
-			        :type="successDelete ? 'success' : 'error'"
+		  <v-layout row wrap v-for="question in collection">
+		    <v-flex xs12>
+		        <v-card class="questionItem">  
+		          <v-card-title primary-title :to="{ name: 'editquestion', params: { id: question.id }}">
+		          	<v-flex xs1 v-if="withchecks">
+		          		<v-checkbox v-model="questionsChecks" :value="question.id" @change="$emit('update:questionsChecks', questionsChecks)" hide-details class="shrink mr-2"></v-checkbox>
+		            </v-flex>
+		          <v-flex v-if="withchecks ? 'xs11' : 'xs12'">
+		              <span class="headline">{{question.title}}
+		              	<v-tooltip bottom>
+		              	<v-btn icon slot="activator" small>
+		              		<v-icon color="light-blue darken-1">info</v-icon>
+		              	</v-btn>
+		              	<span> {{question.answer_type==1 ? 'Тип ответа: ввод значения' : question.answer_type==2 ? 'Тип ответа: выбор одного правильного' : 'Тип ответа: выбор нескольких правильных'}} </span>
+		              </v-tooltip>
+		            </span>
+		          </v-flex>
+				  <v-spacer></v-spacer>
+				  <!--<v-btn v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>-->
+				  <v-tooltip bottom v-if="!withchecks">
+	              	<v-btn slot="activator" @click.native="deleteQuestion(collection.indexOf(question), question.id)" icon><v-icon>delete</v-icon></v-btn>
+	              	<span>Удалить ответ</span>
+		          </v-tooltip>
+				  
+				  <v-tooltip bottom>
+		            <v-btn slot="activator" icon @click="$emit('update:collection', question.id)">
+		              <v-icon>{{ question.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
+		            </v-btn>
+	              	<span>{{ question.show ? 'Скрыть формулировку' : 'Показать формулировку'}}</span>
+		          </v-tooltip>
+		          </v-card-title>
+		  
+					<v-flex xs12>
+						<v-alert
+				          :value="alert"
+				          :type="successDelete ? 'success' : 'error'"
+				        >
+				        {{alert_message}}
+
+					      	<v-tooltip v-if="!successDelete" top>
+						        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
+						        <span>Обновить</span>
+						    </v-tooltip>
+					    </v-alert>
+			      </v-flex>	
+
+		          <v-slide-y-transition>
+		            <v-card-text v-show="question.show">
+		            	<p class="wrappedText">
+			              {{question.text}}
+			          </p>
+		            </v-card-text>
+		          </v-slide-y-transition>
+
+		          <v-snackbar 
+			        color="green lighten-1"
+			        v-model="snackbar"
 			      >
-			        {{alert_message}}
+				    {{ snackbar_message }}
+				  </v-snackbar>
 
-			      	<v-tooltip v-if="!successDelete" top>
-				        <v-btn  @click.native="reloadPage()" slot="activator" icon dark> <v-icon>autorenew</v-icon></v-btn>
-				        <span>Обновить</span>
-				    </v-tooltip>
-			      </v-alert>
-		      </v-flex>	
-
-	          <v-card-actions>
-	            <!--<v-btn v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>-->
-	            <!--<v-btn v-if="!withchecks" @click.native="deleteQuestion(question.id)" icon><v-icon>delete</v-icon></v-btn>-->
-	          </v-card-actions>
-	  
-	          <v-slide-y-transition>
-	            <v-card-text v-show="question.show">
-	            	<p class="wrappedText">
-		              {{question.text}}
-		          </p>
-	            </v-card-text>
-	          </v-slide-y-transition>
-
-	          <v-snackbar 
-		        top="top"
-		        color="green lighten-1"
-		        v-model="snackbar"
-		        >
-			      {{ snackbar_message }}
-			    </v-snackbar>
-
-	        </v-card>
-	    </v-flex>
-	  </v-layout>
-	</v-flex>
+		        </v-card>
+		    </v-flex>
+		  </v-layout>
+		</v-flex>
     </v-layout>
 </template>
 
@@ -83,16 +85,16 @@
 				alert_message: '',
 				snackbar: false,
 				snackbar_message: '',
-				successDelete: ''
+				successDelete: false
 			}
 		},
 		methods: {
-			deleteQuestion(id) {
+			deleteQuestion(index, id) {
 				Axios.delete(TestingSystemAPI+'/api/questions/'+id+'/', {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
-		          this.collection.splice(this.element, 1)
+		          this.collection.splice(index, 1)
 		          this.snackbar = true
 		          this.successDelete = true
 		          this.snackbar_message = 'Вопрос успешно удален.'
