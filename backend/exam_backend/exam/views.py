@@ -150,6 +150,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             # answers.save()
             return Response({'status': 'skiped'})
         if self.request.data['status'] == 3:
+
             print(self.request.data)
             question.result = 0
             question.finished = True
@@ -160,31 +161,34 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             course.token, finished=False)
             current_question = max([session.order_number for session in
                                     SessionQuestion.objects.all().filter(session=session, finished=True)])
-            list_of_questions = course.questions.all()
-            print(list_of_questions)
-            question = secrets.choice(list_of_questions)
-            previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
-            previous_questions = [sessionq.question for sessionq in previous_session_questions]
+            for i in range(current_question, course.questions_number):
+                current_question = max([session.order_number for session in
+                                                    SessionQuestion.objects.all().filter(session=session, finished=True)])
+                list_of_questions = course.questions.all()
+                print(list_of_questions)
+                question = secrets.choice(list_of_questions)
+                previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
+                previous_questions = [sessionq.question for sessionq in previous_session_questions]
 
-            print('previous s-qs: ' + str(previous_session_questions))
-            print('previous qs: ' + str(previous_questions))
-            found_suitable_question = False
-            while not found_suitable_question:
-                print('current checking question is: ' + str(question))
-                if question in previous_questions:
-                    print('no, it is not suitable')
-                    list_of_questions = list_of_questions.exclude(id = question.id)
-                    question = secrets.choice(list_of_questions)
-                else:
-                    found_suitable_question = True
-            print('chosen question is ' + str(question))
-            session_q = SessionQuestion(question=question,
-                                        session=session, order_number=current_question + 1,
-                                        result=0, attempts_number=question.attempts_number,
-                                        finished=True)
-            session_q.save()
-            answers = SessionAnswer.objects.all().filter(sessionQuestion=session_q, answer__deleted = False)
-            answers.delete()
+                print('previous s-qs: ' + str(previous_session_questions))
+                print('previous qs: ' + str(previous_questions))
+                found_suitable_question = False
+                while not found_suitable_question:
+                    print('current checking question is: ' + str(question))
+                    if question in previous_questions:
+                        print('no, it is not suitable')
+                        list_of_questions = list_of_questions.exclude(id = question.id)
+                        question = secrets.choice(list_of_questions)
+                    else:
+                        found_suitable_question = True
+                print('chosen question is ' + str(question))
+                session_q = SessionQuestion(question=question,
+                                            session=session, order_number=current_question + 1,
+                                            result=0, attempts_number=question.attempts_number,
+                                            finished=True)
+                session_q.save()
+                answers = SessionAnswer.objects.all().filter(sessionQuestion=session_q, answer__deleted = False)
+                answers.delete()
             # answers.save()
             print('going to abort')
             return Response({'status': 'aborted'})
