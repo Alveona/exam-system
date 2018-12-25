@@ -2,11 +2,15 @@
 	<v-form ref="addTform">
 		<v-container>
 			<v-layout row wrap>
+				<v-flex xs12>
+				<v-layout row wrap>
 					<h4 class="display-1">Создание нового теста</h4>
 					<v-tooltip bottom v-model="showTestTooltip">
 				        <v-btn slot="activator" @click="showTestTooltip = !showTestTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
 				        <span>Сейчас вы создаете новый тест. В него потребуется добавить из списка уже созданные вами вопросы, которые будут встречаться при прохождении в случайном порядке. </span>
 					</v-tooltip>
+				</v-layout>
+			</v-flex>
 
 				<v-flex xs12 sm6>
 					<v-label>Название теста</v-label>

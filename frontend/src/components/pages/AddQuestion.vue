@@ -2,11 +2,16 @@
 	<v-form ref="addQform" v-model="valid">
 		<v-container>
 			<v-layout row wrap>
-				<h4 class="display-1">Создание нового вопроса</h4>
-				<v-tooltip bottom v-model="showQuestionTooltip">
-			        <v-btn slot="activator" @click="showQuestionTooltip = !showQuestionTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
-			        <span>Сейчас вы создаете новый вопрос, который впоследствие может быть добавлен в ваши курсы. В процессе прохождения теста пользователь сможет отвечать в один момент времени только на один вопрос.</span>
-				</v-tooltip>
+				<v-flex xs12>
+					<v-layout row wrap>
+						<h4 class="display-1">Создание нового вопроса</h4>
+						<v-tooltip bottom v-model="showQuestionTooltip">
+					        <v-btn slot="activator" @click="showQuestionTooltip = !showQuestionTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					        <span>Сейчас вы создаете новый вопрос, который впоследствие может быть добавлен в ваши курсы. В процессе прохождения теста пользователь сможет отвечать в один момент времени только на один вопрос.</span>
+						</v-tooltip>
+					</v-layout>
+				</v-flex>
+
 				<v-flex xs12>
 					<v-label>Краткое название вопроса</v-label>
 					<v-tooltip bottom v-model="showTitleTooltip">
