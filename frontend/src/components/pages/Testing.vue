@@ -81,6 +81,7 @@
 				<v-checkbox 
 			 	  class="testingRadio"
 				  :value="answer.id"
+				  v-model="changedChecks"
 				  @change="changeCheck(answer.id)"
 				></v-checkbox>
 			</v-flex>
@@ -88,6 +89,7 @@
 				<v-checkbox 
 				  :label="answer.answer.text"
 				  :value="answer.id"
+				  v-model="changedChecks"
 				  @change="changeCheck(answer.id)"
 				></v-checkbox>
 			</v-flex>
@@ -148,11 +150,12 @@ export default{
 			resAnswers: [],
 			reqAnswers: [],
 			fullAnswer: null,
-			alert: false
+			alert: false,
+			changedChecks: []
 		}
 	},
 	methods: {
-        getQuestion(callback)
+        getQuestion(q, callback)
         {
         	console.log('getQuestion function: ')
         	var token = { 'token' : this.$route.params.token }
@@ -187,12 +190,15 @@ export default{
 			            if (this.question.question.answer_type != 1)
 				            for (var i = 0; i < this.resAnswers.length; ++i)
 				            {
-						          	    this.reqAnswers.push({
-							          		id: this.resAnswers[i].id,
-							          		chosen: false
-							          	})
+				          	    this.reqAnswers.push({
+					          		id: this.resAnswers[i].id,
+					          		chosen: false
+					          	})
 				          	}
-				          	callback()
+				          	if (this.question.id == q)
+				          		callback(false)
+				          	else
+				          		callback(true)
 			        }).catch(error => {
 
 			          console.log(error)
@@ -242,14 +248,19 @@ export default{
 						console.log(arr[i])
 					console.log(arr)	
 					
-					this.getQuestion(() => {
+					this.getQuestion(this.question.id, (changed) => {
 						console.log('after getQ:')
 						console.log(this.reqAnswers)
-						for(var i = 0; i<arr.length; i++)
-						{
-							this.reqAnswers[i] = arr[i]
-							console.log(this.reqAnswers[i])	
+						if(!changed){
+							for(var i = 0; i<arr.length; i++)
+							{
+								this.reqAnswers[i] = arr[i]
+								if (this.reqAnswers[i].chosen)
+									this.changedChecks.push(this.reqAnswers[i].id)
+								console.log(this.reqAnswers[i])	
+							}
 						}
+						else this.changedChecks = []
 						//this.reqAnswers = arr
 						console.log(this.reqAnswers)
 					})
