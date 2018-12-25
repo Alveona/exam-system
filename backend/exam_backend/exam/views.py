@@ -50,6 +50,7 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
 
     def get_queryset(self):
+        print('GET on /session-q')
         session = CourseSession.objects.all().get(user=self.request.user, course__token=
         self.request.query_params.get('token'), finished=False)
         # print(session)
@@ -69,21 +70,36 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
             # TODO DIFFICULTY FUNCTION
             course = Course.objects.all().get(token=self.request.query_params.get('token'))
             list_of_questions = course.questions.all()
-            # print(list_of_questions)
+            print('list of questions: ' + str(list_of_questions))
             question = secrets.choice(list_of_questions)
-            # print('chosen question is ' + str(question))
+
             previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
+            previous_questions = [sessionq.question for sessionq in previous_session_questions]
+            print('previous s-qs: ' + str(previous_session_questions))
+            print('previous qs: ' + str(previous_questions))
             found_suitable_question = False
             while not found_suitable_question:
-                for sq in previous_session_questions:
-                    if question == sq.question:
-                        question = secrets.choice(list_of_questions)
-                        break
-                    else:
-                        found_suitable_question = True
-                        # print('chosen question in for is '+ str(question))
-                        break
-                continue
+                print('current checking question is: ' + str(question))
+                if question in previous_questions:
+                    print('no, it is not suitable')
+                    list_of_questions = list_of_questions.exclude(id = question.id)
+                    question = secrets.choice(list_of_questions)
+                else:
+                    found_suitable_question = True
+            # while not found_suitable_question:
+            #     print('found suitable? ' + str(found_suitable_question))
+            #     for sq in previous_session_questions:
+            #         print('comparing ' + str(question) + ' and ' + str(sq.question))
+            #         if question == sq.question:
+            #             list_of_questions.exclude(id = question.id)
+            #             question = secrets.choice(list_of_questions)
+            #             break
+            #         else:
+            #             found_suitable_question = True
+            #             # print('chosen question in for is '+ str(question))
+            #             break
+            #     continue
+            print('chosen question is ' + str(question))
             session_q = SessionQuestion(question=question,
                                         session=session, order_number=current_question + 1,
                                         result=0, attempts_number=question.attempts_number,
@@ -134,6 +150,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             # answers.save()
             return Response({'status': 'skiped'})
         if self.request.data['status'] == 3:
+
             print(self.request.data)
             question.result = 0
             question.finished = True
@@ -144,30 +161,34 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
             course.token, finished=False)
             current_question = max([session.order_number for session in
                                     SessionQuestion.objects.all().filter(session=session, finished=True)])
-            list_of_questions = course.questions.all()
-            print(list_of_questions)
-            question = secrets.choice(list_of_questions)
-            previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
-            found_suitable_question = False
-            while not found_suitable_question:
-                print(found_suitable_question)
-                if session.course.questions_number == 1:
-                    return Response({'status': 'aborted'})
-                for sq in previous_session_questions:
-                    if question == sq.question:
+            for i in range(current_question, course.questions_number):
+                current_question = max([session.order_number for session in
+                                                    SessionQuestion.objects.all().filter(session=session, finished=True)])
+                list_of_questions = course.questions.all()
+                print(list_of_questions)
+                question = secrets.choice(list_of_questions)
+                previous_session_questions = SessionQuestion.objects.all().filter(session=session, finished=True)
+                previous_questions = [sessionq.question for sessionq in previous_session_questions]
+
+                print('previous s-qs: ' + str(previous_session_questions))
+                print('previous qs: ' + str(previous_questions))
+                found_suitable_question = False
+                while not found_suitable_question:
+                    print('current checking question is: ' + str(question))
+                    if question in previous_questions:
+                        print('no, it is not suitable')
+                        list_of_questions = list_of_questions.exclude(id = question.id)
                         question = secrets.choice(list_of_questions)
-                        break
                     else:
                         found_suitable_question = True
-                        break
-                continue
-            session_q = SessionQuestion(question=question,
-                                        session=session, order_number=current_question + 1,
-                                        result=0, attempts_number=question.attempts_number,
-                                        finished=True)
-            session_q.save()
-            answers = SessionAnswer.objects.all().filter(sessionQuestion=question, answer__deleted = False)
-            answers.delete()
+                print('chosen question is ' + str(question))
+                session_q = SessionQuestion(question=question,
+                                            session=session, order_number=current_question + 1,
+                                            result=0, attempts_number=question.attempts_number,
+                                            finished=True)
+                session_q.save()
+                answers = SessionAnswer.objects.all().filter(sessionQuestion=session_q, answer__deleted = False)
+                answers.delete()
             # answers.save()
             print('going to abort')
             return Response({'status': 'aborted'})
