@@ -331,7 +331,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         question.attempts_number = question.attempts_number - 1
                         if question.attempts_number == 0:
                             for answer in answers:
-                                question.result += answer.result
+                                question.result += answer.current_result
                             question.finished = True
                             question.save()
                             answers.delete()
@@ -385,7 +385,7 @@ class SessionAnswerViewSet(viewsets.ModelViewSet):
                         question.attempts_number = question.attempts_number - 1
                         if question.attempts_number == 0:
                             for answer in answers:
-                                question.result += answer.result
+                                question.result += answer.current_result
                             question.finished = True
                             question.save()
                             answers.delete()
