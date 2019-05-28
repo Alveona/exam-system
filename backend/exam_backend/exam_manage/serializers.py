@@ -105,7 +105,8 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ('id', 'name', 'description', 'author', 'token', 'image'
-                  , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt')
+                  , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt',
+                  'perfect_mark', 'good_mark', 'satisfactory_mark')
 
     def get_subscribed(self, obj):
         print(obj)
