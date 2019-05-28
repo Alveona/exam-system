@@ -1,8 +1,8 @@
 <template>
-	<v-form>
+	<v-form ref="editQform">
 		<v-container>
 			<v-layout row wrap>
-				<h4 class="display-1">Добавление нового вопроса</h4>
+				<h4 class="display-1">Редактирование вопроса</h4>
 				<v-flex xs12>
 		            <v-text-field
 		              label="Краткое название (будет видно только вам)"
@@ -25,13 +25,12 @@
 		        </v-flex>
 
 		          <v-flex xs12 sm6 xl3>
-	        			<v-layout align-center>
+	        		<v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
-			            <v-text-field 
-			            type='number' 
+			            <v-text-field type="number"
 			            :disabled="!enabledAttempts"
 			            label="Количество попыток"
-			            v-model="question.attempts"
+			            v-model="attempts"
               			clearable
               			box
               			hint="Если не указать, то закончатся, когда обнулятся баллы"
@@ -46,12 +45,20 @@
 			            :disabled="!enabledTimer"
 			            :rules="rulesTimer"
 			            label="Таймер на вопрос"
-			            v-model="question.timer"
+			            v-model="timer"
               			clearable
               			box
 			            hint="В секундах"
 			            ></v-text-field>
 			        </v-layout>
+			      </v-flex>
+
+			      <v-flex xs12>
+				      <v-label>Замена изображения и аудио:</v-label>
+				      <v-tooltip bottom v-model="showMediaTooltip">
+					    <v-btn slot="activator" @click="showMediaTooltip = !showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
+			          </v-tooltip>
 			      </v-flex>
 
 		          <v-flex xs12 sm6 xl3>
@@ -62,6 +69,7 @@
 	                    accept="image/*"
 	                    ref="fileInput"
                         @input="getUploadedQImage($event)"
+                        @update:deleteFile="deleteFile(0)"
 			            :dis="!enabledImage"
 			            :checked="enabledImage"
 			            :label="imageLoadText"
@@ -77,6 +85,7 @@
 	                    accept="audio/*"
 	                    ref="fileInput"
                         @input="getUploadedQAudio($event)"
+                        @update:deleteFile="deleteFile(1)"
 			            :dis="!enabledAudio"
 			            :checked="enabledAudio"
 			            :label="audioLoadText"
@@ -118,10 +127,15 @@
 						:currentType="question.answer_type"
 						:countAnswers="countAnswers"
 						:answers="answers"
+						:answersQty="answersQty"
+						:edit="edit"
   						@update:countAnswers="countAnswers = $event"
+  						@update:answersQty="answersQty = $event"
   						@push="pushAnswer()"
   						@update:answersAudio="getUploadedAudio($event)"
   						@update:answersImage="getUploadedImage($event)"
+  						@update:changeAudio="changeAudio($event)"
+  						@update:changeImage="changeImage($event)"
 					></add-answers>
 				</v-flex>
 							    
@@ -139,7 +153,7 @@
 
 		      <v-flex xs12>
 					<v-btn round color="success" @click.native="onSubmit()" dark large>
-						 Добавить вопрос
+						 Сохранить вопрос
 					</v-btn>
 				</v-flex>
 
@@ -167,6 +181,8 @@
 			    enabledTimer: false,
 			    enabledImage: false,
 			    enabledAudio: false,
+			    showMediaTooltip: false,
+			    edit:true,
 
 				maxDifficulty: 100,
         		minDifficulty: 1,
@@ -197,29 +213,64 @@
 				alert: false,
 				successSet: false,
 				getQError: false,
+				attempts: null,
+				timer: null,
+				answersQty: null,
 
 				questionId: '',
 				answers: [],
+				question: null,
 
-                image: '',
-                imageLoadText: 'Изображение к вопросу',
-
-                audio: '',
-                audioLoadText: 'Голосовое воспроизведение',
+                imageLoadText: 'Изображение еще не загружено',
+                audioLoadText: 'Аудиозапись еще не загружена',
 		    }
 		  },
 		methods: {
 			getQuestion() {
-				Axios.get(`${TestingSystemAPI}/api/questions/`, {
+				axios.get(`${TestingSystemAPI}/api/questions/`, {
 		            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		            params: { 'id' : this.$route.params.id }
 		        }).then((qdata) => {
 					this.question = qdata.data[0]
-					Axios.get(`${TestingSystemAPI}/api/answers/`, {
+					this.enabledAttempts = !!this.question.attempts_number
+					this.enabledTimer = !!this.question.timer
+					this.enabledAudio = false
+					this.enabledImage = false
+       				this.answersQty = this.question.answers_number
+					if (this.question.audio)
+						this.audioLoadText = 'Уже имеется загруженная аудиозапись'
+					if (this.question.image)
+						this.imageLoadText = 'Уже имеется загруженное изображение'
+					this.question.old_image = this.question.image
+					this.question.old_audio = this.question.audio
+					this.question.image = null
+					this.question.audio = null
+					this.attempts = this.question.attempts_number
+					this.timer = this.question.timer
+
+					axios.get(`${TestingSystemAPI}/api/answers/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			            params: { 'id' : this.$route.params.id }
 			        }).then((adata) => {
-						this.answers = adata.data[0]
+						this.answers = adata.data
+						for (var i = 0; i < this.answers.length; i++)
+						{
+							this.answers[i].enabledAudio = false
+							if (this.answers[i].audio)
+								this.answers[i].audioLoadText = 'Уже имеется загруженная аудиозапись'
+							else this.answers[i].audioLoadText = 'Аудиозапись еще не загружена'
+
+							this.answers[i].enabledImage = false
+							if (this.answers[i].image)
+								this.answers[i].imageLoadText = 'Уже имеется загруженное изображение'
+							else this.answers[i].imageLoadText = 'Изображение еще не загружено'
+							this.answers[i].showMediaTooltip = false
+							this.answers[i].old_image = this.answers[i].image
+							this.answers[i].old_audio = this.answers[i].audio
+							this.answers[i].image = null
+							this.answers[i].audio = null
+						}
+
 			        }).catch(error => {
 	                    this.alert = true
 	                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
@@ -230,18 +281,18 @@
                 })
 			},
             getUploadedQImage(e) {
-                this.image = e
+                this.question.image = e
             },
             getUploadedQAudio(e) {
-                this.audio = e
+                this.question.audio = e
             },
             getUploadedAudio(obj) {
             	for (var i = 0; i < this.answers.length; ++i)
             		if (i == obj.index)
             		{
             			this.answers[i].audio = obj.audio
-            			this.answers[i].push(null)
-            			this.answers[i].pop()
+            			this.answers.push(null)
+            			this.answers.pop()
             			return
             		}
             },
@@ -250,31 +301,97 @@
             		if (i == obj.index)
             		{
             			this.answers[i].image = obj.image
-            			this.answers[i].push(null)
-            			this.answers[i].pop()
+            			this.answers.push(null)
+            			this.answers.pop()
             			return
             		}
             },
+            changeAudio(ind){
+				for (var i = 0; i < this.answers.length; ++i)
+					if (i == ind)
+					{
+						if (!this.answers[i].enabledAudio){
+	            			if (this.answers[i].audio)
+								this.answers[i].audioLoadText = "Уже имеется загруженная аудиозапись"
+							else 
+							{
+								this.audio = null
+								this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
+							}
+						}
+						else this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
+					}
+
+				this.answers.push(null)
+				this.answers.pop()
+            },
+            changeImage(ind){
+				for (var i = 0; i < this.answers.length; ++i)
+					if (i == ind)
+					{
+						if (!this.answers[i].enabledImage){
+	            			if (this.answers[i].image)
+								this.answers[i].imageLoadText = "Уже имеется загруженное изображение"
+							else 
+							{
+								this.image = null
+								this.answers[i].imageLoadText = "Изображение еще не загружено"
+							}
+						}
+						else this.answers[i].imageLoadText = "Изображение еще не загружено"
+					}
+				this.answers.push(null)
+				this.answers.pop()
+            },
             onSubmit() {
+	        	if (!this.$refs.editQform.validate())
+	        	{
+               		this.successSet = false
+                    this.alert = true
+                    this.message = 'Не все обязательные поля были заполнены.'
+	        		return
+	        	}
+	        	if (this.successSet)
+	        		return
+
                  let formData = new FormData()
 
                  formData.set('text', this.question.text)
                  formData.set('title', this.question.title)
-                 formData.set('attempts_number', this.question.attempts)
-                 formData.set('timer', this.question.timer)
+                 formData.set('attempts_number', this.attempts)
+                 formData.set('timer', this.timer)
                  formData.set('answer_type', this.question.answer_type)
-                 formData.set('answers_number', this.countAnswers) //R U SHURE???
+                 formData.set('answers_number', this.answersQty)
                  formData.set('difficulty', this.question.difficulty)
-                 formData.set('image', this.image)
-                 formData.set('audio', this.audio)
+
+                 if (this.question.old_image && !this.enabledImage)
+                 	formData.set('image', "stay")
+                 else if (this.question.old_image && !this.question.image)
+                 	formData.set('image', null)
+                 else formData.set('image', this.question.image)
+
+                 if (this.question.old_audio && !this.enabledAudio)
+                 	formData.set('audio', "stay")
+                 else if (this.question.old_audio && !this.question.audio)
+                 	formData.set('audio', null)
+                 else formData.set('audio', this.question.audio)
+
                  var comment = null
                  if (this.currentType == 1)
 					comment = this.answers[0].comment
                  formData.set('comment', comment)
+				/*
+				var object = {};
+				formData.forEach(function(value, key){
+				    object[key] = value;
+				});
+				var json = JSON.stringify(object);
+                 console.log(json)
+				*/			
 
                  axios.patch(`${TestingSystemAPI}/api/questions/`, formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-			          params: {}
+			          params: { 'id' : this.$route.params.id }
 			        })
 	               .then((response) => {
 	               		this.questionId = response.data.id
@@ -285,63 +402,111 @@
 
 		                for (var i = 0; i < this.answers.length; i++)
 		                {
-		                 	answersData.append('image', this.answers[i].image)
-		                 	answersData.append('audio', this.answers[i].audio)
+
+			                if (this.answers[i].old_image && !this.answers[i].enabledImage)
+			                 	answersData.set('image', "stay")
+			                else if (this.answers[i].old_image && !this.answers[i].image)
+			                 	answersData.set('image', null)
+			                else answersData.set('image', this.answers[i].image)
+
+			                if (this.answers[i].old_audio && !this.answers[i].enabledAudio)
+			                 	answersData.set('audio', "stay")
+			                else if (this.answers[i].audio && !this.answers[i].audio)
+			                 	answersData.set('audio', null)
+			                else answersData.set('audio', this.answers[i].audio)
+
+		                 	if (this.currentType != 2 )
+		                 		answersData.append('priority', this.answers[i].priority)
+		                 	else 
+		                 	{
+		                 		if (this.answers[i].correct)
+		                 			answersData.append('priority', this.answers.length)
+		                 		else answersData.append('priority', i + 1)
+		                 	}
 		                 	answersData.append('text', this.answers[i].text)
-		                 	answersData.append('priority', this.answers[i].priority)
 		                 	answersData.append('correct', this.answers[i].correct)
 		                 	if (this.currentType == 2 && !this.answers[i].correct)
 		                 		answersData.append('weight', 0)
 		                 	else answersData.append('weight', this.answers[i].weight)
 		                 	answersData.append('hint', this.answers[i].hint)
 		                 	answersData.append('question', this.questionId)
+		                 	/*
+		                 	var object = {};
+							answersData.forEach(function(value, key){
+							    object[key] = value;
+							});
+							var json = JSON.stringify(object);
+			                 console.log(json)
+			                 */
 		                 }
 
                			axios.patch(`${TestingSystemAPI}/api/answers/`, answersData, {
 				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-				          params: {}
+				          params: { 'id' : this.$route.params.id }
 				        })
 		               .then(response => {
 		               		this.successSet = true
 		                    this.alert = true
-		                    this.message = 'Вопрос успешно добавлен.'
-
+		                    this.message = 'Вопрос успешно изменен.'
+	                    	setTimeout(this.goBack, 1200)
 		                })
 		               .catch(error => {
 		                    this.alert = true
-		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+		                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
 		                })
-						
 	                })
 	               .catch(error => {
 	                    this.alert = true
-	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+	                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
 	                })
             },
 			reloadPage() {
 				window.location.reload(true)
 			},
-			pushAnswer() {
-				var isTrue = false
-				if (this.currentType == 1)
-					isTrue = true
-				this.answers.push({
-                	image: null,
-                	audio: null,
-                	text: null,
-                	priority: this.answers.length+1,
-                	correct: isTrue,
-                	weight: 256,
-                	hint: null,
-                	comment: null,
-                	question: 0,
-					enabledAudio: false,
-					enabledImage: false
-				})
-				console.log('countAnswers: '+ this.countAnswers)
-            	console.log('array len: ' + this.answers.length)
-
-            	console.log(this.answers)
+			goBack(){
+            	router.push('/tests')
+			},				
+			deleteFile(isAudio){
+				if (isAudio)
+					this.question.audio = null
+				else this.question.image = null
+			},
+			pushAnswer(ind=null) {
+				if (!ind)
+				{
+					var isTrue = this.currentType == 1 ? true : false
+					this.answers.push({
+	                	image: null,
+	                	audio: null,
+	                	text: null,
+	                	priority: this.answers.length+1,
+	                	correct: isTrue,
+	                	weight: 256,
+	                	hint: null,
+	                	comment: null,
+	                	question: 0,
+						enabledAudio: false,
+						enabledImage: false
+					})
+				}
+				else
+				{
+					var enAudio = true
+					var enImage = true
+					this.answers.push({
+	                	image: this.answers[ind].image,
+	                	audio: this.answers[ind].audio,
+	                	text: this.answers[ind].text,
+	                	priority: this.answers[ind].priority,
+	                	correct: this.answers[ind].correct,
+	                	weight: this.answers[ind].weight,
+	                	hint: this.answers[ind].hint,
+	                	comment: this.answers[ind].comment,
+	                	question: this.$route.params.id,
+						enabledAudio: true,
+						enabledImage: true
+					})
+				}
 			}
        },
        watch: {
@@ -354,16 +519,29 @@
        			this.answers.splice(0)
        			while (this.answers.length < this.countAnswers)
        					this.pushAnswer()
-				console.log('countAnswers: '+ this.countAnswers)
-            	console.log('array len: ' + this.answers.length)
        		},
        		enabledImage: function(val) {
        			if (!val)
-       				this.image = ''
+       			{
+       				this.question.image = null
+       				if (this.question.old_image)
+       					this.imageLoadText = 'Уже имеется загруженное изображение'
+       				else this.imageLoadText = 'Изображение еще не загружено' 
+       			}
+       			else 
+       				this.imageLoadText = 'Изображение еще не загружено' 
+
        		},
        		enabledAudio: function(val) {
        			if (!val)
-       				this.audio = ''
+       			{
+       				this.question.audio = null
+       				if (this.question.old_audio)
+       					this.audioLoadText = 'Уже имеется загруженная аудиозапись'
+       				else this.audioLoadText = 'Аудиозапись еще не загружена'
+       			}
+       			else 
+       				this.audioLoadText = 'Аудиозапись еще не загружена'
        		},
        		attempts: function(val) {
    				if (this.enabledAttempts)
@@ -383,6 +561,8 @@
        },
        mounted() {
        		this.getQuestion()
+       		for (var i = 0; i < this.answers.length; i++)
+       			this.pushAnswer(i)
        }
 	}
 </script>

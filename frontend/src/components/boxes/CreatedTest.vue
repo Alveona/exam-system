@@ -35,7 +35,11 @@
 		            </v-btn>
 		            <span>{{show ? 'Скрыть описание' : 'Показать описание'}}</span>
 		          </v-tooltip>
-		            <!--<v-btn v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>-->
+
+		          <v-tooltip bottom>
+		            <v-btn slot="activator" v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>
+		            <span>Редактировать тест</span>
+		          </v-tooltip>
 
 				  <v-tooltip bottom>
 		            <v-btn slot="activator" v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>
