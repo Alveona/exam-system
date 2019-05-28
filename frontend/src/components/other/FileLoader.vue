@@ -110,6 +110,7 @@
 
             removeFile() {
                 this.fileUrl = ''
+                this.$emit('update:deleteFile')
             }
         }
     }

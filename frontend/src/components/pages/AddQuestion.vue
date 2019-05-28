@@ -159,6 +159,8 @@
   						@push="pushAnswer()"
   						@update:answersAudio="getUploadedAudio($event)"
   						@update:answersImage="getUploadedImage($event)"
+  						@update:changeAudio="changeAudio($event)"
+  						@update:changeImage="changeImage($event)"
 					></add-answers>
 				</v-flex>
 							    
@@ -269,6 +271,10 @@
             getUploadedQAudio(e) {
                 this.audio = e
             },
+            changeAudio(ind){
+            },
+            changeImage(ind){
+            },
             getUploadedAudio(obj) {
             	for (var i = 0; i < this.answers.length; ++i)
             		if (i == obj.index)
@@ -327,13 +333,19 @@
 	               			this.answers[i].question = this.questionId
 
                  		let answersData = new FormData()
-
 		                for (var i = 0; i < this.answers.length; i++)
 		                {
 		                 	answersData.append('image', this.answers[i].image)
 		                 	answersData.append('audio', this.answers[i].audio)
 		                 	answersData.append('text', this.answers[i].text)
-		                 	answersData.append('priority', this.answers[i].priority)
+		                 	if (this.currentType != 2 )
+		                 		answersData.append('priority', this.answers[i].priority)
+		                 	else 
+		                 	{
+		                 		if (this.answers[i].correct)
+		                 			answersData.append('priority', this.answers.length)
+		                 		else answersData.append('priority', i + 1)
+		                 	}
 		                 	answersData.append('correct', this.answers[i].correct)
 		                 	if (this.currentType == 2 && !this.answers[i].correct)
 		                 		answersData.append('weight', 0)

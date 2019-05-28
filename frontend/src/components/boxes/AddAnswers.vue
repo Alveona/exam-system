@@ -107,17 +107,27 @@
 	              ></v-text-field>
 	            </v-flex>
 
+			      <v-flex xs12>
+				      <v-label>Замена изображения и аудио:</v-label>
+				      <v-tooltip bottom v-model="answer.showMediaTooltip">
+					    <v-btn slot="activator" @click="answer.showMediaTooltip = !answer.showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
+			          </v-tooltip>
+			      </v-flex>
+
 	            <v-flex xs12 sm6 xl3>
 	    			<v-layout align-center>
-			          	<v-checkbox v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
+			          	<v-checkbox @click.native="changeAudio(answers.indexOf(answer))" v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
 			            <file-input 
 			            	class="fileBtn"
 		                    accept="audio/*"
 		                    ref="fileInput"
                         	@input="getUploadedAudio($event, answers.indexOf(answer))"
+                        	@update:deleteFile="deleteFile(1, answers.indexOf(answer))"
 				            :dis="!answer.enabledAudio"
+                        	:fileObj="answer.audio"
 				            :checked="answer.enabledAudio"
-				            :label="audioLoadText"
+				            :label="answer.audioLoadText"
 			            ></file-input>
 			        </v-layout>
 			    </v-flex>
@@ -158,7 +168,7 @@
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 px-1>
+				<v-flex xs12 sm4 px-1 v-if="currentType==3">
 					<v-label>Приоритет проверки</v-label>
 					<v-tooltip bottom >
 				        <v-btn slot="activator" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
@@ -203,31 +213,42 @@
 			      ></v-radio>
 				</v-flex>
 
+			      <v-flex xs12>
+				      <v-label>Замена изображения и аудио:</v-label>
+				      <v-tooltip bottom v-model="answer.showMediaTooltip">
+					    <v-btn slot="activator" @click="answer.showMediaTooltip = !answer.showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
+			          </v-tooltip>
+			      </v-flex>
+
 				  <v-flex xs12 sm4 xl3 mb-3>
 	    			<v-layout align-center>
-			          	<v-checkbox v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
+			          	<v-checkbox @click.native="changeAudio(answers.indexOf(answer))" v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
 			            <file-input 
 			            class="fileBtn"
 	                    accept="audio/*"
 	                    ref="fileInput"
                         @input="getUploadedAudio($event, answers.indexOf(answer))"
+                        @update:deleteFile="deleteFile(1, answers.indexOf(answer))"
                         :checked="answer.enabledAudio"
+                        :fileObj="answer.audio"
 			            :dis="!answer.enabledAudio"
-			            :label="audioLoadText"
+			            :label="answer.audioLoadText"
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
 		          <v-flex xs12 sm4 xl3 mb-3>
 	    			<v-layout align-center>
-			          	<v-checkbox v-model="answer.enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
+			          	<v-checkbox @click.native="changeImage(answers.indexOf(answer))" v-model="answer.enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
 			            <file-input 
 			            class="fileBtn"
 	                    accept="image/*"
 	                    ref="fileInput"
+                        @update:deleteFile="deleteFile(0, answers.indexOf(answer))"
                         @input="getUploadedImage($event, answers.indexOf(answer))"
                         :checked="answer.enabledImage"
 			            :dis="!answer.enabledImage"
-			            :label="imageLoadText"
+			            :label="answer.imageLoadText"
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
@@ -299,7 +320,7 @@
     import FileInput from '@/components/other/FileLoader'
 
 	export default {
-		props: ['currentType', 'countAnswers', 'answers', 'answersQty'],
+		props: ['currentType', 'countAnswers', 'answers', 'answersQty', 'edit'],
 		components: { FileInput },
 		data() {
 			return {
@@ -332,6 +353,7 @@
         		showAnswerTooltop: false,
         		showCommentTooltip: false,
         		showWeightTooltip: false,
+				showMediaTooltip: false,
         		showHintTooltip: false,
         		showWeight2typeTooltip: false,
         		showAnswersTooltip: false,
@@ -342,22 +364,10 @@
 			incLCA() {
 				this.localCountAnswers++
 				this.$emit('push')
-
-				console.log('countAnswers: '+ this.countAnswers)
-				console.log('localCountAnswers: '+ this.localCountAnswers)
-            	console.log('array len: ' + this.answers.length)
-
-            	console.log(this.answers)
 			},
 			decLCA() {
 				this.localCountAnswers--
 				this.answers.pop()
-
-				console.log('countAnswers: '+ this.countAnswers)
-				console.log('localCountAnswers: '+ this.localCountAnswers)
-            	console.log('array len: ' + this.answers.length)
-
-            	console.log(this.answers)
 			},
 			findDuplicates(value) {
 				var found = false
@@ -389,6 +399,21 @@
 						this.answers[i].weight = this.answers[i].correct ? 256 : 0
 						return
 					}
+			},
+			changeAudio(ind){
+				this.$emit('update:changeAudio', ind)
+			},
+			changeImage(ind){
+				this.$emit('update:changeImage', ind)
+			},
+			deleteFile(isAudio, ind){
+				for (var i = 0; i < this.answers.length; i++)
+					if (i = ind){
+						if (isAudio)
+							this.answers[i].audio = null
+						else this.answers[i].image = null
+						return
+					}
 			}
 		},
 		computed: {
@@ -407,6 +432,8 @@
 					this.checkRadios()
 			},
 			countAnswers: function(val) {
+				if (this.edit)
+					return
 				this.answersQty = val
 				this.$emit('update:answersQty', this.answersQty)
 			},

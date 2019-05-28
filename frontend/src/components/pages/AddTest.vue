@@ -219,7 +219,6 @@
 
 		data () {
 		    return {
-        		valid: false,
                 image: '',
                 imageLoadText: 'Изображение к тесту',
 
