@@ -148,7 +148,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         question.title = validated_data['title']
         question.text = validated_data['text']
-        question. answer_type = validated_data['answer_type']
+        question.answer_type = validated_data['answer_type']
         # question = Question(user=self.context['request'].user, title=validated_data['title'],
         #                     text=validated_data['text'], answer_type=validated_data['answer_type'])
         if 'timer' in validated_data:
@@ -162,10 +162,21 @@ class QuestionViewSet(viewsets.ModelViewSet):
             question.difficulty = validated_data['difficulty']
         if 'comment' in validated_data:
             question.comment = validated_data['comment']
+        # print(self.request.data)
         if 'image' in validated_data:
-            question.image = validated_data['image']
+            # print(validated_data['image'])
+            if validated_data['image'] == 'null':
+                question.image = ''
+            else:
+                if validated_data['image'] != 'stay':
+                    question.image = validated_data['image']
         if 'audio' in validated_data:
-            question.audio = validated_data['audio']
+            # print(validated_data['audio'])
+            if validated_data['audio'] == 'null':
+                question.audio = ''
+            else:
+                if validated_data['audio'] != 'stay':
+                    question.audio = validated_data['audio']
         question.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
