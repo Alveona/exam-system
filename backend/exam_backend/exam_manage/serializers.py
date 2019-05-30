@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Question, Course, Answer, UserCourseRelation
+from .models import Question, Course, Answer, UserCourseRelation, StrictMode, Hint
 from exam.models import CourseSession
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -146,11 +146,9 @@ class RelationSerializer(serializers.ModelSerializer):
         validators = []  # Remove a default "unique together" constraint.
 
 class RelationUnsubscribeSerializer(serializers.ModelSerializer):
-
-
     class Meta:
         model = UserCourseRelation
-        field = '__all__'
+        fields = '__all__'
 
 
 class CourseCreatedSerializer(serializers.ModelSerializer):
@@ -165,3 +163,8 @@ class CourseAddedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ('token', 'name', 'user', 'description', 'image')
+
+class StrictModeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StrictMode
+        fields = '__all__'

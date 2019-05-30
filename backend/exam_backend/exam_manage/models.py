@@ -50,9 +50,21 @@ class Answer(models.Model):
     weight = models.IntegerField(blank=True, null=True)
     image = models.ImageField(upload_to='answers/', null=True, verbose_name='Изображение')
     audio = models.FileField(upload_to='answers_audio/', null=True)
-    hint = models.CharField(max_length=255, null=True)
+    hint_old = models.CharField(max_length=255, null=True)
     priority = models.IntegerField(blank = True, null=True)
     deleted = models.BooleanField(default = False)
+
+class StrictMode(models.Model):
+    name = models.CharField(max_length = 255)
+    text = models.TextField(blank=True)
+    image = models.ImageField(upload_to='strict_modes/')
+
+class Hint(models.Model):
+    mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='hint/')
+    text = models.TextField(blank=True)
+
 
 # intermediate models doc:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships

@@ -3,10 +3,10 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import serializers
-from .models import Question, Answer, Course, UserCourseRelation
+from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, RelationUnsubscribeSerializer, \
-    AnswerFormDataSerializer
+    AnswerFormDataSerializer, StrictModeSerializer
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -354,3 +354,9 @@ class RelationUnsubscribeViewSet(viewsets.ModelViewSet):
                                       course=course, access=0)
         relation.delete()
         return Response({'status': 'Successfully deleted'})
+
+class StrictModeViewSet(viewsets.ModelViewSet):
+    queryset = StrictMode.objects.all()
+    serializer_class = StrictModeSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'post', 'delete']
