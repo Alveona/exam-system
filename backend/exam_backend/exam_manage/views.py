@@ -154,7 +154,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if 'timer' in validated_data:
             question.timer = validated_data['timer']
         if 'attempts_number' in validated_data:
-            if question.attemtps_number is None or question.attempts_number <= validated_data['attempts_number']:
+            if question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']:
                 question.attempts_number = validated_data['attempts_number']
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']
