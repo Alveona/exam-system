@@ -3,10 +3,10 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import serializers
-from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint
+from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint, QuestionMedia
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, RelationUnsubscribeSerializer, \
-    AnswerFormDataSerializer, StrictModeSerializer
+    AnswerFormDataSerializer, StrictModeSerializer, QuestionMediaSerializer
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -32,6 +32,7 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
                                                    question__user=self.request.user, deleted = False)
+            print(queryset)
             return queryset
         # if self.request.method == "DELETE": # what was going on here?
             # print('object deleted')
@@ -66,8 +67,8 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         for value in _dict['audio']:
             audio_to_parse.append(value if value != 'null' else None)
         print(audio_to_parse)
-        for value in _dict['hint']:
-            hint_to_parse.append(value if value != 'null' else None)
+        # for value in _dict['hint']:
+        #     hint_to_parse.append(value if value != 'null' else None)
         for value in _dict['image']:
             image_to_parse.append(value if value != 'null' else None)
         for value in _dict['priority']:
@@ -80,9 +81,10 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
                 question = Question.objects.all().get(id=question_to_parse[i])
                 answer = Answer(question=question, text=text_to_parse[i],
                                 correct=correct_to_parse[i], weight=weight_to_parse[i],
-                                audio=audio_to_parse[i], hint=hint_to_parse[i],
+                                audio=audio_to_parse[i],
                                 priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
                 answer.save()
+                # hint = Hint(answer = answer, )
                 successfully_created_answers.append(answer)
             return Response(status=status.HTTP_201_CREATED)
         except:
@@ -117,6 +119,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             queryset = Question.objects.all().filter(id=self.request.query_params.get('id'),
                                                      user=user)
+            print(queryset)
             return queryset
         if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
             queryset = Question.objects.all()
@@ -197,6 +200,7 @@ class AnswerViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
                                                    question__user=self.request.user, deleted = False)
+            print(queryset)
             return queryset
         # if self.request.method == "DELETE":
             # print('object deleted')
@@ -360,3 +364,35 @@ class StrictModeViewSet(viewsets.ModelViewSet):
     serializer_class = StrictModeSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'delete']
+    def get_queryset(self):
+        user = self.request.user
+        if self.request.method == "GET":
+            if self.request.query_params.get('token'):
+                usercourse = UserCourseRelation.objects.all().get(course__token = self.request.query_params.get('token'), \
+                                                                  access = 1)
+                queryset = StrictMode.objects.all().filter(user = usercourse.user)
+            else:
+                queryset = StrictMode.objects.all().filter(user = user)
+            print(queryset)
+            return queryset
+        if user.is_superuser:
+            queryset = QuestionMedia.objects.all()
+            return queryset
+        return QuestionMedia.objects.all().filter()
+
+class QuestionMediaViewSet(viewsets.ModelViewSet):
+    queryset = QuestionMedia.objects.all()
+    serializer_class = QuestionMediaSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_queryset(self):
+        user = self.request.user
+        if self.request.method == "GET":
+            queryset = QuestionMedia.objects.all().filter(question=self.request.query_params.get('question'))
+            print(queryset)
+            return queryset
+        if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
+            queryset = QuestionMedia.objects.all()
+            return queryset
+        return QuestionMedia.objects.all().filter()

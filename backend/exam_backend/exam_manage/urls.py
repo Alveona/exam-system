@@ -2,7 +2,7 @@ from rest_framework import routers
 from .views import QuestionViewSet, AnswerViewSet, CourseViewSet, QuestionListViewSet, \
     CourseCreatedViewSet, CourseAddedViewSet, RelationViewSet, \
     RelationUnsubscribeViewSet, \
-    AnswerFormDataViewSet, StrictModeViewSet
+    AnswerFormDataViewSet, StrictModeViewSet, QuestionMediaViewSet
 
 router = routers.DefaultRouter(trailing_slash=True)
 router.register(r'questions', QuestionViewSet, base_name='questions')
@@ -15,5 +15,6 @@ router.register(r'courses-added', CourseAddedViewSet)
 router.register(r'course-subsc', RelationViewSet)
 router.register(r'course-unsubsc', RelationUnsubscribeViewSet)
 router.register(r'strict_modes', StrictModeViewSet)
+router.register(r'questions_media', QuestionMediaViewSet)
 
 urlpatterns = router.urls

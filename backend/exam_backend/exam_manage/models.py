@@ -54,7 +54,13 @@ class Answer(models.Model):
     priority = models.IntegerField(blank = True, null=True)
     deleted = models.BooleanField(default = False)
 
+class QuestionMedia(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
+    video = models.FileField(upload_to='questions_video/', null=True)
+    audio = models.FileField(upload_to='questions_audio/', null=True)
+
 class StrictMode(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True)
     name = models.CharField(max_length = 255)
     text = models.TextField(blank=True)
     image = models.ImageField(upload_to='strict_modes/')
@@ -62,7 +68,8 @@ class StrictMode(models.Model):
 class Hint(models.Model):
     mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='hint/')
+    audio = models.ImageField(upload_to='hint_audio/', null=True)
+    video = models.ImageField(upload_to='hint_video/', null=True)
     text = models.TextField(blank=True)
 
 

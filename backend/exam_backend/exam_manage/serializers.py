@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Question, Course, Answer, UserCourseRelation, StrictMode, Hint
+from .models import Question, Course, Answer, UserCourseRelation, StrictMode, Hint, QuestionMedia
 from exam.models import CourseSession
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -167,4 +167,17 @@ class CourseAddedSerializer(serializers.ModelSerializer):
 class StrictModeSerializer(serializers.ModelSerializer):
     class Meta:
         model = StrictMode
+        fields = '__all__'
+    def create(self, validated_data):
+        mode = StrictMode(user = self.context['request'].user, name = validated_data['name'])
+        if 'image' in validated_data:
+            mode.image = validated_data['image']
+        if 'text' in validated_data:
+            mode.text = validated_data['text']
+        mode.save()
+        return mode
+
+class QuestionMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionMedia
         fields = '__all__'
