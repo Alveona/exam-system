@@ -245,6 +245,44 @@ class CourseViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        course = self.get_object()
+        if 'name' in validated_data:
+            course.name = validated_data['name']
+        if 'description' in validated_data:
+            course.description = validated_data['description']
+        if 'author' in validated_data:
+            course.author = validated_data['author']
+        if 'image' in validated_data:
+            # print(validated_data['image'])
+            if validated_data['image'] == 'null':
+                course.image = ''
+            else:
+                if validated_data['image'] != 'stay':
+                    course.image = validated_data['image']
+        if 'questions_number' in validated_data:
+            course.questions_number = validated_data['questions_number']
+        if 'attempts' in validated_data:
+            course.attempts = validated_data['attempts']
+        if 'perfect_mark' in validated_data:
+            course.perfect_mark = validated_data['perfect_mark']
+        if 'good_mark' in validated_data:
+            course.good_mark = validated_data['good_mark']
+        if 'satisfactory_mark' in validated_data:
+            course.satisfactory_mark = validated_data['satisfactory_mark']
+        questions_to_parse = validated_data['questions']
+        print(questions_to_parse)
+        print(course.questions)
+        course.questions.clear()
+        print(course.questions)
+        if questions_to_parse:
+            for question in questions_to_parse:
+                course.questions.add(question)
+
+        course.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def perform_destroy(self, instance):
         instance.delete()
 
