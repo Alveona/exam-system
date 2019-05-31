@@ -6,7 +6,7 @@ from rest_framework import serializers
 from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint, QuestionMedia
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, RelationUnsubscribeSerializer, \
-    AnswerFormDataSerializer, StrictModeSerializer, QuestionMediaSerializer
+    AnswerFormDataSerializer, StrictModeSerializer, QuestionMediaSerializer, HintSerializer
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -399,3 +399,9 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
             queryset = QuestionMedia.objects.all()
             return queryset
         return QuestionMedia.objects.all().filter()
+
+class HintViewSet(viewsets.ModelViewSet):
+    queryset = Hint.objects.all()
+    serializer_class = HintSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'post', 'delete']

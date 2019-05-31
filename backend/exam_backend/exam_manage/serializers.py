@@ -182,3 +182,8 @@ class QuestionMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionMedia
         fields = '__all__'
+
+class HintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hint
+        fields = '__all__'
