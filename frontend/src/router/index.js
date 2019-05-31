@@ -10,6 +10,7 @@ import QuestionsManagment from '@/components/pages/QuestionsManagment'
 import TestsManagment from '@/components/pages/TestsManagment'
 import Stats from '@/components/pages/Stats'
 import UserGuide from '@/components/pages/UserGuide'
+import Profile from '@/components/pages/Profile'
 import AddQuestion from '@/components/pages/AddQuestion'
 import EditQuestion from '@/components/pages/EditQuestion'
 import AddTest from '@/components/pages/AddTest'
@@ -78,6 +79,9 @@ const router = new Router({
       },{
       	path: 'stats',
       	component: Stats
+      },{
+        path: 'profile',
+        component: Profile
       },{
       	path: 'guide',
       	component: UserGuide

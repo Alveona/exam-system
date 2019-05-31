@@ -287,59 +287,34 @@
                 this.question.audio = e
             },
             getUploadedAudio(obj) {
-            	for (var i = 0; i < this.answers.length; ++i)
-            		if (i == obj.index)
-            		{
-            			this.answers[i].audio = obj.audio
-            			this.answers.push(null)
-            			this.answers.pop()
-            			return
-            		}
+    			this.answers[obj.index].audio = obj.audio
+    			this.answers.push(null)
+    			this.answers.pop()
             },
             getUploadedImage(obj) {
-            	for (var i = 0; i < this.answers.length; ++i)
-            		if (i == obj.index)
-            		{
-            			this.answers[i].image = obj.image
-            			this.answers.push(null)
-            			this.answers.pop()
-            			return
-            		}
+    			this.answers[obj.index].image = obj.image
+    			this.answers.push(null)
+    			this.answers.pop()
             },
-            changeAudio(ind){
-				for (var i = 0; i < this.answers.length; ++i)
-					if (i == ind)
-					{
-						if (!this.answers[i].enabledAudio){
-	            			if (this.answers[i].audio)
-								this.answers[i].audioLoadText = "Уже имеется загруженная аудиозапись"
-							else 
-							{
-								this.audio = null
-								this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
-							}
-						}
-						else this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
-					}
-
+            changeAudio(i){
+				if (!this.answers[i].enabledAudio){
+					this.answers[i].audio = null
+        			if (this.answers[i].old_audio)
+						this.answers[i].audioLoadText = "Уже имеется загруженная аудиозапись"
+					else this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
+				}
+				else this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
 				this.answers.push(null)
 				this.answers.pop()
             },
-            changeImage(ind){
-				for (var i = 0; i < this.answers.length; ++i)
-					if (i == ind)
-					{
-						if (!this.answers[i].enabledImage){
-	            			if (this.answers[i].image)
-								this.answers[i].imageLoadText = "Уже имеется загруженное изображение"
-							else 
-							{
-								this.image = null
-								this.answers[i].imageLoadText = "Изображение еще не загружено"
-							}
-						}
-						else this.answers[i].imageLoadText = "Изображение еще не загружено"
-					}
+            changeImage(i){
+				if (!this.answers[i].enabledImage){
+					this.answers[i].image = null
+        			if (this.answers[i].old_image)
+						this.answers[i].imageLoadText = "Уже имеется загруженное изображение"
+					else this.answers[i].imageLoadText = "Изображение еще не загружено"
+				}
+				else this.answers[i].imageLoadText = "Изображение еще не загружено"
 				this.answers.push(null)
 				this.answers.pop()
             },
@@ -387,11 +362,10 @@
 				});
 				var json = JSON.stringify(object);
                  console.log(json)
-				*/			
-
-                 axios.patch(`${TestingSystemAPI}/api/questions/`, formData, {
+				*/
+                 axios.patch(TestingSystemAPI+'/api/questions/'+this.$route.params.id+'/', formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-			          params: { 'id' : this.$route.params.id }
+			          params: {}
 			        })
 	               .then((response) => {
 	               		this.questionId = response.data.id
@@ -402,7 +376,6 @@
 
 		                for (var i = 0; i < this.answers.length; i++)
 		                {
-
 			                if (this.answers[i].old_image && !this.answers[i].enabledImage)
 			                 	answersData.set('image', "stay")
 			                else if (this.answers[i].old_image && !this.answers[i].image)
@@ -440,9 +413,9 @@
 			                 */
 		                 }
 
-               			axios.patch(`${TestingSystemAPI}/api/answers/`, answersData, {
+               			axios.patch(TestingSystemAPI+'/api/answers/'+this.$route.params.id+'/', answersData, {
 				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-				          params: { 'id' : this.$route.params.id }
+				          params: { }
 				        })
 		               .then(response => {
 		               		this.successSet = true
