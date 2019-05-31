@@ -42,6 +42,7 @@ class AnswerFormDataSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     subscribed = serializers.SerializerMethodField()
+    mode = serializers.SerializerMethodField()
     extra_kwargs = {
         'url': {'view_name': 'courses', 'lookup_field': 'token'}
     }
@@ -82,11 +83,8 @@ class CourseSerializer(serializers.ModelSerializer):
     def partial_update(self, instance, validated_data):
         pass  # TODO
 
-    class Meta:
-        model = Course
-        fields = ('id', 'name', 'description', 'author', 'token', 'image'
-                  , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt',
-                  'perfect_mark', 'good_mark', 'satisfactory_mark')
+
+
 
     def get_subscribed(self, obj):
         print(obj)
@@ -99,14 +97,31 @@ class CourseSerializer(serializers.ModelSerializer):
             return False
         return True
 
+    def get_mode(self, obj):
+        session = CourseSession.objects.all().filter(course=obj,
+                                                      user=self.context['request'].user, finished=False)
+        print(session)
+        if session:
+            return session.first().mode.id
+        else:
+            return None
+
     def get_current_attempt(self, obj):
         sessions = CourseSession.objects.all().filter(course=obj,
                                                       user=self.context['request'].user, finished=True)
         attempts = [s.attempt_number for s in [session for session in sessions]]
+        print(attempts)
         if attempts:
             return max(attempts)
         else:
             return 0
+
+    class Meta:
+        model = Course
+        # fields = ('id', 'name', 'description', 'author', 'token', 'image'
+        #           , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt',
+        #           'perfect_mark', 'good_mark', 'satisfactory_mark', 'mode',)
+        fields = '__all__'
 
 
 class RelationSerializer(serializers.ModelSerializer):
