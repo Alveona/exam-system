@@ -63,7 +63,7 @@ class StrictMode(models.Model):
 class QuestionMedia(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
     mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE, null=True)
-    video = models.FileField(upload_to='questions_video/', null=True)
+    video = models.CharField(max_length=255, null=True)
     audio = models.FileField(upload_to='questions_audio/', null=True)
 
 class Hint(models.Model):
