@@ -55,7 +55,7 @@ class Answer(models.Model):
     deleted = models.BooleanField(default = False)
 
 class StrictMode(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null = True)
     name = models.CharField(max_length = 255)
     text = models.TextField(blank=True)
     image = models.ImageField(upload_to='strict_modes/')

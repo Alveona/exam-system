@@ -366,7 +366,8 @@ class StrictModeViewSet(viewsets.ModelViewSet):
     queryset = StrictMode.objects.all()
     serializer_class = StrictModeSerializer
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
+    # lookup_field = 'id'
     def get_queryset(self):
         user = self.request.user
         if self.request.method == "GET":
@@ -379,9 +380,23 @@ class StrictModeViewSet(viewsets.ModelViewSet):
             print(queryset)
             return queryset
         if user.is_superuser:
-            queryset = QuestionMedia.objects.all()
+            queryset = StrictMode.objects.all()
             return queryset
-        return QuestionMedia.objects.all().filter()
+        return StrictMode.objects.all().filter()
+
+    def destroy(self, request, *args, **kwargs):
+        print(self.request.data)
+        print('delete')
+        instance = self.get_object()
+        print(instance)
+        self.perform_destroy(instance)
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+    # def perform_destroy(self, instance):
+    #     instance.delete()
 
 class QuestionMediaViewSet(viewsets.ModelViewSet):
     queryset = QuestionMedia.objects.all()
