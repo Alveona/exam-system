@@ -3,10 +3,10 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import serializers
-from .models import Question, Answer, Course, UserCourseRelation
+from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint, QuestionMedia
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, RelationUnsubscribeSerializer, \
-    AnswerFormDataSerializer
+    AnswerFormDataSerializer, StrictModeSerializer, QuestionMediaSerializer, HintSerializer
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -32,6 +32,7 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
                                                    question__user=self.request.user, deleted = False)
+            print(queryset)
             return queryset
         # if self.request.method == "DELETE": # what was going on here?
             # print('object deleted')
@@ -66,8 +67,8 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         for value in _dict['audio']:
             audio_to_parse.append(value if value != 'null' else None)
         print(audio_to_parse)
-        for value in _dict['hint']:
-            hint_to_parse.append(value if value != 'null' else None)
+        # for value in _dict['hint']:
+        #     hint_to_parse.append(value if value != 'null' else None)
         for value in _dict['image']:
             image_to_parse.append(value if value != 'null' else None)
         for value in _dict['priority']:
@@ -76,15 +77,19 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
 
         successfully_created_answers = [] # used to easily revert all creates if exception occured
         try:
+            ids_arr = []
             for i in range(0, len(question_to_parse)):
                 question = Question.objects.all().get(id=question_to_parse[i])
                 answer = Answer(question=question, text=text_to_parse[i],
                                 correct=correct_to_parse[i], weight=weight_to_parse[i],
-                                audio=audio_to_parse[i], hint=hint_to_parse[i],
+                                audio=audio_to_parse[i],
                                 priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
                 answer.save()
+                # hint = Hint(answer = answer, )
                 successfully_created_answers.append(answer)
-            return Response(status=status.HTTP_201_CREATED)
+                print('id:' + str(answer.id))
+                ids_arr.append(answer.id)
+            return Response({"answers" : ids_arr})
         except:
             # yup, we don't set 'deleted' to them, but directly delete from database because
             # something went completely wrong so we don't need partically written answers
@@ -117,6 +122,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             queryset = Question.objects.all().filter(id=self.request.query_params.get('id'),
                                                      user=user)
+            print(queryset)
             return queryset
         if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
             queryset = Question.objects.all()
@@ -154,7 +160,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if 'timer' in validated_data:
             question.timer = validated_data['timer']
         if 'attempts_number' in validated_data:
-            if question.attemtps_number is None or question.attempts_number <= validated_data['attempts_number']:
+            if question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']:
                 question.attempts_number = validated_data['attempts_number']
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']
@@ -197,6 +203,7 @@ class AnswerViewSet(viewsets.ModelViewSet):
         if self.request.method == "GET":
             queryset = Answer.objects.all().filter(question=self.request.query_params.get('id'),
                                                    question__user=self.request.user, deleted = False)
+            print(queryset)
             return queryset
         # if self.request.method == "DELETE":
             # print('object deleted')
@@ -243,6 +250,44 @@ class CourseViewSet(viewsets.ModelViewSet):
         CourseSession.objects.all().filter(course=instance).delete()
         Course.objects.all().get(token=instance.token).delete()
         self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        course = self.get_object()
+        if 'name' in validated_data:
+            course.name = validated_data['name']
+        if 'description' in validated_data:
+            course.description = validated_data['description']
+        if 'author' in validated_data:
+            course.author = validated_data['author']
+        if 'image' in validated_data:
+            # print(validated_data['image'])
+            if validated_data['image'] == 'null':
+                course.image = ''
+            else:
+                if validated_data['image'] != 'stay':
+                    course.image = validated_data['image']
+        if 'questions_number' in validated_data:
+            course.questions_number = validated_data['questions_number']
+        if 'attempts' in validated_data:
+            course.attempts = validated_data['attempts']
+        if 'perfect_mark' in validated_data:
+            course.perfect_mark = validated_data['perfect_mark']
+        if 'good_mark' in validated_data:
+            course.good_mark = validated_data['good_mark']
+        if 'satisfactory_mark' in validated_data:
+            course.satisfactory_mark = validated_data['satisfactory_mark']
+        questions_to_parse = validated_data['questions']
+        print(questions_to_parse)
+        print(course.questions)
+        course.questions.clear()
+        print(course.questions)
+        if questions_to_parse:
+            for question in questions_to_parse:
+                course.questions.add(question)
+
+        course.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
@@ -316,3 +361,47 @@ class RelationUnsubscribeViewSet(viewsets.ModelViewSet):
                                       course=course, access=0)
         relation.delete()
         return Response({'status': 'Successfully deleted'})
+
+class StrictModeViewSet(viewsets.ModelViewSet):
+    queryset = StrictMode.objects.all()
+    serializer_class = StrictModeSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'post', 'delete']
+    def get_queryset(self):
+        user = self.request.user
+        if self.request.method == "GET":
+            if self.request.query_params.get('token'):
+                usercourse = UserCourseRelation.objects.all().get(course__token = self.request.query_params.get('token'), \
+                                                                  access = 1)
+                queryset = StrictMode.objects.all().filter(user = usercourse.user)
+            else:
+                queryset = StrictMode.objects.all().filter(user = user)
+            print(queryset)
+            return queryset
+        if user.is_superuser:
+            queryset = QuestionMedia.objects.all()
+            return queryset
+        return QuestionMedia.objects.all().filter()
+
+class QuestionMediaViewSet(viewsets.ModelViewSet):
+    queryset = QuestionMedia.objects.all()
+    serializer_class = QuestionMediaSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_queryset(self):
+        user = self.request.user
+        if self.request.method == "GET":
+            queryset = QuestionMedia.objects.all().filter(question=self.request.query_params.get('question'))
+            print(queryset)
+            return queryset
+        if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
+            queryset = QuestionMedia.objects.all()
+            return queryset
+        return QuestionMedia.objects.all().filter()
+
+class HintViewSet(viewsets.ModelViewSet):
+    queryset = Hint.objects.all()
+    serializer_class = HintSerializer
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'post', 'delete']
