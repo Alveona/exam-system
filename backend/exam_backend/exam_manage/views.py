@@ -77,6 +77,7 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
 
         successfully_created_answers = [] # used to easily revert all creates if exception occured
         try:
+            ids_arr = []
             for i in range(0, len(question_to_parse)):
                 question = Question.objects.all().get(id=question_to_parse[i])
                 answer = Answer(question=question, text=text_to_parse[i],
@@ -86,7 +87,9 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
                 answer.save()
                 # hint = Hint(answer = answer, )
                 successfully_created_answers.append(answer)
-            return Response(status=status.HTTP_201_CREATED)
+                print('id:' + str(answer.id))
+                ids_arr.append(answer.id)
+            return Response({"answers" : ids_arr})
         except:
             # yup, we don't set 'deleted' to them, but directly delete from database because
             # something went completely wrong so we don't need partically written answers
