@@ -19,10 +19,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.difficulty = validated_data['difficulty']
         if 'comment' in validated_data:
             question.comment = validated_data['comment']
-        if 'image' in validated_data:
-            question.image = validated_data['image']
-        if 'audio' in validated_data:
-            question.audio = validated_data['audio']
+        # if 'image' in validated_data:
+        #     question.image = validated_data['image']
+        # if 'audio' in validated_data:
+        #     question.audio = validated_data['audio']
+
         question.save()
         return question
 
