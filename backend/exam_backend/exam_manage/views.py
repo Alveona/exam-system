@@ -22,6 +22,7 @@ class QuestionListViewSet(viewsets.ModelViewSet):
         return Question.objects.all().filter(user=user)
 
 
+
 class AnswerFormDataViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerFormDataSerializer
@@ -116,6 +117,32 @@ class QuestionViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put', 'delete', 'patch']
     lookup_field = 'id'
 
+    def create(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        print(validated_data)
+        question = Question(user=self.request.user, title=validated_data['title'],
+                            text=validated_data['text'], answer_type=validated_data['answer_type'])
+        # if 'timer' in validated_data:
+        #     question.timer = validated_data['timer']
+        if 'attempts_number' in self.request.data:
+            print(self.request.data['attempts_number'])
+            if self.request.data['attempts_number'] != 'null':
+                print('if')
+                question.attempts_number = self.request.data['attempts_number']
+            else:
+                print('else')
+                # question.attempts_number = None
+        if 'answers_number' in validated_data:
+            question.answers_number = validated_data['answers_number']
+        if 'difficulty' in validated_data:
+            question.difficulty = validated_data['difficulty']
+        if 'comment' in validated_data:
+            question.comment = validated_data['comment']
+
+        question.save()
+        return Response({"id" : question.id})
+
+
     def get_queryset(self):
         user = self.request.user
         if self.request.method == "GET":
@@ -187,6 +214,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         instance.delete()
+
 
 
 
@@ -389,7 +417,7 @@ class StrictModeViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         print(instance)
         self.perform_destroy(instance)
-        instance.save()
+        # instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
@@ -430,7 +458,7 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
             else:
                 media.video = self.request.data['video']
         media.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK)
 
 class HintViewSet(viewsets.ModelViewSet):
     queryset = Hint.objects.all()

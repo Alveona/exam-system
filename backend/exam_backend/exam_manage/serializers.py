@@ -5,27 +5,6 @@ from .models import Question, Course, Answer, UserCourseRelation, StrictMode, Hi
 from exam.models import CourseSession
 
 class QuestionSerializer(serializers.ModelSerializer):
-    def create(self, validated_data):
-        print(self.context['request'].data)
-        question = Question(user=self.context['request'].user, title=validated_data['title'],
-                            text=validated_data['text'], answer_type=validated_data['answer_type'])
-        if 'timer' in validated_data:
-            question.timer = validated_data['timer']
-        if 'attempts_number' in validated_data:
-            question.attempts_number = validated_data['attempts_number']
-        if 'answers_number' in validated_data:
-            question.answers_number = validated_data['answers_number']
-        if 'difficulty' in validated_data:
-            question.difficulty = validated_data['difficulty']
-        if 'comment' in validated_data:
-            question.comment = validated_data['comment']
-        # if 'image' in validated_data:
-        #     question.image = validated_data['image']
-        # if 'audio' in validated_data:
-        #     question.audio = validated_data['audio']
-
-        question.save()
-        return question
 
 
     class Meta:

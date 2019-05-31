@@ -12,7 +12,7 @@ class Question(models.Model):
     comment = models.CharField(max_length=255, blank=True)
     answers_number = models.IntegerField(null=True)
     audio = models.FileField(upload_to='questions_audio/', null=True)
-    attempts_number = models.IntegerField(null=True)
+    attempts_number = models.IntegerField(null = True)
     timer = models.IntegerField(null=True)  # in seconds
     deleted = models.BooleanField(default=False)
     version = models.IntegerField(default=0)

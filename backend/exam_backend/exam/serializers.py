@@ -4,8 +4,8 @@ from django.conf import settings
 import secrets  # used to do a safe random choice of questions
 import random
 from .models import  CourseSession, SessionQuestion, SessionAnswer
-from exam_manage.models import Course, Question, Answer, Hint
-from exam_manage.serializers import QuestionSerializer, AnswerInCourseSerializer, RelationUnsubscribeSerializer
+from exam_manage.models import Course, Question, Answer, Hint, StrictMode, QuestionMedia
+from exam_manage.serializers import QuestionSerializer, AnswerInCourseSerializer, RelationUnsubscribeSerializer, QuestionMediaSerializer
 
 class SessionStatsSerializer(serializers.ModelSerializer):
     perfect_mark = serializers.SerializerMethodField()
@@ -82,6 +82,8 @@ class SessionSerializer(serializers.ModelSerializer):
             else:
                 session = CourseSession(course=course, attempt_number=number_of_attempts + 1,
                                         user=self.context['request'].user, finished=False)
+                mode = StrictMode.objects.all().get(id = self.context['request'].data['mode'])
+                session.mode = mode
                 session.save()
                 list_of_questions = course.questions.all()
                 print(list_of_questions)
@@ -123,6 +125,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
     hint = serializers.SerializerMethodField()
     audio_hint = serializers.SerializerMethodField()
     video_hint = serializers.SerializerMethodField()
+    media = serializers.SerializerMethodField()
 
     def get_hint(self, obj):
         print('search for hint')
@@ -194,6 +197,14 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
                 return None
         else:
             return None
+    def get_media(self, obj):
+        mode_id = obj.session.mode.id
+        mode = StrictMode.objects.all().get(id = mode_id)
+        question_id = obj.question.id
+        question = Question.objects.all().get(id = question_id)
+        media = QuestionMedia.objects.all().get(mode = mode, question = question)
+        serializer = QuestionMediaSerializer(instance = media)
+        return serializer.data
 
     class Meta:
         model = SessionQuestion
