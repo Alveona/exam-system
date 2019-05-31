@@ -82,6 +82,7 @@ class SessionSerializer(serializers.ModelSerializer):
             else:
                 session = CourseSession(course=course, attempt_number=number_of_attempts + 1,
                                         user=self.context['request'].user, finished=False)
+                print(self.context['request'].data)
                 mode = StrictMode.objects.all().get(id = self.context['request'].data['mode'])
                 session.mode = mode
                 session.save()
@@ -184,19 +185,36 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
     def get_video_hint(self, obj):
         object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
+        print(object)
         if object.first():
             answer = object.first().answer
+            print(answer)
             mode = obj.session.mode
+            print(mode)
             #print('obj from hint: ' + str(object))
             hint = Hint.objects.all().filter(answer = answer, mode = mode)
+            print(hint)
             if hint:
-                request = self.context.get('request')
-                audio_url = hint.first().video.url
-                return request.build_absolute_uri(audio_url)
+                print(hint.first().video)
+                return hint.first().video
             else:
                 return None
         else:
             return None
+        # object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
+        # if object.first():
+        #     answer = object.first().answer
+        #     mode = obj.session.mode
+        #     #print('obj from hint: ' + str(object))
+        #     hint = Hint.objects.all().filter(answer = answer, mode = mode)
+        #     if hint:
+        #         request = self.context.get('request')
+        #         audio_url = hint.first().video.url
+        #         return request.build_absolute_uri(audio_url)
+        #     else:
+        #         return None
+        # else:
+        #     return None
     def get_media(self, obj):
         mode_id = obj.session.mode.id
         mode = StrictMode.objects.all().get(id = mode_id)
