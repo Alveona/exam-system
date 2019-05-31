@@ -1,12 +1,13 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
-from exam_manage.models import Question, Course, Answer
+from exam_manage.models import Question, Course, Answer, StrictMode
 
 class CourseSession(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     attempt_number = models.IntegerField(null=True)  # attempts of current course
+    mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE, null=True)
     finished = models.BooleanField(default=False)  # 1 is for finished
 
 
