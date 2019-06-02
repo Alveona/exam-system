@@ -22,6 +22,7 @@ class QuestionListViewSet(viewsets.ModelViewSet):
         return Question.objects.all().filter(user=user)
 
 
+
 class AnswerFormDataViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerFormDataSerializer
@@ -64,9 +65,9 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
             correct_to_parse.append(value.capitalize())
         for value in _dict['weight']:
             weight_to_parse.append(value)
-        for value in _dict['audio']:
-            audio_to_parse.append(value if value != 'null' else None)
-        print(audio_to_parse)
+        # for value in _dict['audio']:
+        #     audio_to_parse.append(value if value != 'null' else None)
+        # print(audio_to_parse)
         # for value in _dict['hint']:
         #     hint_to_parse.append(value if value != 'null' else None)
         for value in _dict['image']:
@@ -76,27 +77,26 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         print('len: ' + str(len(question_to_parse)))
 
         successfully_created_answers = [] # used to easily revert all creates if exception occured
-        try:
-            ids_arr = []
-            for i in range(0, len(question_to_parse)):
-                question = Question.objects.all().get(id=question_to_parse[i])
-                answer = Answer(question=question, text=text_to_parse[i],
-                                correct=correct_to_parse[i], weight=weight_to_parse[i],
-                                audio=audio_to_parse[i],
-                                priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
-                answer.save()
-                # hint = Hint(answer = answer, )
-                successfully_created_answers.append(answer)
-                print('id:' + str(answer.id))
-                ids_arr.append(answer.id)
-            return Response({"answers" : ids_arr})
-        except:
-            # yup, we don't set 'deleted' to them, but directly delete from database because
-            # something went completely wrong so we don't need partically written answers
-            print('Unable to create object, clearing all them up')
-            for ans in successfully_created_answers:
-                ans.delete()
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        #try:
+        ids_arr = []
+        for i in range(0, len(question_to_parse)):
+            question = Question.objects.all().get(id=question_to_parse[i])
+            answer = Answer(question=question, text=text_to_parse[i],
+                            correct=correct_to_parse[i], weight=weight_to_parse[i],
+                            priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
+            answer.save()
+            # hint = Hint(answer = answer, )
+            successfully_created_answers.append(answer)
+            print('id:' + str(answer.id))
+            ids_arr.append(answer.id)
+        return Response({"answers" : ids_arr})
+        # except:
+        #     # yup, we don't set 'deleted' to them, but directly delete from database because
+        #     # something went completely wrong so we don't need partically written answers
+        #     print('Unable to create object, clearing all them up')
+        #     for ans in successfully_created_answers:
+        #         ans.delete()
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
     def destroy(self, request, *args, **kwargs):
@@ -116,6 +116,32 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'put', 'delete', 'patch']
     lookup_field = 'id'
+
+    def create(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        print(validated_data)
+        question = Question(user=self.request.user, title=validated_data['title'],
+                            text=validated_data['text'], answer_type=validated_data['answer_type'])
+        # if 'timer' in validated_data:
+        #     question.timer = validated_data['timer']
+        if 'attempts_number' in self.request.data:
+            print(self.request.data['attempts_number'])
+            if self.request.data['attempts_number'] != 'null':
+                print('if')
+                question.attempts_number = self.request.data['attempts_number']
+            else:
+                print('else')
+                # question.attempts_number = None
+        if 'answers_number' in validated_data:
+            question.answers_number = validated_data['answers_number']
+        if 'difficulty' in validated_data:
+            question.difficulty = validated_data['difficulty']
+        if 'comment' in validated_data:
+            question.comment = validated_data['comment']
+
+        question.save()
+        return Response({"id" : question.id})
+
 
     def get_queryset(self):
         user = self.request.user
@@ -188,6 +214,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         instance.delete()
+
 
 
 
@@ -366,7 +393,8 @@ class StrictModeViewSet(viewsets.ModelViewSet):
     queryset = StrictMode.objects.all()
     serializer_class = StrictModeSerializer
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
+    # lookup_field = 'id'
     def get_queryset(self):
         user = self.request.user
         if self.request.method == "GET":
@@ -379,9 +407,23 @@ class StrictModeViewSet(viewsets.ModelViewSet):
             print(queryset)
             return queryset
         if user.is_superuser:
-            queryset = QuestionMedia.objects.all()
+            queryset = StrictMode.objects.all()
             return queryset
-        return QuestionMedia.objects.all().filter()
+        return StrictMode.objects.all().filter()
+
+    def destroy(self, request, *args, **kwargs):
+        print(self.request.data)
+        print('delete')
+        instance = self.get_object()
+        print(instance)
+        self.perform_destroy(instance)
+        # instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+    # def perform_destroy(self, instance):
+    #     instance.delete()
 
 class QuestionMediaViewSet(viewsets.ModelViewSet):
     queryset = QuestionMedia.objects.all()
@@ -400,8 +442,46 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
             return queryset
         return QuestionMedia.objects.all().filter()
 
+    def create(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        question = Question.objects.all().get(id = validated_data['question'])
+        mode = StrictMode.objects.all().get(id = validated_data['mode'])
+        media = QuestionMedia(question = question, mode = mode)
+        if 'audio' in self.request.data:
+            if 'audio' == 'null':
+                media.audio = None
+            else:
+                media.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if 'video' == 'null':
+                media.video = None
+            else:
+                media.video = self.request.data['video']
+        media.save()
+        return Response(status=status.HTTP_200_OK)
+
 class HintViewSet(viewsets.ModelViewSet):
     queryset = Hint.objects.all()
     serializer_class = HintSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'delete']
+
+    def create(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        answer = Answer.objects.all().get(id = validated_data['answer'])
+        mode = StrictMode.objects.all().get(id = validated_data['mode'])
+        hint = Hint(answer = answer, mode = mode)
+        if 'audio' in self.request.data:
+            if 'audio' == 'null':
+                hint.audio = None
+            else:
+                hint.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if 'video' == 'null':
+                hint.video = None
+            else:
+                hint.video = self.request.data['video']
+        if 'text' in self.request.data:
+            hint.text = self.request.data['text']
+        hint.save()
+        return Response(status=status.HTTP_200_OK)

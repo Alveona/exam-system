@@ -4,8 +4,8 @@ from django.conf import settings
 import secrets  # used to do a safe random choice of questions
 import random
 from .models import  CourseSession, SessionQuestion, SessionAnswer
-from exam_manage.models import Course, Question, Answer
-from exam_manage.serializers import QuestionSerializer, AnswerInCourseSerializer, RelationUnsubscribeSerializer
+from exam_manage.models import Course, Question, Answer, Hint, StrictMode, QuestionMedia
+from exam_manage.serializers import QuestionSerializer, AnswerInCourseSerializer, RelationUnsubscribeSerializer, QuestionMediaSerializer
 
 class SessionStatsSerializer(serializers.ModelSerializer):
     perfect_mark = serializers.SerializerMethodField()
@@ -82,6 +82,9 @@ class SessionSerializer(serializers.ModelSerializer):
             else:
                 session = CourseSession(course=course, attempt_number=number_of_attempts + 1,
                                         user=self.context['request'].user, finished=False)
+                print(self.context['request'].data)
+                mode = StrictMode.objects.all().get(id = self.context['request'].data['mode'])
+                session.mode = mode
                 session.save()
                 list_of_questions = course.questions.all()
                 print(list_of_questions)
@@ -122,30 +125,114 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
 
     hint = serializers.SerializerMethodField()
     audio_hint = serializers.SerializerMethodField()
+    video_hint = serializers.SerializerMethodField()
+    mode_image = serializers.SerializerMethodField()
+    media = serializers.SerializerMethodField()
 
     def get_hint(self, obj):
+        print('search for hint')
         object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
-        #print('obj from hint: ' + str(object))
+        print(object)
         if object.first():
-            return object.first().answer.hint
+            answer = object.first().answer
+            print(answer)
+            mode = obj.session.mode
+            print(mode)
+            #print('obj from hint: ' + str(object))
+            hint = Hint.objects.all().filter(answer = answer, mode = mode)
+            print(hint)
+            if hint:
+                print(hint.first().text)
+                return hint.first().text
+            else:
+                return None
         else:
-            return ''
+            return None
+        # if object.first():
+        #     return object.first().answer.hint
+        # else:
+        #     return ''
 
     def get_audio_hint(self, obj):
-        object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True, answer__deleted = False)
+        object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
         if object.first():
-            if object.first().answer.audio:
-                #return object.first().answer.audio
-                #return None
-                print(object.first().answer.audio)
+            answer = object.first().answer
+            mode = obj.session.mode
+            #print('obj from hint: ' + str(object))
+            hint = Hint.objects.all().filter(answer = answer, mode = mode)
+            if hint:
                 request = self.context.get('request')
-                audio_url = object.first().answer.audio.url
-                #return str('http://172.20.10.2:8000/media/' + str(object.first().answer.audio))
+                audio_url = hint.first().audio.url
+                print(hint.first().audio.url)
                 return request.build_absolute_uri(audio_url)
             else:
                 return None
         else:
             return None
+        # object = SessionAnswer.objects.all().filter(sessionQuestion=obj, will_send_hint = True, answer__deleted = False)
+        # if object.first():
+        #     if object.first().answer.audio:
+        #         #return object.first().answer.audio
+        #         #return None
+        #         print(object.first().answer.audio)
+        #         request = self.context.get('request')
+        #         audio_url = object.first().answer.audio.url
+        #         #return str('http://172.20.10.2:8000/media/' + str(object.first().answer.audio))
+        #         return request.build_absolute_uri(audio_url)
+        #     else:
+        #         return None
+        # else:
+        #     return None
+
+    def get_video_hint(self, obj):
+        object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
+        print(object)
+        if object.first():
+            answer = object.first().answer
+            print(answer)
+            mode = obj.session.mode
+            print(mode)
+            #print('obj from hint: ' + str(object))
+            hint = Hint.objects.all().filter(answer = answer, mode = mode)
+            print(hint)
+            if hint:
+                print(hint.first().video)
+                return hint.first().video
+            else:
+                return None
+        else:
+            return None
+        # object = SessionAnswer.objects.all().filter(sessionQuestion = obj, will_send_hint = True, answer__deleted = False)
+        # if object.first():
+        #     answer = object.first().answer
+        #     mode = obj.session.mode
+        #     #print('obj from hint: ' + str(object))
+        #     hint = Hint.objects.all().filter(answer = answer, mode = mode)
+        #     if hint:
+        #         request = self.context.get('request')
+        #         audio_url = hint.first().video.url
+        #         return request.build_absolute_uri(audio_url)
+        #     else:
+        #         return None
+        # else:
+        #     return None
+    def get_media(self, obj):
+        mode_id = obj.session.mode.id
+        mode = StrictMode.objects.all().get(id = mode_id)
+        question_id = obj.question.id
+        question = Question.objects.all().get(id = question_id)
+        media = QuestionMedia.objects.all().get(mode = mode, question = question)
+        serializer = QuestionMediaSerializer(instance = media)
+        return serializer.data
+
+    def get_mode_image(self, obj):
+        print('get_mode_img')
+        mode_id = obj.session.mode.id
+        mode = StrictMode.objects.all().get(id = mode_id)
+        request = self.context.get('request')
+        print(mode.image)
+        return request.build_absolute_uri(mode.image.url)
+
 
     class Meta:
         model = SessionQuestion

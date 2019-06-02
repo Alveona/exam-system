@@ -22,6 +22,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         profile = Profile(user=user)
         if 'image' in validated_data:
             profile.image = validated_data['image']
+        if 'name' in validated_data:
+            profile.name = validated_data['name']
+        if 'surname' in validated_data:
+            profile.surname = validated_data['surname']
         if 'phone' in validated_data:
             profile.phone = validated_data['phone']
         if 'group' in validated_data:

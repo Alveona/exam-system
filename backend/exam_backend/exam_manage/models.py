@@ -12,7 +12,7 @@ class Question(models.Model):
     comment = models.CharField(max_length=255, blank=True)
     answers_number = models.IntegerField(null=True)
     audio = models.FileField(upload_to='questions_audio/', null=True)
-    attempts_number = models.IntegerField(null=True)
+    attempts_number = models.IntegerField(null = True)
     timer = models.IntegerField(null=True)  # in seconds
     deleted = models.BooleanField(default=False)
     version = models.IntegerField(default=0)
@@ -55,7 +55,7 @@ class Answer(models.Model):
     deleted = models.BooleanField(default = False)
 
 class StrictMode(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null = True)
     name = models.CharField(max_length = 255)
     text = models.TextField(blank=True)
     image = models.ImageField(upload_to='strict_modes/')
@@ -63,14 +63,14 @@ class StrictMode(models.Model):
 class QuestionMedia(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
     mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE, null=True)
-    video = models.FileField(upload_to='questions_video/', null=True)
+    video = models.CharField(max_length=255, null=True)
     audio = models.FileField(upload_to='questions_audio/', null=True)
 
 class Hint(models.Model):
     mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
-    audio = models.ImageField(upload_to='hint_audio/', null=True)
-    video = models.ImageField(upload_to='hint_video/', null=True)
+    audio = models.FileField(upload_to='hint_audio/', null=True)
+    video = models.CharField(max_length=255, null=True)
     text = models.TextField(blank=True)
 
 

@@ -8,6 +8,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, related_name = 'Profile_User')
     # related name supposed to prevent some clashes between two models, more here:
     # https://stackoverflow.com/questions/22538563/django-reverse-accessors-for-foreign-keys-clashing
+    name = models.CharField(max_length = 255, null = True)
+    surname = models.CharField(max_length = 255, null = True)
     activity = models.CharField(max_length=255, null=True)  # job or university
     image = models.ImageField(upload_to='users/', null=True)
     phone = models.CharField(max_length=16, null=True)

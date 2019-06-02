@@ -33,8 +33,7 @@ class SessionStatsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.method == 'GET':
             session = CourseSession.objects.all().filter(course__user=self.request.user,
-                                                         course__token=self.request.query_params.get('token'),
-                                                         finished=True). \
+                                                         course__token=self.request.query_params.get('token')). \
                 order_by('-attempt_number').first()
             empty = CourseSession.objects.none()
             list = []
