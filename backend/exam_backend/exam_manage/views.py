@@ -465,3 +465,23 @@ class HintViewSet(viewsets.ModelViewSet):
     serializer_class = HintSerializer
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'delete']
+
+    def create(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        answer = Answer.objects.all().get(id = validated_data['answer'])
+        mode = StrictMode.objects.all().get(id = validated_data['mode'])
+        hint = Hint(answer = answer, mode = mode)
+        if 'audio' in self.request.data:
+            if 'audio' == 'null':
+                hint.audio = None
+            else:
+                hint.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if 'video' == 'null':
+                hint.video = None
+            else:
+                hint.video = self.request.data['video']
+        if 'text' in self.request.data:
+            hint.text = self.request.data['text']
+        hint.save()
+        return Response(status=status.HTTP_200_OK)

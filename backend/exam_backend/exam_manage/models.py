@@ -69,8 +69,8 @@ class QuestionMedia(models.Model):
 class Hint(models.Model):
     mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE)
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
-    audio = models.ImageField(upload_to='hint_audio/', null=True)
-    video = models.ImageField(upload_to='hint_video/', null=True)
+    audio = models.FileField(upload_to='hint_audio/', null=True)
+    video = models.CharField(max_length=255, null=True)
     text = models.TextField(blank=True)
 
 

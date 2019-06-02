@@ -126,6 +126,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
     hint = serializers.SerializerMethodField()
     audio_hint = serializers.SerializerMethodField()
     video_hint = serializers.SerializerMethodField()
+    mode_image = serializers.SerializerMethodField()
     media = serializers.SerializerMethodField()
 
     def get_hint(self, obj):
@@ -223,6 +224,15 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
         media = QuestionMedia.objects.all().get(mode = mode, question = question)
         serializer = QuestionMediaSerializer(instance = media)
         return serializer.data
+
+    def get_mode_image(self, obj):
+        print('get_mode_img')
+        mode_id = obj.session.mode.id
+        mode = StrictMode.objects.all().get(id = mode_id)
+        request = self.context.get('request')
+        print(mode.image)
+        return request.build_absolute_uri(mode.image.url)
+
 
     class Meta:
         model = SessionQuestion
