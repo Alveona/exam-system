@@ -20,7 +20,7 @@
 	        </v-flex>
 
 			<v-flex xs12>
-				<div class="title">
+				<div class="headline">
 					<span v-if="currentType != 1">
 						Ответы: 
 					</span>
@@ -39,9 +39,9 @@
 			<v-layout row wrap v-if="currentType==1">
 
 			<v-flex xs12>
-				<h4 class="title mb-2">Ответ: </h4>
+				<h4 class="headline mb-2">Ответ: </h4>
 			</v-flex>
-				<v-flex xs12 sm6>
+				<v-flex xs12 sm6 xl4>
 	        	  	<v-label>Правильный ответ</v-label>
 					<v-tooltip bottom v-model="showAnswerTooltop">
 				        <v-btn slot="activator" @click="showAnswerTooltop = !showAnswerTooltop" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
@@ -58,7 +58,7 @@
 		          ></v-text-field>
 		        </v-flex>
 
-				<v-flex xs12 sm6>
+				<v-flex xs12 sm6 xl4>
 					<v-label>Комментарий к формату ответа</v-label>
 					<v-tooltip bottom v-model="showCommentTooltip">
 				        <v-btn slot="activator" @click="showCommentTooltip = !showCommentTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
@@ -74,7 +74,7 @@
 		          ></v-text-field>
 		        </v-flex>
 
-		        <v-flex xs12 sm6>
+		        <v-flex xs12 sm6 xl4>
 					<v-label>Максимальный балл за ответ</v-label>
 					<v-tooltip bottom v-model="showWeightTooltip">
 				        <v-btn slot="activator" @click="showWeightTooltip = !showWeightTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
@@ -91,46 +91,68 @@
 	              ></v-text-field>
 	            </v-flex>
 
-	            <v-flex xs12 sm6>
-	            	<v-label>Текстовая подсказка</v-label>
-					<v-tooltip bottom v-model="showHintTooltip">
-				        <v-btn slot="activator" @click="showHintTooltip = !showHintTooltip" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
-				        <span>Опциональное поле. Если тестируемый ответит неверно, то всплывет подсказка, которая должна содержать намек на то, как правильно находить решение. В идеале постарайтесь, чтобы подсказка не слишком сильно облегчала задачу, но и позволяла тестируемому дать направление для размышлений. Также есть возможность загрузить аудиоподсказку, дополняющую или дублирующую текстовую.</span>
-		        	</v-tooltip>
-	              <v-text-field
-	                type="text"
-	                class="ml-2"
-	                v-model="answer.hint"
-	                :rules="[rules.hint]"
-	                clearable
-	                solo
-	              ></v-text-field>
-	            </v-flex>
+				<v-flex xs12 v-for="mode in modes">
+					<v-layout row wrap>
+						<v-flex xs12 sm6>
+							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+						</v-flex>
+						<v-flex xs12 v-if="edit">
+						      <v-label>Замена изображения и аудио:</v-label>
+						      <v-tooltip bottom v-model="answer.showMediaTooltip">
+							    <v-btn slot="activator" @click="answer.showMediaTooltip = !answer.showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+							    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
+					          </v-tooltip>
+					      </v-flex>
+			            <v-flex xs12 sm6 px-2>
+							<v-label v-if="!edit">Аудиоподсказка</v-label>
+			    			<v-layout align-center>
+					          	<v-checkbox @click.native="changeAudio(answers.indexOf(answer), modes.indexOf(mode))" v-model="answer.enabledAudio[modes.indexOf(mode)]" hide-details class="shrink mr-2"></v-checkbox>
+					            <file-input 
+					            	class="fileBtn"
+				                    accept="audio/*"
+				                    ref="fileInput"
+		                        	@input="getUploadedAudio($event, answers.indexOf(answer), modes.indexOf(mode))"
+		                        	@update:deleteFile="deleteFile(1, answers.indexOf(answer), modes.indexOf(mode))"
+						            :dis="!answer.enabledAudio[modes.indexOf(mode)]"
+						            :checked="answer.enabledAudio[modes.indexOf(mode)]"
+						            :label="answer.audioLoadText[modes.indexOf(mode)]"
+					            ></file-input>
+					        </v-layout>
+					    </v-flex>
+					</v-layout>
 
-			      <v-flex xs12>
-				      <v-label>Замена изображения и аудио:</v-label>
-				      <v-tooltip bottom v-model="answer.showMediaTooltip">
-					    <v-btn slot="activator" @click="answer.showMediaTooltip = !answer.showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
-					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
-			          </v-tooltip>
-			      </v-flex>
+					<v-layout row wrap>
+			            <v-flex xs12 sm6 px-2>
+			            	<v-label>Текстовая подсказка</v-label>
+							<v-tooltip bottom v-model="answer.showHintTooltip[modes.indexOf(mode)]">
+						        <v-btn slot="activator" @click="clickHintTooltip(answers.indexOf(answer), modes.indexOf(mode))" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+						        <span>Опциональное поле. Если тестируемый ответит неверно, то всплывет подсказка, которая должна содержать намек на то, как правильно находить решение. В идеале постарайтесь, чтобы подсказка не слишком сильно облегчала задачу, но и позволяла тестируемому дать направление для размышлений. Также есть возможность загрузить аудиоподсказку, дополняющую или дублирующую текстовую.</span>
+				        	</v-tooltip>
+			              <v-text-field
+			                type="text"
+			                v-model="answer.hints[modes.indexOf(mode)]"
+			                :rules="[rules.hint]"
+			                clearable
+			                solo
+			              ></v-text-field>
+			            </v-flex>
 
-	            <v-flex xs12 sm6 xl3>
-	    			<v-layout align-center>
-			          	<v-checkbox @click.native="changeAudio(answers.indexOf(answer))" v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
-			            <file-input 
-			            	class="fileBtn"
-		                    accept="audio/*"
-		                    ref="fileInput"
-                        	@input="getUploadedAudio($event, answers.indexOf(answer))"
-                        	@update:deleteFile="deleteFile(1, answers.indexOf(answer))"
-				            :dis="!answer.enabledAudio"
-                        	:fileObj="answer.audio"
-				            :checked="answer.enabledAudio"
-				            :label="answer.audioLoadText"
-			            ></file-input>
-			        </v-layout>
-			    </v-flex>
+						<v-flex xs12 sm6 px-2>
+			            	<v-label>Видеоподсказка (ссылка)</v-label>
+			            	<v-tooltip bottom v-model="answer.showVideoTooltip[modes.indexOf(mode)]">
+						        <v-btn slot="activator" @click="clickVideoTooltip(answers.indexOf(answer), modes.indexOf(mode))" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+						        <span>Опциональное поле. Вы можете добавить видеореакцию на ответ, содержащую намек на то, в чем может быть неправ учащийся. Если добавлена ссылка на видео, загруженное аудио воспроизводиться при прохождении не будет.</span>
+				        	</v-tooltip>
+			              <v-text-field
+			                type="text"
+			                v-model="answer.videos[modes.indexOf(mode)]"
+			                :rules="[rules.video]"
+			                clearable
+			                solo
+			              ></v-text-field>
+			            </v-flex>
+					</v-layout>
+				</v-flex>
 
 			</v-layout>
 
@@ -150,7 +172,7 @@
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 px-1 v-if="currentType==3" >
+				<v-flex xs12 sm6 px-1 v-if="currentType==3" >
 
 					<v-label>Максимальный балл</v-label>
 					<v-tooltip bottom >
@@ -168,7 +190,7 @@
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 px-1 v-if="currentType==3">
+				<v-flex xs12 sm6 px-1 v-if="currentType==3">
 					<v-label>Приоритет проверки</v-label>
 					<v-tooltip bottom >
 				        <v-btn slot="activator" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
@@ -183,21 +205,33 @@
 		          ></v-text-field>
 				</v-flex>
 
-				<v-flex xs12 sm4 px-1>
-					<v-label>Текстовая подсказка</v-label>
-					<v-tooltip bottom >
-				        <v-btn slot="activator" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
-				        <span>Опциональное поле. Если тестируемый ответит неверно, то всплывет подсказка, которая должна содержать намек на то, как правильно находить решение. В идеале постарайтесь, чтобы подсказка не слишком сильно облегчала задачу, но и позволяла тестируемому дать направление для размышлений. Также есть возможность загрузить аудиоподсказку, дополняющую или дублирующую текстовую.</span>
-		        	</v-tooltip>
-		          <v-text-field
-		            type="text"
-		            v-model="answer.hint"
-		            :rules="[rules.hint]"
-		            solo
-		          ></v-text-field>
-				</v-flex>
+				<v-flex xs12 v-if="edit">
+			      <v-label>Замена изображения и аудио:</v-label>
+			      <v-tooltip bottom v-model="answer.showMediaTooltip">
+				    <v-btn slot="activator" @click="answer.showMediaTooltip = !answer.showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
+		          </v-tooltip>
+		      </v-flex>
 
-				<v-flex xs12 sm4 >
+	          <v-flex xs12 sm6 mb-3>
+				<v-label v-if="!edit">Изображение: </v-label>
+    			<v-layout align-center>
+		          	<v-checkbox @click.native="changeImage(answers.indexOf(answer))" v-model="answer.enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
+
+		            <file-input 
+		            class="fileBtn"
+                    accept="image/*"
+                    ref="fileInput"
+                    @update:deleteFile="deleteFile(0, answers.indexOf(answer))"
+                    @input="getUploadedImage($event, answers.indexOf(answer))"
+                    :checked="answer.enabledImage"
+		            :dis="!answer.enabledImage"
+		            :label="answer.imageLoadText"
+		            ></file-input>
+		        </v-layout>
+		      </v-flex>
+
+				<v-flex xs12 sm6>
 		          <v-switch 
 		            v-if="currentType==3"
 			        :label="isTrueText"
@@ -213,45 +247,61 @@
 			      ></v-radio>
 				</v-flex>
 
-			      <v-flex xs12>
-				      <v-label>Замена изображения и аудио:</v-label>
-				      <v-tooltip bottom v-model="answer.showMediaTooltip">
-					    <v-btn slot="activator" @click="answer.showMediaTooltip = !answer.showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
-					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
-			          </v-tooltip>
-			      </v-flex>
+				<v-flex xs12 v-for="mode in modes">
+					<v-layout row wrap>
+						<v-flex xs12 sm6>
+							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+						</v-flex>
+						<v-flex xs12 sm6 px-2>
+							<v-label v-if="!edit">Аудиоподсказка: </v-label>
+			    			<v-layout align-center>
+					          	<v-checkbox @click.native="changeAudio(answers.indexOf(answer), modes.indexOf(mode))" v-model="answer.enabledAudio[modes.indexOf(mode)]" hide-details class="shrink mr-2"></v-checkbox>
+					            <file-input 
+					            class="fileBtn"
+			                    accept="audio/*"
+			                    ref="fileInput"
+		                        @input="getUploadedAudio($event, answers.indexOf(answer), modes.indexOf(mode))"
+		                        @update:deleteFile="deleteFile(1, answers.indexOf(answer), modes.indexOf(mode))"
+		                        :checked="answer.enabledAudio[modes.indexOf(mode)]"
+					            :dis="!answer.enabledAudio[modes.indexOf(mode)]"
+					            :label="answer.audioLoadText[modes.indexOf(mode)]"
+					            ></file-input>
+					        </v-layout>
+					      </v-flex>
+					</v-layout>
 
-				  <v-flex xs12 sm4 xl3 mb-3>
-	    			<v-layout align-center>
-			          	<v-checkbox @click.native="changeAudio(answers.indexOf(answer))" v-model="answer.enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
-			            <file-input 
-			            class="fileBtn"
-	                    accept="audio/*"
-	                    ref="fileInput"
-                        @input="getUploadedAudio($event, answers.indexOf(answer))"
-                        @update:deleteFile="deleteFile(1, answers.indexOf(answer))"
-                        :checked="answer.enabledAudio"
-                        :fileObj="answer.audio"
-			            :dis="!answer.enabledAudio"
-			            :label="answer.audioLoadText"
-			            ></file-input>
-			        </v-layout>
-			      </v-flex>
-		          <v-flex xs12 sm4 xl3 mb-3>
-	    			<v-layout align-center>
-			          	<v-checkbox @click.native="changeImage(answers.indexOf(answer))" v-model="answer.enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
-			            <file-input 
-			            class="fileBtn"
-	                    accept="image/*"
-	                    ref="fileInput"
-                        @update:deleteFile="deleteFile(0, answers.indexOf(answer))"
-                        @input="getUploadedImage($event, answers.indexOf(answer))"
-                        :checked="answer.enabledImage"
-			            :dis="!answer.enabledImage"
-			            :label="answer.imageLoadText"
-			            ></file-input>
-			        </v-layout>
-			      </v-flex>
+					<v-layout row wrap>
+						<v-flex xs12 sm6 px-2>
+							<v-label>Текстовая подсказка</v-label>
+							<v-tooltip bottom v-model="answer.showHintTooltip[modes.indexOf(mode)]">
+						        <v-btn slot="activator" @click.native="clickHintTooltip(answers.indexOf(answer), modes.indexOf(mode))" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+						        <span>Опциональное поле. Если тестируемый ответит неверно, то всплывет подсказка, которая должна содержать намек на то, как правильно находить решение. В идеале постарайтесь, чтобы подсказка не слишком сильно облегчала задачу, но и позволяла тестируемому дать направление для размышлений. Также есть возможность загрузить аудиоподсказку, дополняющую или дублирующую текстовую.</span>
+				        	</v-tooltip>
+				          <v-text-field
+				            type="text"
+				            v-model="answer.hints[modes.indexOf(mode)]"
+				            :rules="[rules.hint]"
+				            solo
+				          ></v-text-field>
+						</v-flex>
+
+						<v-flex xs12 sm6 px-2>
+			            	<v-label>Видеоподсказка (ссылка)</v-label>
+			            	<v-tooltip bottom v-model="answer.showVideoTooltip[modes.indexOf(mode)]">
+						        <v-btn slot="activator" @click="clickVideoTooltip(answers.indexOf(answer), modes.indexOf(mode))" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
+						        <span>Опциональное поле. Вы можете добавить видеореакцию на ответ, содержащую намек на то, в чем может быть неправ учащийся. Если добавлена ссылка на видео, загруженное аудио воспроизводиться при прохождении не будет.</span>
+				        	</v-tooltip>
+			              <v-text-field
+			                type="text"
+			                v-model="answer.videos[modes.indexOf(mode)]"
+			                :rules="[rules.video]"
+			                clearable
+			                solo
+			              ></v-text-field>
+			            </v-flex>
+						  
+					  </v-layout>
+				  </v-flex>
 
 			</v-layout>
 		</v-layout>
@@ -320,11 +370,10 @@
     import FileInput from '@/components/other/FileLoader'
 
 	export default {
-		props: ['currentType', 'countAnswers', 'answers', 'answersQty', 'edit'],
+		props: ['currentType', 'countAnswers', 'answers', 'answersQty', 'edit', 'modes'],
 		components: { FileInput },
 		data() {
 			return {
-				audioLoadText: 'Аудиоподсказка',
 				isTrueText: 'Ответ верен',
                 imageLoadText: 'Изображение к ответу',
 				audio: '',
@@ -337,7 +386,8 @@
                 	duplicatePriority: value => !this.findDuplicates(value) || 'Такое значение уже есть у другого ответа',
                 	answer: value => (!value || (!!value && value.length <= this.maxAnswerLength)) || 'Максимальная длина поля '+this.maxAnswerLength+' символов',
                 	comment: value => (!value || (!!value && value.length <= this.maxCommentLength)) || 'Максимальная длина поля '+this.maxCommentLength+' символов',
-                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов'
+                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов',
+                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
                 },
         		oneAnswerRadios: 0,
         		maxAnswers:15,
@@ -349,6 +399,7 @@
         		maxWeight: 1000,
         		minPriority: 1,
         		maxPriority: 15,
+        		maxVideoLength: 150,
         		maxIncludedAnswers: 8,
         		showAnswerTooltop: false,
         		showCommentTooltip: false,
@@ -386,34 +437,31 @@
 						this.answers[i].correct = true
 					else this.answers[i].correct = false
 			},
-			getUploadedAudio(e, index) {
-				this.$emit('update:answersAudio', {'audio' : e, 'index': index})
+			getUploadedAudio(e, index, mode) {
+				this.$emit('update:answersAudio', {'audio' : e, 'index': index, 'mode' : mode})
 			},
 			getUploadedImage(e, index) {
 				this.$emit('update:answersImage', {'image' : e, 'index': index})
 			},
-			changeCheck(index, e){
-				for (var i = 0; i < this.answers.length; ++i)
-					if (i == index)
-					{
-						this.answers[i].weight = this.answers[i].correct ? 256 : 0
-						return
-					}
+			changeCheck(i, e){
+				this.answers[i].weight = this.answers[i].correct ? 256 : 0
 			},
-			changeAudio(ind){
-				this.$emit('update:changeAudio', ind)
+			changeAudio(ind, mode){
+				this.$emit('update:changeAudio', {'index' : ind, 'mode': mode})
 			},
 			changeImage(ind){
 				this.$emit('update:changeImage', ind)
 			},
-			deleteFile(isAudio, ind){
-				for (var i = 0; i < this.answers.length; i++)
-					if (i = ind){
-						if (isAudio)
-							this.answers[i].audio = null
-						else this.answers[i].image = null
-						return
-					}
+			deleteFile(isAudio, i, mode){
+				if (isAudio)
+					this.answers[i].audios[mode] = null
+				else this.answers[i].image = null
+			},
+			clickHintTooltip(ans, mode){
+				this.$emit('update:clickHintTooltip', {'answer' : ans, 'mode': mode})
+			},
+			clickVideoTooltip(ans, mode){
+				this.$emit('update:clickVideoTooltip', {'answer' : ans, 'mode': mode})
 			}
 		},
 		computed: {

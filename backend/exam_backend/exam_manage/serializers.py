@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
-from .models import Question, Course, Answer, UserCourseRelation
+from .models import Question, Course, Answer, UserCourseRelation, StrictMode, Hint, QuestionMedia
 from exam.models import CourseSession
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -19,10 +19,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.difficulty = validated_data['difficulty']
         if 'comment' in validated_data:
             question.comment = validated_data['comment']
-        if 'image' in validated_data:
-            question.image = validated_data['image']
-        if 'audio' in validated_data:
-            question.audio = validated_data['audio']
+        # if 'image' in validated_data:
+        #     question.image = validated_data['image']
+        # if 'audio' in validated_data:
+        #     question.audio = validated_data['audio']
+
         question.save()
         return question
 
@@ -146,11 +147,9 @@ class RelationSerializer(serializers.ModelSerializer):
         validators = []  # Remove a default "unique together" constraint.
 
 class RelationUnsubscribeSerializer(serializers.ModelSerializer):
-
-
     class Meta:
         model = UserCourseRelation
-        field = '__all__'
+        fields = '__all__'
 
 
 class CourseCreatedSerializer(serializers.ModelSerializer):
@@ -165,3 +164,26 @@ class CourseAddedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ('token', 'name', 'user', 'description', 'image')
+
+class StrictModeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StrictMode
+        fields = '__all__'
+    def create(self, validated_data):
+        mode = StrictMode(user = self.context['request'].user, name = validated_data['name'])
+        if 'image' in validated_data:
+            mode.image = validated_data['image']
+        if 'text' in validated_data:
+            mode.text = validated_data['text']
+        mode.save()
+        return mode
+
+class QuestionMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionMedia
+        fields = '__all__'
+
+class HintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hint
+        fields = '__all__'

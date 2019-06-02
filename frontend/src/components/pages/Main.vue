@@ -69,7 +69,7 @@
         <v-card>
 
           <v-list>
-            <v-list-tile @click="">
+            <v-list-tile @click="toProfile()">
               <v-icon class="mr-3">
                 account_circle
               </v-icon>
@@ -109,19 +109,22 @@
 	      	{ icon: 'done', text: 'Добавленные тесты', link: '/' },
 	        { icon: 'help_outline', text: 'Управление вопросами', link: '/questions' },
 	        { icon: 'toc', text: 'Управление тестами', link: '/tests' },
-	        //{ icon: 'trending_up', text: 'Статистика', link: '/stats' },
+	        { icon: 'trending_up', text: 'Статистика', link: '/stats' },
 	        //{ icon: 'import_contacts', text: 'Руководство пользователя', link: '/guide' }
 	      ]
 	    }
-	},
-	methods: {
-		signout(){
-			Authentication.signout(this, '/login');
-		},
-		changePage(link){
-			router.push(link)
-		}
-	}
+  	},
+  	methods: {
+  		signout(){
+  			Authentication.signout(this, '/login');
+  		},
+  		changePage(link){
+  			router.push(link)
+  		},
+      toProfile(){
+        router.push('/profile')
+      }
+  	}
   }
 </script>
 

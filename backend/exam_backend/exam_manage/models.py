@@ -50,9 +50,29 @@ class Answer(models.Model):
     weight = models.IntegerField(blank=True, null=True)
     image = models.ImageField(upload_to='answers/', null=True, verbose_name='Изображение')
     audio = models.FileField(upload_to='answers_audio/', null=True)
-    hint = models.CharField(max_length=255, null=True)
+    hint_old = models.CharField(max_length=255, null=True)
     priority = models.IntegerField(blank = True, null=True)
     deleted = models.BooleanField(default = False)
+
+class StrictMode(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True)
+    name = models.CharField(max_length = 255)
+    text = models.TextField(blank=True)
+    image = models.ImageField(upload_to='strict_modes/')
+
+class QuestionMedia(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
+    mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE, null=True)
+    video = models.FileField(upload_to='questions_video/', null=True)
+    audio = models.FileField(upload_to='questions_audio/', null=True)
+
+class Hint(models.Model):
+    mode = models.ForeignKey(StrictMode, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    audio = models.ImageField(upload_to='hint_audio/', null=True)
+    video = models.ImageField(upload_to='hint_video/', null=True)
+    text = models.TextField(blank=True)
+
 
 # intermediate models doc:
 # https://docs.djangoproject.com/en/1.7/topics/db/models/#extra-fields-on-many-to-many-relationships

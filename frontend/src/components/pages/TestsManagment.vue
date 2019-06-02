@@ -6,6 +6,27 @@
 			</p>
 		</v-flex>
 
+		<div class="divider"></div>
+		<h4 class="title pt-2">Режимы</h4>
+		<v-tooltip bottom v-model="showModesTooltip">
+	        <v-btn slot="activator" @click="showModesTooltip = !showModesTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+	        <span>Выбирая режим, пользователь может выбрать вариант восприятия информации от преподавателя. Например, можно привязть к разным режимам разных преподавателей, или одного, но в разных стилях подачи (добрый, ехидный и т.д.) К каждому из режимов можно добавлять свои подсказки к ответам, аудио- и видеозаписи, а также изображение лица преподавателя, которое будет появляться при воспроизведении подсказок. </span>
+		</v-tooltip>
+		<div class="divider mt-2"></div>
+		
+		<v-flex xs12>
+			<modes
+			></modes>
+		</v-flex>
+
+		<div class="divider"></div>
+		<h4 class="title pt-2">Созданные тесты</h4>
+		<v-tooltip bottom v-model="showTestsTooltip">
+	        <v-btn slot="activator" @click="showTestsTooltip = !showTestsTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+	        <span>Выбирая режим, пользователь может выбрать вариант восприятия информации от преподавателя. Например, можно привязть к разным режимам разных преподавателей, или одного, но в разных стилях подачи (добрый, ехидный и т.д.) К каждому из режимов можно добавлять свои подсказки к ответам, аудио- и видеозаписи, а также изображение лица преподавателя, которое будет появляться при воспроизведении подсказок. </span>
+		</v-tooltip>
+		<div class="divider mt-2"></div>
+
 		<v-flex xs12>
 			<v-btn round color="success" to="add/test" class="mb-3" dark>
 				<v-icon size="24px" class="mr-2">
@@ -48,6 +69,7 @@
 <script>
   	import Axios from 'axios'
 	import router from '@/router'
+  	import Modes from '@/components/boxes/Modes'
   	import CreatedTest from '@/components/boxes/CreatedTest'
 	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
@@ -55,13 +77,15 @@
 	const TestingSystemAPI = connection.server
 
 	export default {
-		components: { CreatedTest },
+		components: { CreatedTest, Modes },
 		data() {
 			return {
 				tests: [],
 				alert_message: '',
 				alert: false,
 				successLoad: false,
+				showModesTooltip:false,
+				showTestsTooltip:false,
 				emptyPic: require('@/assets/images/no_image.png')
 			}
 		},
@@ -99,5 +123,10 @@
 </script>
 
 <style>
-	
+	.divider{
+		height:1px;
+		width:100%;
+		background: #bbb;
+		margin-bottom:15px;
+	}
 </style>

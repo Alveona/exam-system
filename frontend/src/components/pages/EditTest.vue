@@ -339,9 +339,9 @@
 
 				
 
-                 Axios.patch(`${TestingSystemAPI}/api/courses/`, formData, {
+                 Axios.patch(`${TestingSystemAPI}/api/courses/`+this.$route.params.token, formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-			          params: {'token' : this.$route.params.token}
+			          params: {}
 			        })
 	               .then((response) => {
 	               		this.successSet = true

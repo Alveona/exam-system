@@ -24,7 +24,7 @@
                     ref="file"
                     name="file"
                     :accept="accept"
-                    @change="onFilePicked"
+                    @change="onFilePicked($event)"
                     :disabled="dis"
             >
         </div>

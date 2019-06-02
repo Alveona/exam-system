@@ -5,6 +5,13 @@
 		<p class="title text-md-center">Вопрос {{question.order_number}}.</p>
 	</v-flex>
 
+	<v-layout row justify-space-around v-if="question.media.video">
+		<!--<iframe width="560" height="315" src="https://youtu.be/Yseg6hB7_Lk" frameborder="0" allow="autoplay" allowfullscreen></iframe>-->
+		<iframe width="560" height="315" src="https://www.youtube.com/watch?v=KMe3VHxZbgY&autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	</v-layout>
+
+	
+
 	<v-flex v-if="!question.question.image" xs12 class="my-3">
 		<p class="font-weight-regular subheading">{{question.question.text}}</p>
 	</v-flex>
@@ -23,8 +30,8 @@
 		</v-flex>
 	</v-layout>
 
-	<v-flex xs12 v-if="question.question.audio != null" class="mb-4" > 
-		<vue-audio :file="question.question.audio" :autoPlay="question.audio_hint != null ? false : true"/>
+	<v-flex xs12 v-if="question.media.audio && !question.media.video" class="mb-4" > 
+		<vue-audio :file="question.media.audio" :autoPlay="!!question.audio_hint ? false : true"/>
 	</v-flex>
 
 	<v-flex v-if="question.question.answer_type == 1" xs12>
@@ -96,8 +103,12 @@
 		</v-layout>
 	</v-flex>
 
+	<v-layout row justify-space-around v-if="question.video_hint">
+		<!--<iframe width="560" height="315" src="https://youtu.be/Yseg6hB7_Lk" frameborder="0" allow="autoplay" allowfullscreen></iframe>-->
+		<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG&autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	</v-layout>
 
-	<v-flex xs12 v-if="question.audio_hint != null" class="mb-4"> 
+	<v-flex xs12 v-if="question.audio_hint && !question.video_hint" class="mb-4"> 
 		<vue-audio :file="question.audio_hint" :autoPlay="true"/>
 	</v-flex>
 
@@ -158,8 +169,9 @@ export default{
         getQuestion(q, callback)
         {
         	console.log('getQuestion function: ')
-        	var token = { 'token' : this.$route.params.token }
-        	Axios.post(`${TestingSystemAPI}/api/session/`, token, {
+        	var token_mode = { 'token' : this.$route.params.token, 'mode' :  this.$route.params.mode}
+        	console.log(token_mode)
+        	Axios.post(`${TestingSystemAPI}/api/session/`, token_mode, {
 	            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 	            params: {}
 	        }).then((data) => {
