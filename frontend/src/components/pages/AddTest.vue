@@ -118,6 +118,11 @@
 		        </v-flex>
 
 		          <v-flex xs12 sm6 xl3>
+		          	<v-label>Иллюстрация к тесту</v-label>
+					<v-tooltip bottom v-model="showImageTooltip">
+				        <v-btn slot="activator" @click="showImageTooltip = !showImageTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Желательно добавить, чтобы сделать ваш курс легко узнаваемым</span>
+		        	</v-tooltip>
         			<v-layout align-center>
 			          	<v-checkbox v-model="enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
 			            <file-input 
@@ -241,6 +246,7 @@
 			    showQNumTooltip: false,
 			    showLinkTooltip: false,
 			    showDescriptionTooltip: false,
+			    showImageTooltip: false,
 
 			    title: '',
 			    token: '',

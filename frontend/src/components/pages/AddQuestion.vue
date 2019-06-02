@@ -374,7 +374,7 @@
                 questionData.set('answers_number', this.answersQty)
                 questionData.set('difficulty', this.difficulty)
                 questionData.set('image', this.image)
-                var comment = null
+                let comment = null
                 if (this.currentType == 1)
 					comment = this.answers[0].comment
                 questionData.set('comment', comment)
@@ -386,7 +386,7 @@
                 .then((response) => {
                		this.questionId = response.data.id
 
-               		for (var i = 0; i < this.modes.length; i++)
+               		for (let i = 0; i < this.modes.length; i++)
                		{
                			console.log('im here')
             			let QMediaData = new FormData()
@@ -395,107 +395,117 @@
 		                QMediaData.set('audio', this.audios[i])
 		                QMediaData.set('video', this.videos[i])
 
-						axios.post(`${TestingSystemAPI}/api/questions_media/`, QMediaData, { 
-				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-				          params: {}
-				        })
+						let object = {};
+						QMediaData.forEach(function(value, key){
+						    object[key] = value;
+						});
+						let json = JSON.stringify(object);
+		                 console.log(json)
+
+						axios.post(`${TestingSystemAPI}/api/questions_media/`, QMediaData, {
+					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+					          params: {}
+					        })
 				        .then((response) => {
 				        	console.log(this.questionId + ' ' + this.modes[i].id + ' success questions_media')
-				        	if (i == this.modes.length - 1)
-				        	{
-				           		for (var j = 0; j < this.answers.length; ++j)
-				           			this.answers[j].question = this.questionId
+				        	if (i != this.modes.length - 1)
+				        		return
+			           		for (let j = 0; j < this.answers.length; ++j)
+			           			this.answers[j].question = this.questionId
 
-				         		let answersData = new FormData()
-				                for (var j = 0; j < this.answers.length; j++)
-				                {
-				                 	answersData.append('image', this.answers[j].image)
-				                 	answersData.append('text', this.answers[j].text)
-				                 	if (this.currentType != 2 )
-				                 		answersData.append('priority', this.answers[j].priority)
-				                 	else 
-				                 	{
-				                 		if (this.answers[j].correct)
-				                 			answersData.append('priority', this.answers.length)
-				                 		else answersData.append('priority', j + 1)
-				                 	}
-				                 	answersData.append('correct', this.answers[j].correct)
-				                 	if (this.currentType == 2 && !this.answers[j].correct)
-				                 		answersData.append('weight', 0)
-				                 	else answersData.append('weight', this.answers[j].weight)
-				                 	answersData.append('question', this.questionId)
+			         		let answersData = new FormData()
+			                for (let j = 0; j < this.answers.length; j++)
+			                {
+			                 	answersData.append('image', this.answers[j].image)
+			                 	answersData.append('text', this.answers[j].text)
+			                 	if (this.currentType != 2 )
+			                 		answersData.append('priority', this.answers[j].priority)
+			                 	else 
+			                 	{
+			                 		if (this.answers[j].correct)
+			                 			answersData.append('priority', this.answers.length)
+			                 		else answersData.append('priority', j + 1)
+			                 	}
+			                 	answersData.append('correct', this.answers[j].correct)
+			                 	if (this.currentType == 2 && !this.answers[j].correct)
+			                 		answersData.append('weight', 0)
+			                 	else answersData.append('weight', this.answers[j].weight)
+			                 	answersData.append('question', this.questionId)
 
-				         			
-				                 }
+			         			
+			                 }
 
-		               			axios.post(`${TestingSystemAPI}/api/answers/`, answersData, {
-						          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-						          params: {}
-						        })
-				               .then(response => {
-				               		let ans = response.data.answers
-				               		console.log(ans)
-				               		if (ans.length != this.answers.length)
-				               		{
-				               			console.log('server response length error')
-					               		this.successSet = false
-					                    this.alert = true
-					                    this.message = 'Не удалось добавить вопрос. Произошла ошибка.'
-				               			return
-				               		}
-
-				               		for (var i = 0; i < ans.length; i++)
-				               		{
-				               			for (var j = 0; j < this.modes.length; j++)
-				               			{
-				               				console.log('start of end'+this.modes.length)
-				                			let AHintData = new FormData()
-							                AHintData.set('answer', this.ans[i])
-							                AHintData.set('mode', this.modes[j].id)
-							                AHintData.set('audio', this.answers[i].audios[j])
-							                AHintData.set('video', this.answers[i].videos[j])
-							                AHintData.set('text', this.answers[i].hints[j])
-
-											var object = {};
-											AHintData.forEach(function(value, key){
-											    object[key] = value;
-											});
-											var json = JSON.stringify(object);
-							                console.log(json)
-
-					               			axios.post(`${TestingSystemAPI}/api/answers_hint/`, AHintData, { 
-									          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-									          params: {}
-									        })
-									        .then((response) => {
-									        	console.log(this.ans[i] + ' ' + this.modes[j].id + ' success answers_hint')
-									        })
-							               .catch(error => {
-							               		this.successSet = false
-							                    this.alert = true
-							                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-							                    return
-							                })
-							           }
-				               		}
-				               		this.successSet = true
-				                    this.alert = true
-				                    this.message = 'Вопрос успешно добавлен.'
-				                })
-				               .catch(error => {
+	               			axios.post(`${TestingSystemAPI}/api/answers/`, answersData, {
+					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+					          params: {}
+					        })
+			               .then(response => {
+			               		let ans = response.data.answers
+			               		console.log(ans)
+			               		if (ans.length != this.answers.length)
+			               		{
+			               			console.log('server response length error')
 				               		this.successSet = false
 				                    this.alert = true
-				                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-				                })
+				                    this.message = 'Не удалось добавить вопрос. Произошла ошибка.'
+			               			return
+			               		}
+
+			               		for (let i = 0; i < ans.length; i++)
+			               		{
+			               			for (let j = 0; j < this.modes.length; j++)
+			               			{
+			               				console.log('start of end'+this.modes.length)
+			                			let AHintData = new FormData()
+						                AHintData.set('answer', ans[i])
+						                AHintData.set('mode', this.modes[j].id)
+						                AHintData.set('audio', this.answers[i].audios[j])
+						                AHintData.set('video', this.answers[i].videos[j])
+						                AHintData.set('text', this.answers[i].hints[j])
+
+										let object = {};
+										AHintData.forEach(function(value, key){
+										    object[key] = value;
+										});
+										let json = JSON.stringify(object);
+						                console.log(json)
+
+				               			axios.post(`${TestingSystemAPI}/api/answers_hint/`, AHintData, { 
+								          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+								          params: {}
+								        })
+								        .then((response) => {
+								        	console.log(ans[i] + ' ' + this.modes[j].id + ' success answers_hint')
+								        	if (i == ans.length - 1 && j == this.modes.length - 1)
+								        	{
+							               		this.successSet = true
+							                    this.alert = true
+							                    this.message = 'Вопрос успешно добавлен.'
+								        	}
+								        })
+						               .catch(error => {
+						               		this.successSet = false
+						                    this.alert = true
+						                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+						                    return
+						                })
+						           }
+			               		}
+			                })
+			               .catch(error => {
+			               		this.successSet = false
+			                    this.alert = true
+			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+			                })
 
 
 
-				        	}
+				        	
 				        })
 		                .catch(error => {
 		               		this.successSet = false
 		                    this.alert = true
-		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.111'
 		                    return
 		                })
 		            }

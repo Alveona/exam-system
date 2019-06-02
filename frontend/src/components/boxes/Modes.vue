@@ -163,13 +163,6 @@
                 formData.set('name', this.title)
                 formData.set('image', this.image)
 
-				var object = {};
-				formData.forEach(function(value, key){
-				    object[key] = value;
-				});
-				var json = JSON.stringify(object);
-                 console.log(json)
-
                 Axios.post(`${TestingSystemAPI}/api/strict_modes/`, formData, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
@@ -190,17 +183,13 @@
 		          params: {}
 		        })
                .then(response => {
-               		this.successLoad = true
-                    this.alert = true
-                    this.alert_message = 'Режим успешно удален.'
+                    this.reloadPage()
                 })
                .catch(error => {
                		this.successLoad = false
                     this.alert = true
                     this.alert_message = 'Не удалось удалить режим. Проверьте подключение к сети.'
                 })
-               this.modes.push(null)
-               this.modes.pop()
 			},
 			hideAlert() {
 				this.alert = false

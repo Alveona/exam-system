@@ -28,7 +28,7 @@
 	            	<v-flex xs12>
 						<v-alert
 				        :value="alert"
-				        :type="successReq ? 'success' : infoReq ? 'info' : 'error'"
+				        :type="successReq ? 'success' : 'error'"
         				transition="scale-transition"
         				outline
 				        >
@@ -43,13 +43,14 @@
 		            <v-select v-if="openModes"
 			            v-model="currentVariant"
 			            :items="modeVariants"
-			            item-value="id"
 			            item-text="name"
+			            item-value="id"
 				        label="Выбор режима"
+            			return-object
 			            solo
 			            required
 		            ></v-select>
-		            <v-btn v-if="response.subscribed" round color="primary" :to="{ name: 'testing', params: { token: $route.params.token, mode: currentVariant.id } }" dark block large>
+		            <v-btn v-if="response.subscribed" round :disabled="!successLoaded" color="primary" :to="{ name: 'testing', params: { token: $route.params.token, mode: currentVariant.id} }" dark block large>
 						 Пройти тест
 					</v-btn>
 					<v-btn v-if="!response.subscribed" @click.native="subscribe()" round color="success" dark block large>
@@ -101,35 +102,36 @@
 				response: [],
 				emptyPic: require('@/assets/images/no_image.png'),
 				modes:[],
-				currentVariant:null,
+				currentVariant:{id:null,name:null},
       			modeVariants: [],
-      			openModes: false
+      			openModes: false,
+      			successLoaded: false
 			}
 		},
 		methods: {
             getTestData()
             {
-		        console.log(this.$route.params.token)
             	Axios.get(`${TestingSystemAPI}/api/courses/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: { 'token' : this.$route.params.token}
 		        }).then(({data}) => {
 		          this.response = data[0]
-		          this.alert = false
-		          this.successReq = true
-
-					axios.get(`${TestingSystemAPI}/api/strict_modes/`, {
+		          console.log('1')
+					Axios.get(TestingSystemAPI+'/api/strict_modes/?token='+this.$route.params.token, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        }).then(({data}) => {
 			          this.modes = data
+			          console.log(this.modes)
+			          this.successLoaded = true
 			          if (!this.response.mode)
 			          	this.openModes = true
 			          this.successReq = true
 
-			          for (var i = 0; i < this.modes.length; i++)
-			          	this.modeVariants.push({ 'id' : this.modes[i].id, 'name' : this.modes[i].name})
+			          for (let i = 0; i < this.modes.length; i++)
+			          	this.modeVariants.push({ id : this.modes[i].id,name : this.modes[i].name})
 			          this.currentVariant = this.modeVariants[0]
+			          console.log(this.currentVariant)
 
 			        }).catch(error => {
 			          this.alert = true
@@ -199,6 +201,9 @@
 			alert: function(val) {
 				if (val)
 					this.startTimer()
+			},
+			currentVariant: function(val){
+				console.log(val)
 			}
 		}
 	}

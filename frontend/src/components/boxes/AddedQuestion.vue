@@ -22,12 +22,12 @@
 
 				  <v-tooltip bottom v-if="!withchecks">
 	              	<v-btn slot="activator" v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>
-	              	<span>Редактировать ответ</span>
+	              	<span>Редактировать вопрос</span>
 		          </v-tooltip>
 
 				  <v-tooltip bottom v-if="!withchecks">
 	              	<v-btn slot="activator" @click.native="deleteQuestion(collection.indexOf(question), question.id)" icon><v-icon>delete</v-icon></v-btn>
-	              	<span>Удалить ответ</span>
+	              	<span>Удалить вопрос</span>
 		          </v-tooltip>
 				  
 				  <v-tooltip bottom>
