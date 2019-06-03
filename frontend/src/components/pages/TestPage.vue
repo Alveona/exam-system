@@ -72,7 +72,7 @@
 	          <v-flex xs12>
 	          	<p>
 	              	<span v-if="!response.subscribed">Не подписан на тест</span>
-	              	<span v-else><strong>Использованные попытки:</strong> {{response.current_attempt}} / {{response.attempts}}</span>
+	              	<span v-else><strong>Использованные попытки:</strong> {{response.current_attempt}} <span v-if="response.attempts">/</span> {{response.attempts}}</span>
 	              </p>
 	          </v-flex>
               <v-flex xs12 class="wrapText">
