@@ -186,6 +186,81 @@
 		          ></v-text-field>
 		        </v-flex>	
 
+		        <v-flex xs12 sm6>
+		        	<v-label>Финальная аудиозапись к результату 'Отлично'</v-label>
+        			<v-layout align-center>
+			          	<v-checkbox v-model="enabledAudioPerfect" hide-details class="shrink mr-2"></v-checkbox>
+			            <file-input 
+			            class="fileBtn"
+	                    accept="audio/*"
+	                    ref="fileInput"
+                        @input="getUploadedAudio($event, 0)"
+			            :dis="!enabledAudioPerfect"
+			            :checked="enabledAudioPerfect"
+			            :label="audioLoadTextPerfect"
+			            ></file-input>
+			        </v-layout>
+			      </v-flex>
+
+			      <v-flex xs12 sm6>
+		        	<v-label>Финальная аудиозапись к результату 'Хорошо'</v-label>
+        			<v-layout align-center>
+			          	<v-checkbox v-model="enabledAudioGood" hide-details class="shrink mr-2"></v-checkbox>
+			            <file-input 
+			            class="fileBtn"
+	                    accept="audio/*"
+	                    ref="fileInput"
+                        @input="getUploadedAudio($event, 1)"
+			            :dis="!enabledAudioGood"
+			            :checked="enabledAudioGood"
+			            :label="audioLoadTextGood"
+			            ></file-input>
+			        </v-layout>
+			      </v-flex>
+
+			      <v-flex xs12 sm6>
+		        	<v-label>Финальная аудиозапись к результату 'Удовлетворительно'</v-label>
+        			<v-layout align-center>
+			          	<v-checkbox v-model="enabledAudioSatisfactory" hide-details class="shrink mr-2"></v-checkbox>
+			            <file-input 
+			            class="fileBtn"
+	                    accept="audio/*"
+	                    ref="fileInput"
+                        @input="getUploadedAudio($event, 2)"
+			            :dis="true"
+			            :checked="enabledAudioSatisfactory"
+			            :label="audioLoadTextSatisfactory"
+			            ></file-input>
+			        </v-layout>
+			      </v-flex>
+
+			      <v-flex xs12 sm6>
+		        	<v-label>Финальная аудиозапись к результату 'Плохо'</v-label>
+        			<v-layout align-center>
+			          	<v-checkbox v-model="enabledAudioBad" hide-details class="shrink mr-2"></v-checkbox>
+			            <file-input 
+			            class="fileBtn"
+	                    accept="audio/*"
+	                    ref="fileInput"
+                        @input="getUploadedAudio($event, 3)"
+			            :dis="!enabledAudioBad"
+			            :checked="enabledAudioBad"
+			            :label="audioLoadTextBad"
+			            ></file-input>
+			        </v-layout>
+			      </v-flex>
+
+			      <v-flex xs12>
+		            <v-label>Финальное видео к тесту</v-label>
+		              <v-text-field
+		                type="text"
+		                v-model="video"
+		                :rules="[rules.video]"
+		                clearable
+		                solo
+		              ></v-text-field>
+		            </v-flex>
+
 				<v-flex xs12>
 					<v-alert
 			        :value="alert"
@@ -269,7 +344,21 @@
         		maxTitleLen: 100,
         		minTokenLen: 8,
         		maxTokenLen: 50,
+        		maxVideoLength: 150,
         		validToken: true,
+        		audioPerfect: null,
+        		audioGood: null,
+        		audioSatisfactory: null,
+        		audioBad:null,
+        		audioLoadTextPerfect:'',
+        		audioLoadTextGood:'',
+        		audioLoadTextSatisfactory:'',
+        		audioLoadTextBad:'',
+        		enabledAudioBad:false,
+        		enabledAudioSatisfactory:false,
+        		enabledAudioGood:false,
+        		enabledAudioPerfect:false,
+        		video:'',
 
                 rules: {
                 	required: value => !!value || 'Это необходимое поле',
@@ -284,7 +373,8 @@
                 	description: val => (val.length >= this.minDescrLen && val.length <= this.maxDescrLen) || 'Длина текста должна быть в диапазоне от '+this.minDescrLen+' до '+this.maxDescrLen + ' символов',
                 	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
                 	tokenValid: async (val) => await this.getTokenAnswer() || '',
-                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина ссылки должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов'
+                	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина ссылки должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов',
+                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
                 },
 
 		    }
@@ -321,6 +411,16 @@
 		          console.log(error)
 		        })
 			},
+            getUploadedAudio(e, val) {
+            	if (val == 0)
+                	this.audioPerfect = e
+                else if (val == 1)
+                	this.audioGood = e
+                else if (val == 2)
+                	this.audioSatisfactory = e
+                else if (val == 3)
+                	this.audioBad = e
+            },
             getUploadedImage(e) {
                 this.image = e
             },
@@ -349,9 +449,21 @@
                  formData.set('perfect_mark', this.perfect_mark)
                  formData.set('good_mark', this.good_mark)
                  formData.set('satisfactory_mark', this.satisfactory_mark)
+                 formData.set('perfect_audio', this.audioPerfect)
+                 formData.set('good_audio', this.audioGood)
+                 formData.set('satisfactory_audio', this.audioGood) //has to to be changed to 'satisfactory' but now it is right
+                 formData.set('bad_audio', this.audioBad)
+                 formData.set('video', this.video)
                  for (var i = 0; i < this.questionsChecks.length; i++)
                  	formData.append('questions', this.questionsChecks[i])
 
+
+				let object = {};
+				formData.forEach(function(value, key){
+				    object[key] = value;
+				});
+				let json = JSON.stringify(object);
+                 console.log(json)
                  console.log(formData)
 
                  Axios.post(`${TestingSystemAPI}/api/courses/`, formData, {
