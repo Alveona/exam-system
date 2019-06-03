@@ -9,18 +9,43 @@ from exam_manage.serializers import QuestionSerializer, AnswerInCourseSerializer
 
 class SessionStatsSerializer(serializers.ModelSerializer):
     perfect_mark = serializers.SerializerMethodField()
+    perfect_audio = serializers.SerializerMethodField()
     good_mark = serializers.SerializerMethodField()
+    good_audio = serializers.SerializerMethodField()
     satisfactory_mark = serializers.SerializerMethodField()
+    satisfactory_audio = serializers.SerializerMethodField()
+    bad_audio = serializers.SerializerMethodField()
+    video = serializers.SerializerMethodField()
     session_q = serializers.SerializerMethodField()
 
     def get_perfect_mark(self, obj):
         return obj.course.perfect_mark
 
+    def get_perfect_audio(self, obj):
+        if obj.course.perfect_audio:
+            return self.context.get('request').build_absolute_uri(obj.course.perfect_audio.url)
+
     def get_good_mark(self, obj):
         return obj.course.good_mark
 
+    def get_good_audio(self, obj):
+        if obj.course.good_audio:
+            return self.context.get('request').build_absolute_uri(obj.course.good_audio.url)
+
     def get_satisfactory_mark(self, obj):
         return obj.course.satisfactory_mark
+
+    def get_satisfactory_audio(self, obj):
+        if obj.course.satisfactory_audio:
+            return self.context.get('request').build_absolute_uri(obj.course.satisfactory_audio.url)
+
+    def get_bad_audio(self, obj):
+        if obj.course.bad_audio:
+            return self.context.get('request').build_absolute_uri(obj.course.bad_audio.url)
+
+    def get_video(self, obj):
+        if obj.course.video:
+            return obj.course.video
 
     def get_session_q(self, obj):
         #return SessionQuestion.objects.all().filter(session = obj)
@@ -29,7 +54,12 @@ class SessionStatsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CourseSession
-        fields = ('perfect_mark', 'good_mark', 'satisfactory_mark', 'session_q')
+        fields = ('perfect_mark', 'good_mark', 'satisfactory_mark', 'session_q',
+                  'perfect_audio', 'good_audio', 'satisfactory_audio',
+                  'bad_audio', 'video')
+
+# class OverallStatsSerializer(serializers.ModelSerializer):
+
 
 
 class SessionQuestionStatsSerializer(serializers.ModelSerializer):
@@ -221,6 +251,8 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
         mode = StrictMode.objects.all().get(id = mode_id)
         question_id = obj.question.id
         question = Question.objects.all().get(id = question_id)
+        print(question)
+        print(mode)
         media = QuestionMedia.objects.all().get(mode = mode, question = question)
         serializer = QuestionMediaSerializer(instance = media)
         return serializer.data

@@ -50,6 +50,7 @@ class CourseSerializer(serializers.ModelSerializer):
     current_attempt = serializers.SerializerMethodField()
 
     def create(self, validated_data):
+        print(validated_data)
         questions_to_parse = validated_data['questions']
         print(questions_to_parse)
         course = Course(name=validated_data['name'], description=validated_data['description'],
@@ -60,6 +61,16 @@ class CourseSerializer(serializers.ModelSerializer):
         course.perfect_mark = self.context['request'].data['perfect_mark']
         course.good_mark = self.context['request'].data['good_mark']
         course.satisfactory_mark = self.context['request'].data['satisfactory_mark']
+        if self.context['request'].data['perfect_audio'] != 'null':
+            course.perfect_audio = self.context['request'].data['perfect_audio']
+        if self.context['request'].data['good_audio'] != 'null':
+            course.good_audio = self.context['request'].data['good_audio']
+        if self.context['request'].data['satisfactory_audio'] != 'null':
+            course.satisfactory_audio = self.context['request'].data['satisfactory_audio']
+        if self.context['request'].data['bad_audio'] != 'null':
+            course.bad_audio = self.context['request'].data['bad_audio']
+        if self.context['request'].data['video'] != 'null':
+            course.video = self.context['request'].data['video']
         course.save()
         #questions = self.context['request'].data['questions']
         #questions_to_parse = validated_data['questions']
@@ -75,6 +86,8 @@ class CourseSerializer(serializers.ModelSerializer):
             user = validated_data['user']
         else:
             user = self.context['request'].user
+
+
         user_relation = UserCourseRelation(user=user, course=course, access=1)
         user_relation.save()
         course.save()

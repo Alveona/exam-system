@@ -32,8 +32,13 @@ class Course(models.Model):
     user = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                   through='UserCourseRelation', related_name='user')  # unusual relation table
     perfect_mark = models.IntegerField(null=True)  # percentage
+    perfect_audio = models.FileField(upload_to='courses_audio/', null = True)
     good_mark = models.IntegerField(null=True)
+    good_audio = models.FileField(upload_to='courses_audio/', null = True)
     satisfactory_mark = models.IntegerField(null=True)
+    satisfactory_audio = models.FileField(upload_to='courses_audio/', null = True)
+    bad_audio = models.FileField(upload_to='courses_audio/', null = True)
+    video = models.CharField(max_length = 255, null = True)
     version = models.IntegerField(default=0)
     deleted = models.BooleanField(default=False)
 

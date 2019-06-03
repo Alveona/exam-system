@@ -264,6 +264,65 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
+    def create(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        print(validated_data)
+        questions_to_parse = validated_data['questions']
+        print(questions_to_parse)
+        course = Course(name=validated_data['name'], description=validated_data['description'],
+                        questions_number=validated_data['questions_number'],
+                        token=validated_data['token'],
+
+                        author=validated_data['author'])
+        course.perfect_mark = self.request.data['perfect_mark']
+        course.good_mark = self.request.data['good_mark']
+        course.satisfactory_mark = self.request.data['satisfactory_mark']
+        if 'perfect_audio' in self.request.data:
+            if self.request.data['perfect_audio'] != 'null':
+                course.perfect_audio = self.request.data['perfect_audio']
+            else:
+                course.perfect_audio = None
+        if 'good_audio' in self.request.data:
+            if self.request.data['good_audio'] != 'null':
+                course.good_audio = self.request.data['good_audio']
+            else:
+                course.good_audio = None
+        if 'satisfactory_audio' in self.request.data:
+            if self.request.data['satisfactory_audio'] != 'null':
+                course.satisfactory_audio = self.request.data['satisfactory_audio']
+            else:
+                course.satisfactory_audio = None
+
+        if 'video' in self.request.data:
+            if self.request.data['video'] != 'null':
+                course.video = self.request.data['video']
+            else:
+                course.video = ''
+        if 'attempts' in validated_data and self.request.data['attempts'] != '':
+            course.attempts = self.request.data['attempts']
+        course.save()
+        #questions = self.context['request'].data['questions']
+        #questions_to_parse = validated_data['questions']
+
+        if questions_to_parse:
+            for question in questions_to_parse:
+                course.questions.add(question)
+
+        if 'image' in validated_data:
+            course.image = validated_data['image']
+
+        if 'user' in validated_data:
+            user = validated_data['user']
+        else:
+            user = self.request.user
+
+
+        user_relation = UserCourseRelation(user=user, course=course, access=1)
+        user_relation.save()
+        course.save()
+        # return course
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def get_queryset(self):
         if self.request.method == "GET":
             queryset = Course.objects.all().filter(token=self.request.query_params.get('token'))
