@@ -379,6 +379,13 @@
 					comment = this.answers[0].comment
                 questionData.set('comment', comment)
 
+				let object = {};
+				questionData.forEach(function(value, key){
+				    object[key] = value;
+				});
+				let json = JSON.stringify(object);
+                 console.log(json)
+
                 axios.post(`${TestingSystemAPI}/api/questions/`, questionData, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}

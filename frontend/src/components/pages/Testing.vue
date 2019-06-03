@@ -6,8 +6,7 @@
 	</v-flex>
 
 	<v-layout row justify-space-around v-if="question.media.video">
-		<!--<iframe width="560" height="315" src="https://youtu.be/Yseg6hB7_Lk" frameborder="0" allow="autoplay" allowfullscreen></iframe>-->
-		<iframe width="560" height="315" src="https://www.youtube.com/watch?v=KMe3VHxZbgY&autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		<iframe width="720" height="406" :src="question.media.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
 	
@@ -31,7 +30,7 @@
 	</v-layout>
 
 	<v-flex xs12 v-if="question.media.audio && !question.media.video" class="mb-4" > 
-		<vue-audio :file="question.media.audio" :autoPlay="!!question.audio_hint ? false : true"/>
+		<vue-audio :file="question.media.audio" :autoPlay="question.audio_hint ? false : true"/>
 	</v-flex>
 
 	<v-flex v-if="question.question.answer_type == 1" xs12>
@@ -40,14 +39,13 @@
           v-model="fullAnswer"
           required
   		  clearable
-  		  :rules="rules"
   		  box
         ></v-text-field>
 	</v-flex>
 
 	<v-flex v-else-if="question.question.answer_type == 2" xs12>
 		<v-radio-group>
-			<v-layout wrap col >
+			<v-layout wrap col>
 				<v-flex xs12 sm6 md4 px-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
 			        <v-img 
 			        	:src="answer.answer.image"
@@ -76,7 +74,7 @@
 
 	<v-flex v-else-if="question.question.answer_type == 3" xs12>
 		<v-layout wrap col>
-			<v-flex xs12 sm6 md4 px-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
+			<v-flex xs12 sm6 md4 px-1 v-for="answer in resAnswers" v-if="!!answer.answer.image">
 		        <v-img 
 		        	:src="answer.answer.image"
 	        		:aspect-ratio="16/9" 
@@ -103,25 +101,40 @@
 		</v-layout>
 	</v-flex>
 
+	<v-flex xs12 v-if="question.hint || question.audio_hint || question.video_hint">
+	 	<p class="title">Комментарий к вашему ответу:</p>
+	</v-flex>
+
 	<v-layout row justify-space-around v-if="question.video_hint">
-		<!--<iframe width="560" height="315" src="https://youtu.be/Yseg6hB7_Lk" frameborder="0" allow="autoplay" allowfullscreen></iframe>-->
-		<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG&autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+		<iframe width="720" height="406" :src="question.video_hint" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
 	<v-flex xs12 v-if="question.audio_hint && !question.video_hint" class="mb-4"> 
 		<vue-audio :file="question.audio_hint" :autoPlay="true"/>
 	</v-flex>
 
-	<v-flex xs12 v-if="!!question.hint"> 
-	  <v-alert 
-        :value="true"
-        type="warning"
-      >
-        {{question.hint}}
-      </v-alert>
-	</v-flex>
+		<v-flex xs12 v-if="question.hint"> 
+		  <v-alert 
+	        :value="true"
+	        type="warning"
+	      >
+		      <v-layout row wrap>
+			    <v-flex xs3>
+				    <v-img 
+				    	:src="question.mode_image"
+						:aspect-ratio="1/1" 
+						width="100"
+				        position="center center"
+				    ></v-img>
+				</v-flex>
+			    <v-flex xs9 class="title">
+			        {{question.hint}}
+			    </v-flex>
+			</v-layout>
+	      </v-alert>
+		</v-flex>
 
-	<v-layout row wrap>
+	<v-layout row justify-space-around>
 
 		<v-flex xs12 sm6 class="px-3">
 			<v-btn round color="success" @click.native="setAnswer()" dark block large>
@@ -185,6 +198,22 @@ export default{
 		        		router.push('/tests/'+this.$route.params.token+'/result')
 
 			        this.question = qdata.data[0]
+			        console.log('qid: '+this.question.id)
+			        
+				    if (this.question.media.video)
+			        	this.question.media.video += '?autoplay=1'
+				    if (this.question.video_hint)
+				        this.question.video_hint += '?autoplay=1'
+				    
+				    
+				    if (this.question.audio_hint && this.question.audio_hint.search("null") != -1)
+				    	this.question.audio_hint = null
+				    if (this.question.media.audio && this.question.media.audio.search("null") != -1)
+				    	this.question.media.audio = null
+				    else 
+				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio
+				    console.log(this.question.media.audio)
+				    
 
 		        	Axios.get(`${TestingSystemAPI}/api/session-a/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
@@ -207,10 +236,10 @@ export default{
 					          		chosen: false
 					          	})
 				          	}
-				          	if (this.question.id == q)
-				          		callback(false)
-				          	else
-				          		callback(true)
+			          	if (this.question.id == q)
+			          		callback(false)
+			          	else
+			          		callback(true)
 			        }).catch(error => {
 
 			          console.log(error)

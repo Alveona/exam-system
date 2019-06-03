@@ -3,6 +3,15 @@
 		<v-flex xs12>
 			<p class="title text-md-center">Результаты</p>
 		</v-flex>
+
+		<v-layout row justify-space-around v-if="response.video">
+			<iframe width="720" height="406" :src="response.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+		</v-layout>
+		<v-layout row justify-space-around v-if="!response.video">
+			<v-flex xs12 class="mb-4"> 
+				<vue-audio :file="audio" :autoPlay="true"/>
+			</v-flex>
+		</v-layout>
 		<v-flex xs12>
 			<v-data-table 
 		      :headers="headers"
@@ -14,19 +23,19 @@
 		        <td class="text-xs-center">{{ props.item.result }}</td>
 		        <td class="text-xs-center">{{ props.item.weight_sum }}</td>
 		      </template>
-		      <template slot="footer" v-if="getPercent() >= response.perfect_mark" >
+		      <template slot="footer" v-if="mark == 5" >
 		        <td colspan="100%" class="light-green accent-4">
 		          <strong>Оценка: </strong> 
 		          <span >Отлично</span>
 		        </td>
 		      </template>
-		       <template slot="footer" v-else-if="getPercent() >= response.good_mark" >
+		       <template slot="footer" v-else-if="mark == 4" >
 		        <td colspan="100%" class="yellow lighten-1">
 		          <strong>Оценка: </strong> 
 		          <span>Хорошо</span>
 		        </td>
 		      </template>
-		       <template slot="footer" v-else-if="getPercent() >= response.satisfactory_mark">
+		       <template slot="footer" v-else-if="mark == 3">
 		        <td colspan="100%"  class="orange lighten-1">
 		          <strong>Оценка: </strong> 
 		          <span>Удовлетворительно</span>
@@ -63,10 +72,12 @@
 	import router from '@/router'
 	import Authentication from '@/components/pages/Authentication'
 	import connection from '@/router/connection'
+	import VueAudio from 'vue-audio'
 
 	const TestingSystemAPI = connection.server
 
 	export default {
+		components: { VueAudio },
 		data() {
 			return {
 		      headers: [
@@ -84,7 +95,9 @@
 		          align: 'center'}
 		      ],
 		      response: [],
-		      q_items: []
+		      q_items: [],
+		      mark:0,
+		      audio:null
 			}
 		},
 		methods: {
@@ -96,9 +109,28 @@
 		        	console.log(data)
 	                this.response = data.data[0]
 	                this.q_items = this.response.session_q
+	                if (this.response.video)
+	                	this.response.video += '?autoplay=1'
 					this.q_items.push({ 'order_number' : "Всего", 'result' : 0, 'weight_sum' : 0})
 					this.q_items[this.q_items.length - 1].result = this.getSumScore()
 					this.q_items[this.q_items.length - 1].weight_sum = this.getSumMax()
+					if (this.getPercent() >= this.response.perfect_mark){
+						this.mark = 5
+						this.audio = this.response.perfect_audio
+					}
+					else if (this.getPercent() >= this.response.good_mark){
+						this.mark = 4
+						this.audio = this.response.good_audio
+					}
+					else if (this.getPercent() >= this.response.satisfactory_mark){
+						this.mark = 3
+						this.audio = this.response.satisfactory_audio
+					}
+					else {
+						this.mark = 2
+						this.audio = this.response.bad_audio
+					}
+
 		        }).catch(error => {
 
 		          console.log(error)
