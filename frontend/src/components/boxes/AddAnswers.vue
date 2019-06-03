@@ -146,7 +146,6 @@
 			              <v-text-field
 			                type="text"
 			                v-model="answer.videos[modes.indexOf(mode)]"
-			                :rules="[rules.video]"
 			                clearable
 			                solo
 			              ></v-text-field>
@@ -294,7 +293,6 @@
 			              <v-text-field
 			                type="text"
 			                v-model="answer.videos[modes.indexOf(mode)]"
-			                :rules="[rules.video]"
 			                clearable
 			                solo
 			              ></v-text-field>
@@ -386,13 +384,12 @@
                 	duplicatePriority: value => !this.findDuplicates(value) || 'Такое значение уже есть у другого ответа',
                 	answer: value => (!value || (!!value && value.length <= this.maxAnswerLength)) || 'Максимальная длина поля '+this.maxAnswerLength+' символов',
                 	comment: value => (!value || (!!value && value.length <= this.maxCommentLength)) || 'Максимальная длина поля '+this.maxCommentLength+' символов',
-                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов',
-                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
+                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов'
                 },
         		oneAnswerRadios: 0,
         		maxAnswers:15,
         		minAnswers: 2,
-        		maxAnswerLength:100,
+        		maxAnswerLength:250,
         		maxCommentLength: 150,
         		maxHintLength: 300,
         		minWeight: 0,
