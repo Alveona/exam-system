@@ -63,9 +63,11 @@
 	        </v-flex>
 
 	        <v-flex xs12 sm8>
+	        	<!--
 	          <v-flex xs12>
 	              <p><strong>Ссылка:</strong> http://web.ru/tests/{{$route.params.token}}</p>
 	          </v-flex>
+	      -->
 			  <v-flex xs12>
 	              <p><strong>Автор:</strong> {{response.author}}</p>
 	          </v-flex>

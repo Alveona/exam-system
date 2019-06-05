@@ -110,7 +110,7 @@
 	</v-layout>
 
 	<v-flex xs12 v-if="question.audio_hint && !question.video_hint" class="mb-4"> 
-		<vue-audio :file="question.audio_hint" :autoPlay="true"/>
+		<vue-audio :file="question.audio_hint" :autoPlay="question.audio_hint ? true : false"/>
 	</v-flex>
 
 		<v-flex xs12 v-if="question.hint"> 

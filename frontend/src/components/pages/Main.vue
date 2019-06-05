@@ -108,8 +108,8 @@
 	      items: [
 	      	{ icon: 'done', text: 'Добавленные тесты', link: '/' },
 	        { icon: 'help_outline', text: 'Управление вопросами', link: '/questions' },
-	        { icon: 'toc', text: 'Управление тестами', link: '/tests' },
-	        { icon: 'trending_up', text: 'Статистика', link: '/stats' },
+	        { icon: 'toc', text: 'Управление тестами', link: '/tests' }
+	        //{ icon: 'trending_up', text: 'Статистика', link: '/stats' },
 	        //{ icon: 'import_contacts', text: 'Руководство пользователя', link: '/guide' }
 	      ]
 	    }

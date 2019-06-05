@@ -1,5 +1,5 @@
 export default {
-	server: 'http://43f7047d.ngrok.io'
+	server: '127.0.0.1:8000'
 	//172.20.10.2
 	//10.0.1.5
 }
