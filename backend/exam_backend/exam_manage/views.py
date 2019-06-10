@@ -525,6 +525,17 @@ class HintViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'delete']
 
+    def get_queryset(self):
+        user = self.request.user
+        if self.request.method == "GET":
+            queryset = Hint.objects.all().filter(answer=self.request.query_params.get('answer'))
+            print(queryset)
+            return queryset
+        if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
+            queryset = Hint.objects.all()
+            return queryset
+        return Hint.objects.all().filter()
+
     def create(self, request, *args, **kwargs):
         validated_data = self.request.data
         answer = Answer.objects.all().get(id = validated_data['answer'])
