@@ -36,10 +36,10 @@
 		            <span>{{show ? 'Скрыть описание' : 'Показать описание'}}</span>
 		          </v-tooltip>
 
-		          <v-tooltip bottom>
+		          <!--<v-tooltip bottom>
 		            <v-btn slot="activator" v-if="!added" :to="{ name: 'edittest', params: { token: token }}" icon><v-icon>edit</v-icon></v-btn>
 		            <span>Редактировать тест</span>
-		          </v-tooltip>
+		          </v-tooltip>-->
 
 				  <v-tooltip bottom>
 		            <v-btn slot="activator" v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>
@@ -118,8 +118,6 @@
 		          this.alert = true
 		          this.successDelete = false
 		          this.message = 'Не удалось удалить тест. Проверьте подключение к сети.'
-
-		          console.log(error)
 		        })
 		    },
 			reloadPage() {
