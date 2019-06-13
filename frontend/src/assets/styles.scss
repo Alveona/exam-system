@@ -1,9 +1,6 @@
 @import "./partials/variables";
 @import "./partials/animations";
 
-.v-text-field__slot > .v-label.theme--light:not(.error--text), .v-label.theme--light:not(.error--text) {
-	color: #4d4d4d!important;
-}
 .v-input::placeholder:not {
 	color: #999!important;
 }

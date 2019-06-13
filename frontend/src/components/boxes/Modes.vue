@@ -32,7 +32,7 @@
 			    </v-flex>
 
 		        <v-flex xs12 sm3 class="pt-4">
-		        	<v-btn @click="addMode()" round color="success"  dark>
+		        	<v-btn :disabled="isSubmitting" @click="addMode()" round color="success"  dark>
 			        	<v-icon size="24px" class="mr-2">
 							add
 						</v-icon>
@@ -109,6 +109,7 @@
 				showImageTooltip: false,
 				showTitleTooltip: false,
 				alert: false,
+				isSubmitting: false,
 				successLoad: false,
 				title: '',
 				alert_message: '',
@@ -117,7 +118,7 @@
 					title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
 					required: value => !!value || 'Это необходимое поле'
 				},
-        		minTitleLen: 8,
+        		minTitleLen: 3,
         		maxTitleLen: 100,
         		modes:[],
 			}
@@ -159,6 +160,7 @@
 	        	}
 	        	*/
 
+	        	this.isSubmitting = true
                 let formData = new FormData()
                 formData.set('name', this.title)
                 formData.set('image', this.image)
@@ -174,6 +176,7 @@
                .catch(error => {
                		this.successLoad = false
                     this.alert = true
+	        		this.isSubmitting = false
                     this.alert_message = 'Не удалось добавить режим. Проверьте подключение к сети.'
                 })
 			},

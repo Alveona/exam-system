@@ -1,18 +1,26 @@
 <template>
   <div class="l-auth-container">
+    <!--
     <div class="authTitle">
         <v-card-text>
           <h2 class="display-3 text-lg-center">Service Title</h2>
         </v-card-text>
     </div>
+  -->
     <div class="l-auth">
       <v-form v-model="validLogin">
+        <v-layout row justify-space-around>
+          <v-flex xs12>
+            <p class="title text-md-center" px-3><span class="light-blue--text text--lighten-1">Вход</span></p>
+          </v-flex>
+        </v-layout>
         <v-text-field label="Логин"
                       v-model="credentials.username"
                       prepend-icon="account_box"
                       :rules="rules"
                       required
-                      color="light-blue lighten-1">
+                      color="light-blue lighten-1"
+                      class="error-text">
         </v-text-field>
 
         <v-text-field label="Пароль"
@@ -112,19 +120,17 @@
     max-width: 320px;
     animation: bounceIn 1s forwards ease;
 
-    label, input, .icon {
+    label,input, .icon {
       color: #29b6f6!important;
     }
 
-    .input-group__details {
-      &:before {
-        background-color: $border-color-input !important;
-      }
-    }
   }
 
   .l-signup {
     @extend .l-auth;
     animation: slideInFromLeft 1s forwards ease;
+  }
+  .v-text-field__slot>label{
+    color: #29b6f6 !important;
   }
 </style>
