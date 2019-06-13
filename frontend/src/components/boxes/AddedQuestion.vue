@@ -20,10 +20,10 @@
 		          </v-flex>
 				  <v-spacer></v-spacer>
 
-				  <v-tooltip bottom v-if="!withchecks">
+				  <!--<v-tooltip bottom v-if="!withchecks">
 	              	<v-btn slot="activator" v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>
 	              	<span>Редактировать вопрос</span>
-		          </v-tooltip>
+		          </v-tooltip>-->
 
 				  <v-tooltip bottom v-if="!withchecks">
 	              	<v-btn slot="activator" @click.native="deleteQuestion(collection.indexOf(question), question.id)" icon><v-icon>delete</v-icon></v-btn>
