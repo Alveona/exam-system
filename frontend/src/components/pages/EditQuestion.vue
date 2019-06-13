@@ -2,66 +2,71 @@
 	<v-form ref="editQform">
 		<v-container>
 			<v-layout row wrap>
-				<h4 class="display-1">Редактирование вопроса</h4>
 				<v-flex xs12>
+					<v-layout row wrap>
+						<h4 class="display-1">Редактирование вопроса</h4>
+					</v-layout>
+				</v-flex>
+
+				<v-flex xs12 mt-3>
+					<v-label>Краткое название</v-label>
+					<v-tooltip bottom v-model="showTitleTooltip">
+				        <v-btn slot="activator" @click="showTitleTooltip = !showTitleTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Поле будет видно только вам в списке добавленных вопросов для удобства навигации по ним.</span>
+		        	</v-tooltip>
 		            <v-text-field
-		              label="Краткое название (будет видно только вам)"
 		              v-model="question.title"
+		              placeholder="Например, 'Задание по линейным уравнениям'"
 		              required
               		  clearable
-              		  :rules="rulesTitleLength"
-              		  box
+              		  :rules="[rules.title]"
+              		  solo
 		            ></v-text-field>
 		        </v-flex>
 		        <v-flex xs12>
+		        	<v-label>Формулировка вопроса</v-label>
+		        	<v-tooltip bottom v-model="showTextTooltip">
+				        <v-btn slot="activator" @click="showTextTooltip = !showTextTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Поле формулировки вопроса должно содержать полную постановку задачи.</span>
+		        	</v-tooltip>
 			        <v-textarea
-			            label="Формулировка вопроса"
 			            v-model="question.text"
-          		  		:rules="rulesQuestionLength"
+			            placeholder="Например, 'Найдите корень уравнения 2x - 5 = 14.'"
+          		  		:rules="[rules.question]"
 			            required
               			clearable
-              			box
+              			solo
 			          ></v-textarea>
 		        </v-flex>
 
 		          <v-flex xs12 sm6 xl3>
+		          	<v-layout align-center>
+	        	  	  	<v-label>Количество попыток</v-label>
+						<v-tooltip bottom v-model="showAttemptsTooltip">
+					        <v-btn slot="activator" @click="showAttemptsTooltip = !showAttemptsTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					        <span>Необязательное поле. Если не указать количество попыток, то они закончатся, когда обнулятся баллы.</span>
+			        	</v-tooltip>
+			        </v-layout>
 	        		<v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
-			            <v-text-field type="number"
-			            :disabled="!enabledAttempts"
-			            label="Количество попыток"
-			            v-model="attempts"
-              			clearable
-              			box
-              			hint="Если не указать, то закончатся, когда обнулятся баллы"
+			            <v-text-field 
+				            type="number"
+				            :disabled="!enabledAttempts"
+	          		  		:rules="[rules.attempts]"
+				            v-model="attempts"
+	              			clearable
+	              			solo
+	              			persistent-hint
 			            ></v-text-field>
 				      </v-layout>
 		          </v-flex>
 
-		          <v-flex xs12 sm6 xl3>
-        			<v-layout align-center>
-			          	<v-checkbox v-model="enabledTimer" hide-details class="shrink mr-2"></v-checkbox>
-			            <v-text-field type='number' 
-			            :disabled="!enabledTimer"
-			            :rules="rulesTimer"
-			            label="Таймер на вопрос"
-			            v-model="timer"
-              			clearable
-              			box
-			            hint="В секундах"
-			            ></v-text-field>
-			        </v-layout>
-			      </v-flex>
-
-			      <v-flex xs12>
-				      <v-label>Замена изображения и аудио:</v-label>
-				      <v-tooltip bottom v-model="showMediaTooltip">
-					    <v-btn slot="activator" @click="showMediaTooltip = !showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
-					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
-			          </v-tooltip>
-			      </v-flex>
-
-		          <v-flex xs12 sm6 xl3>
+		           <v-flex xs12 sm6 xl3>
+    				<v-label>Изображение к вопросу</v-label>
+    				<v-tooltip bottom v-model="showImageTooltip">
+				        <v-btn slot="activator" @click="showImageTooltip = !showImageTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Необязательное поле. Будет отображаться вместе с формулировкой вопроса.</span>
+		        	</v-tooltip>
         			<v-layout align-center>
 			          	<v-checkbox v-model="enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
 			            <file-input 
@@ -76,22 +81,71 @@
 			            ></file-input>
 			        </v-layout>
 			      </v-flex>
-
-				  <v-flex xs12 sm6 xl3>
+<!--
+		          <v-flex xs12 sm6 xl3>
         			<v-layout align-center>
-			          	<v-checkbox v-model="enabledAudio" hide-details class="shrink mr-2"></v-checkbox>
-			            <file-input 
-			            class="fileBtn"
-	                    accept="audio/*"
-	                    ref="fileInput"
-                        @input="getUploadedQAudio($event)"
-                        @update:deleteFile="deleteFile(1)"
-			            :dis="!enabledAudio"
-			            :checked="enabledAudio"
-			            :label="audioLoadText"
-			            ></file-input>
+			          	<v-checkbox v-model="enabledTimer" hide-details class="shrink mr-2"></v-checkbox>
+			            <v-text-field type='number' 
+			            :disabled="!enabledTimer"
+			            :rules="rulesTimer"
+			            label="Таймер на вопрос"
+			            v-model="timer"
+              			clearable
+              			box
+			            hint="В секундах"
+			            ></v-text-field>
 			        </v-layout>
 			      </v-flex>
+-->
+<!--
+			      <v-flex xs12>
+				      <v-label>Замена изображения и аудио:</v-label>
+				      <v-tooltip bottom v-model="showMediaTooltip">
+					    <v-btn slot="activator" @click="showMediaTooltip = !showMediaTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+					    <span>Если вы хотите оставить изображение или аудио без изменений, убедитесь, что галочки ниже не отмечены. Если же хотите удалить их, отметьте галочку, но не загружайте новый файл. Для изменения изображения или аудио загрузите новый файл.</span>
+			          </v-tooltip>
+			      </v-flex>
+-->
+		         
+				<v-flex xs12 v-for="mode in modes">
+				  <div class="divider"></div>
+				  <v-layout row wrap>
+						<v-flex xs12 sm6>
+							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+						</v-flex>
+					</v-layout>
+
+					<v-layout row wrap>
+						<v-flex xs12 sm6 px-2>
+			            <v-label>Видео к вопросу</v-label>
+			              <v-text-field
+			                type="text"
+			                v-model="videos[modes.indexOf(mode)]"
+			                :rules="[rules.video]"
+			                clearable
+			                solo
+			              ></v-text-field>
+			            </v-flex>
+
+			            <v-flex xs12 sm6 px-4>
+			            <v-label>Голосовое воспроизведение</v-label>
+	        			<v-layout align-center>
+				          	<v-checkbox @click.native="changeQAudio(modes.indexOf(mode))" v-model="enabledAudio[modes.indexOf(mode)]" hide-details class="shrink mr-2"></v-checkbox>
+				            <file-input 
+				            class="fileBtn"
+		                    accept="audio/*"
+		                    ref="fileInput"
+	                        @input="getUploadedQAudio($event, modes.indexOf(mode))"
+				            :dis="!enabledAudio[modes.indexOf(mode)]"
+				            :checked="enabledAudio[modes.indexOf(mode)]"
+				            :label="audioLoadText[modes.indexOf(mode)]"
+				            ></file-input>
+				        </v-layout>
+				      </v-flex>
+					</v-layout>
+
+			  </v-flex>
+				<div class="divider"></div>
 
 				<v-flex xs10>
 	              <v-slider
@@ -105,19 +159,24 @@
 	              <v-text-field
 			        v-model="question.difficulty"
 	                type="number"
-	                :rules="rulesDifficulty"
-	                box
+	                :rules="[rules.difficulty]"
+	                solo
 	              ></v-text-field>
 	            </v-flex>
 
 				<v-flex xs12>
+	    	  	  <v-label>Тип ответов</v-label>
+	    	  	  <v-tooltip bottom v-model="showTypeTooltip">
+				        <v-btn slot="activator" @click="showTypeTooltip = !showTypeTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+				        <span>Выберите один из трех типов ответов, которые должен дать пользователь на вопрос. Тип "ввод значения" означает, что пользователь должен ввести ответ сам. Тип "выбор одного варианта" означает, что у пользователя будет выбор из нескольких ответов, и он должен указать только один верный. Тип "выбор нескольких вариантов" означает, что у пользователя будет выбор из нескольких ответов, и он должен отметить среди них верные (должно быть от 1 верного варианта до количества, равного количеству вариантов ответов). </span>
+		        	</v-tooltip>
 		          <v-select
 		            v-model="question.answer_type"
 		            :items="answerTypes"
 		            item-value="id"
 		            item-text="val"
 			        label="Тип ответа"
-		            box
+		            solo
 		            required
 		           ></v-select>
 		        </v-flex>
@@ -136,6 +195,8 @@
   						@update:answersImage="getUploadedImage($event)"
   						@update:changeAudio="changeAudio($event)"
   						@update:changeImage="changeImage($event)"
+  						@update:clickHintTooltip="clickHintTooltip($event)"
+  						@update:clickVideoTooltip="clickVideoTooltip($event)"
 					></add-answers>
 				</v-flex>
 							    
@@ -180,8 +241,12 @@
 		    	enabledAttempts: false,
 			    enabledTimer: false,
 			    enabledImage: false,
-			    enabledAudio: false,
 			    showMediaTooltip: false,
+			    showTitleTooltip: false,
+			    showTextTooltip: false,
+			    showAttemptsTooltip: false,
+			    showImageTooltip: false,
+			    showTypeTooltip: false,
 			    edit:true,
 
 				maxDifficulty: 100,
@@ -194,6 +259,7 @@
         		minTitleLength: 6,
         		maxQuestionLength: 2000,
         		minQuestionLength: 12,
+        		maxVideoLength: 150,
 
       			selectedType: [],
       			answerTypes: [
@@ -202,12 +268,15 @@
 	      			{ id: 3, val : 'Выбор нескольких вариантов'}
       			],
 
-        		rulesRequired: [ (value) => !!value || 'Это обязательное поле' ],
-        		rulesTitleLength: [ (str) => (str.length >= this.minTitleLength && str.length <= this.maxTitleLength) || 'Допустимая длина: от '+this.minTitleLength + ' до ' + this.maxTitleLength + ' символов' ],
-        		rulesQuestionLength: [ (str) => (str.length >= this.minQuestionLength && str.length <= this.maxQuestionLength) || 'Допустимая длина: от '+this.minQuestionLength + ' до ' + this.maxQuestionLength + ' символов' ],
-        		rulesDifficulty: [ (value) => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty ],
-        		rulesAttempts: [ (value) => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts ],
-        		rulesTimer: [ (value) => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer ],
+				rules: {
+                	required: value => !!value || 'Это необходимое поле',
+                	title: str => (str.length >= this.minTitleLength && str.length <= this.maxTitleLength) || 'Допустимая длина: от '+this.minTitleLength + ' до ' + this.maxTitleLength + ' символов',
+                	question: str => (str.length >= this.minQuestionLength && str.length <= this.maxQuestionLength) || 'Допустимая длина: от '+this.minQuestionLength + ' до ' + this.maxQuestionLength + ' символов',
+                	difficulty: value => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty,
+                	attempts: value => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts,
+                	timer: value => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer,
+                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
+                },
         		
 				message: '',
 				alert: false,
@@ -216,13 +285,21 @@
 				attempts: null,
 				timer: null,
 				answersQty: null,
+				enabledAudio:[],
+				videos:[],
+				audios:[],
+				old_audios:[],
+				audioLoadText:[],
+				qMediaData:[],
+				hints: [],
+				modes:[],
 
-				questionId: '',
+				questionId: null,
 				answers: [],
 				question: null,
+				image: null,
 
-                imageLoadText: 'Изображение еще не загружено',
-                audioLoadText: 'Аудиозапись еще не загружена',
+                imageLoadText: 'Изображение не загружено',
 		    }
 		  },
 		methods: {
@@ -234,47 +311,78 @@
 					this.question = qdata.data[0]
 					this.enabledAttempts = !!this.question.attempts_number
 					this.enabledTimer = !!this.question.timer
-					this.enabledAudio = false
 					this.enabledImage = false
        				this.answersQty = this.question.answers_number
-					if (this.question.audio)
-						this.audioLoadText = 'Уже имеется загруженная аудиозапись'
 					if (this.question.image)
 						this.imageLoadText = 'Уже имеется загруженное изображение'
 					this.question.old_image = this.question.image
-					this.question.old_audio = this.question.audio
 					this.question.image = null
-					this.question.audio = null
 					this.attempts = this.question.attempts_number
 					this.timer = this.question.timer
 
-					axios.get(`${TestingSystemAPI}/api/answers/`, {
+					axios.get(`${TestingSystemAPI}/api/questions_media/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			            params: { 'id' : this.$route.params.id }
-			        }).then((adata) => {
-						this.answers = adata.data
-						for (var i = 0; i < this.answers.length; i++)
-						{
-							this.answers[i].enabledAudio = false
-							if (this.answers[i].audio)
-								this.answers[i].audioLoadText = 'Уже имеется загруженная аудиозапись'
-							else this.answers[i].audioLoadText = 'Аудиозапись еще не загружена'
+			        }).then((response) => {
+			        	this.qMediaData = response.data
+			        	console.log('qMediaData')
+			        	console.log(this.qMediaData)
 
-							this.answers[i].enabledImage = false
-							if (this.answers[i].image)
-								this.answers[i].imageLoadText = 'Уже имеется загруженное изображение'
-							else this.answers[i].imageLoadText = 'Изображение еще не загружено'
-							this.answers[i].showMediaTooltip = false
-							this.answers[i].old_image = this.answers[i].image
-							this.answers[i].old_audio = this.answers[i].audio
-							this.answers[i].image = null
-							this.answers[i].audio = null
-						}
+			        	for (let k = 0; k < this.qMediaData.length; k++)
+			        	{
+			        		this.enabledAudio.push(false)
+			        		this.audios.push(null)
+			        		this.videos.push('')
+			        		if (this.qMediaData[k].audio && this.qMediaData[k].audio.search("null") != -1)
+				    			this.qMediaData[k].audio = null
+			        		if (!!this.qMediaData[k].audio)
+			        			this.audioLoadText.push('Уже имеется загруженная аудиозапись')
+			        		else this.audioLoadText.push('Аудиозапись не загружена')
+			        		this.old_audios.push(this.qMediaData[k].audio)
+			        	}
 
-			        }).catch(error => {
+			        	axios.get(`${TestingSystemAPI}/api/answers/`, {
+				            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				            params: { 'id' : this.$route.params.id }
+				        }).then((adata) => {
+							this.answers = adata.data
+							for (var i = 0; i < this.answers.length; i++)
+							{
+
+								this.answers[i].enabledImage = false
+								if (this.answers[i].image)
+									this.answers[i].imageLoadText = 'Уже имеется загруженное изображение'
+								else this.answers[i].imageLoadText = 'Изображение еще не загружено'
+								this.answers[i].showMediaTooltip = false
+								this.answers[i].old_image = this.answers[i].image
+								this.answers[i].image = null
+
+	               				axios.get(`${TestingSystemAPI}/api/answers_hint/`, {
+						            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+						            params: { 'id' : this.answers[i].id }
+						        }).then((response) => {
+						        	console.log('answers_hint'+(i+1))
+						        	console.log(this.response.data)
+						        	this.hints.push(response.data)
+					        	}).catch(error => {
+				                    this.alert = true
+				                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
+				                })
+
+							}
+
+				        }).catch(error => {
+		                    this.alert = true
+		                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
+		                })
+		        	})
+	               .catch(error => {
+	               		this.successSet = false
 	                    this.alert = true
-	                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
+	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 	                })
+
+					
 		        }).catch(error => {
                     this.alert = true
                     this.message = 'Не удалось получить данные о вопросе. Проверьте подключение к сети.'
@@ -283,8 +391,12 @@
             getUploadedQImage(e) {
                 this.question.image = e
             },
-            getUploadedQAudio(e) {
-                this.question.audio = e
+            getUploadedQAudio(e, mode) {
+                this.audios[mode] = e
+            },
+            changeQAudio(mode){
+            	if (!this.enabledAudio[mode])
+       				this.audios[mode] = null
             },
             getUploadedAudio(obj) {
     			this.answers[obj.index].audio = obj.audio
@@ -450,36 +562,81 @@
 					var isTrue = this.currentType == 1 ? true : false
 					this.answers.push({
 	                	image: null,
-	                	audio: null,
 	                	text: null,
 	                	priority: this.answers.length+1,
 	                	correct: isTrue,
 	                	weight: 256,
-	                	hint: null,
 	                	comment: null,
 	                	question: 0,
-						enabledAudio: false,
-						enabledImage: false
+						enabledImage: false,
+						enabledAudio:[],
+						audioLoadText:[],
+						showHintTooltip:[],
+						showVideoTooltip:[],
+						audios:[],
+						hints:[],
+						videos:[],
+						old_audios:[]
 					})
+
+					for (var i = 0; i < this.qMediaData.length; i++){
+						this.answers[this.answers.length - 1].audios.push(null)
+						this.answers[this.answers.length - 1].old_audios.push(null)
+						this.answers[this.answers.length - 1].enabledAudio.push(false)
+						this.answers[this.answers.length - 1].showHintTooltip.push(false)
+						this.answers[this.answers.length - 1].showVideoTooltip.push(false)
+						this.answers[this.answers.length - 1].videos.push('')
+						this.answers[this.answers.length - 1].audioLoadText.push('Аудио не загружено')
+						this.answers[this.answers.length - 1].hints.push('')
+					}
 				}
 				else
 				{
-					var enAudio = true
-					var enImage = true
 					this.answers.push({
 	                	image: this.answers[ind].image,
-	                	audio: this.answers[ind].audio,
 	                	text: this.answers[ind].text,
 	                	priority: this.answers[ind].priority,
 	                	correct: this.answers[ind].correct,
 	                	weight: this.answers[ind].weight,
-	                	hint: this.answers[ind].hint,
 	                	comment: this.answers[ind].comment,
 	                	question: this.$route.params.id,
-						enabledAudio: true,
-						enabledImage: true
+						enabledImage: true,
+						enabledAudio:[],
+						audioLoadText:[],
+						showHintTooltip:[],
+						showVideoTooltip:[],
+						audios:[],
+						hints:[],
+						videos:[],
+						old_audios:[]
 					})
+
+					for (var i = 0; i < this.qMediaData.length; i++){
+						this.answers[this.answers.length - 1].audios.push(null)
+						this.answers[this.answers.length - 1].old_audios.push(this.hints[ind][i].audio)
+						this.answers[this.answers.length - 1].enabledAudio.push(false)
+						this.answers[this.answers.length - 1].showHintTooltip.push(false)
+						this.answers[this.answers.length - 1].showVideoTooltip.push(false)
+						this.answers[this.answers.length - 1].videos.push(this.hints[ind][i].video)
+						this.answers[this.answers.length - 1].audioLoadText.push(!!this.hints[ind][i].audio ? 'Уже имеется загруженная аудиозапись' : 'Аудиозапись не загружена')
+						this.answers[this.answers.length - 1].hints.push(this.hints[ind][i].text)
+					}
 				}
+
+			},
+			getModeData(){				
+				axios.get(`${TestingSystemAPI}/api/strict_modes/`, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        }).then(({data}) => {
+		          this.modes = data
+
+       			  //this.pushAnswer()
+
+		        }).catch(error => {
+		          this.alert = true
+		          this.alert_message = 'Не удалось получить список режимов. Проверьте подключение к сети.'
+		        })
 			}
        },
        watch: {
@@ -499,10 +656,10 @@
        				this.question.image = null
        				if (this.question.old_image)
        					this.imageLoadText = 'Уже имеется загруженное изображение'
-       				else this.imageLoadText = 'Изображение еще не загружено' 
+       				else this.imageLoadText = 'Изображение не загружено' 
        			}
        			else 
-       				this.imageLoadText = 'Изображение еще не загружено' 
+       				this.imageLoadText = 'Изображение не загружено' 
 
        		},
        		enabledAudio: function(val) {
@@ -511,10 +668,10 @@
        				this.question.audio = null
        				if (this.question.old_audio)
        					this.audioLoadText = 'Уже имеется загруженная аудиозапись'
-       				else this.audioLoadText = 'Аудиозапись еще не загружена'
+       				else this.audioLoadText = 'Аудиозапись не загружена'
        			}
        			else 
-       				this.audioLoadText = 'Аудиозапись еще не загружена'
+       				this.audioLoadText = 'Аудиозапись не загружена'
        		},
        		attempts: function(val) {
    				if (this.enabledAttempts)
@@ -533,9 +690,10 @@
        		},
        },
        mounted() {
-       		this.getQuestion()
-       		for (var i = 0; i < this.answers.length; i++)
-       			this.pushAnswer(i)
+   		this.getModeData()
+   		this.getQuestion()
+   		for (var i = 0; i < this.answers.length; i++)
+   			this.pushAnswer(i)
        }
 	}
 </script>
