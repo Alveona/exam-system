@@ -176,8 +176,8 @@
                .catch(error => {
                		this.successLoad = false
                     this.alert = true
-	        		this.isSubmitting = false
                     this.alert_message = 'Не удалось добавить режим. Проверьте подключение к сети.'
+                    this.isSubmitting = false
                 })
 			},
 			deleteMode(id){

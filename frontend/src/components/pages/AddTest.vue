@@ -227,7 +227,7 @@
 	                    accept="audio/*"
 	                    ref="fileInput"
                         @input="getUploadedAudio($event, 2)"
-			            :dis="!enabledAudioSatisfactory"
+			            :dis="true"
 			            :checked="enabledAudioSatisfactory"
 			            :label="audioLoadTextSatisfactory"
 			            ></file-input>
@@ -274,7 +274,7 @@
 		      </v-flex>	
 
 				<v-flex xs12>
-					<v-btn round color="success" @click.native="onSubmit()" dark large :disabled="isSubmitting">
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
 						 Создать тест
 					</v-btn>
 				</v-flex>	        		        
@@ -310,7 +310,6 @@
 			    alert: false,
 			    message: '',
 			    checkTokenObserver: false,
-			    isSubmitting: false,
 
 			    showTestTooltip: false,
 			    showTitleTooltip: false,
@@ -419,7 +418,7 @@
                 	this.audioGood = e
                 else if (val == 2)
                 	this.audioSatisfactory = e
-                else
+                else if (val == 3)
                 	this.audioBad = e
             },
             getUploadedImage(e) {
@@ -436,10 +435,8 @@
                     this.message = 'Не все обязательные поля были заполнены.'
 	        		return
 	        	}
-
 	        	if (this.successSet)
 	        		return
-	        	 this.isSubmitting = true
                  let formData = new FormData()
 
                  formData.set('name', this.title)
@@ -454,7 +451,7 @@
                  formData.set('satisfactory_mark', this.satisfactory_mark)
                  formData.set('perfect_audio', this.audioPerfect)
                  formData.set('good_audio', this.audioGood)
-                 formData.set('satisfactory_audio', this.audioSatisfactory) 
+                 formData.set('satisfactory_audio', this.audioGood) //has to to be changed to 'satisfactory' but now it is right
                  formData.set('bad_audio', this.audioBad)
                  formData.set('video', this.video)
                  for (var i = 0; i < this.questionsChecks.length; i++)
@@ -477,14 +474,12 @@
 	               		this.successSet = true
 	                    this.alert = true
 	                    this.message = 'Тест успешно добавлен.'
-	        			this.isSubmitting = false
 	                    setTimeout(this.goBack, 1200)
 	                })
 	               .catch((error) => {
 	               		this.successSet = false
 	                    this.alert = true
 	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
-	        			this.isSubmitting = false
 	                })
             },
             textToTranslit(text) {

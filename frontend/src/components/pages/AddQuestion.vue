@@ -54,7 +54,7 @@
 	        	  	  <v-layout align-center>
 			          	<v-checkbox v-model="enabledAttempts" hide-details class="shrink mr-2"></v-checkbox>
 			            <v-text-field 
-				            type="number"
+				            type='number' 
 				            :disabled="!enabledAttempts"
 	          		  		:rules="[rules.attempts]"
 				            v-model="attempts"
@@ -65,7 +65,6 @@
 				      </v-layout>
 		          </v-flex>
 
-				<!--
 		          <v-flex xs12 sm6 xl3>
         			<v-layout align-center>
 	        	  	  	<v-label>Таймер на вопрос</v-label>
@@ -85,14 +84,8 @@
 			            ></v-text-field>
 			        </v-layout>
 			      </v-flex>
-			  -->
 
 		          <v-flex xs12 sm6 xl3>
-    				<v-label>Изображение к вопросу</v-label>
-    				<v-tooltip bottom v-model="showImageTooltip">
-				        <v-btn slot="activator" @click="showImageTooltip = !showImageTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
-				        <span>Необязательное поле. Будет отображаться вместе с формулировкой вопроса.</span>
-		        	</v-tooltip>
         			<v-layout align-center>
 			          	<v-checkbox v-model="enabledImage" hide-details class="shrink mr-2" ></v-checkbox>
 			            <file-input 
@@ -213,8 +206,7 @@
 		        </v-flex>	
 
 		        <v-flex xs12>
-					<v-btn round color="success" @click.native="onSubmit()" dark large :disabled="
-	        						isSubmitting">
+					<v-btn round color="success" @click.native="onSubmit()" dark large>
 						 Добавить вопрос
 					</v-btn>
 				</v-flex>
@@ -243,7 +235,6 @@
 			    enabledTimer: false,
 			    enabledImage: false,
 			    enabledAudio: false,
-			    isSubmitting: false,
 
 				maxDifficulty: 100,
         		minDifficulty: 1,
@@ -270,7 +261,6 @@
 				showTimerTooltip:false,
 				showQuestionTooltip:false,
 				showTypeTooltip:false,
-				showImageTooltip:false,
 
 				modes: [],
       			selectedType: [],
@@ -302,8 +292,8 @@
 				audios:[],
 				audioLoadText:[],
 
-                image: null,
-                imageLoadText: 'Изображение не загружено',
+                image: '',
+                imageLoadText: 'Изображение к вопросу',
 		    }
 		  },
 		methods: {
@@ -374,7 +364,6 @@
 	        	}
 	        	if (this.successSet)
 	        		return
-	        	this.isSubmitting = true
                 let questionData = new FormData()
 
                 questionData.set('text', this.text)
@@ -466,8 +455,6 @@
 				               		this.successSet = false
 				                    this.alert = true
 				                    this.message = 'Не удалось добавить вопрос. Произошла ошибка.'
-
-	        						this.isSubmitting = false
 			               			return
 			               		}
 
@@ -501,14 +488,12 @@
 							               		this.successSet = true
 							                    this.alert = true
 							                    this.message = 'Вопрос успешно добавлен.'
-	        									this.isSubmitting = false
 								        	}
 								        })
 						               .catch(error => {
 						               		this.successSet = false
 						                    this.alert = true
 						                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-	        								this.isSubmitting = false
 						                    return
 						                })
 						           }
@@ -518,7 +503,6 @@
 			               		this.successSet = false
 			                    this.alert = true
 			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-	        					this.isSubmitting = false
 			                })
 
 
@@ -528,8 +512,7 @@
 		                .catch(error => {
 		               		this.successSet = false
 		                    this.alert = true
-		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-	        				this.isSubmitting = false
+		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.111'
 		                    return
 		                })
 		            }
@@ -540,7 +523,6 @@
                     this.alert = true
 	               	this.successSet = false
                     this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-	        		this.isSubmitting = false
                 })
             },
 			reloadPage() {
