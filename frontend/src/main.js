@@ -11,7 +11,7 @@ Vue.use(VueCookie)
 Vue.use(Vuetify)
 Vue.use(Vuelidate)
 
-Vue.config.productionTip = false
+Vue.config.productionTip = true
 
 Authentication.checkAuthentication()
 
