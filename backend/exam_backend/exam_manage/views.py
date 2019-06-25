@@ -267,7 +267,8 @@ class CourseViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         validated_data = self.request.data
         print(validated_data)
-        questions_to_parse = validated_data['questions']
+        questions_to_parse = request.POST.getlist('questions')
+        # https://stackoverflow.com/questions/12101658/how-to-get-an-array-in-django-posted-via-ajax
         print(questions_to_parse)
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
@@ -488,7 +489,7 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
     queryset = QuestionMedia.objects.all()
     serializer_class = QuestionMediaSerializer
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_queryset(self):
         user = self.request.user
@@ -507,15 +508,37 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
         mode = StrictMode.objects.all().get(id = validated_data['mode'])
         media = QuestionMedia(question = question, mode = mode)
         if 'audio' in self.request.data:
-            if 'audio' == 'null':
+            if self.request.data['audio'] == 'null':
                 media.audio = None
             else:
                 media.audio = self.request.data['audio']
-        if 'video' in self.request.data:
-            if 'video' == 'null':
+        if self.request.data['video'] in self.request.data:
+            if self.request.data['video'] == 'null':
                 media.video = None
             else:
                 media.video = self.request.data['video']
+        media.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        question = Question.objects.all().get(id = validated_data['question'])
+        mode = StrictMode.objects.all().get(id = validated_data['mode'])
+        # media = QuestionMedia(question = question, mode = mode)
+        media = self.get_object()
+        if 'audio' in self.request.data:
+            if self.request.data['audio'] == 'null':
+                media.audio = ''
+            else:
+                if self.request.data['audio'] != 'stay':
+                    # print('if')
+                    media.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if self.request.data['video'] == 'null':
+                media.video = ''
+            else:
+                if self.request.data['video'] != 'stay':
+                    media.video = self.request.data['video']
         media.save()
         return Response(status=status.HTTP_200_OK)
 
@@ -523,7 +546,8 @@ class HintViewSet(viewsets.ModelViewSet):
     queryset = Hint.objects.all()
     serializer_class = HintSerializer
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
+    lookup_field = 'id'
 
     def get_queryset(self):
         user = self.request.user
@@ -542,15 +566,39 @@ class HintViewSet(viewsets.ModelViewSet):
         mode = StrictMode.objects.all().get(id = validated_data['mode'])
         hint = Hint(answer = answer, mode = mode)
         if 'audio' in self.request.data:
-            if 'audio' == 'null':
+            if self.request.data['audio'] == 'null':
                 hint.audio = None
             else:
                 hint.audio = self.request.data['audio']
         if 'video' in self.request.data:
-            if 'video' == 'null':
+            if self.request.data['video'] == 'null':
                 hint.video = None
             else:
                 hint.video = self.request.data['video']
+        if 'text' in self.request.data:
+            hint.text = self.request.data['text']
+        hint.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        answer = Answer.objects.all().get(id = validated_data['answer'])
+        mode = StrictMode.objects.all().get(id = validated_data['mode'])
+        # hint = Hint(answer = answer, mode = mode)
+        hint = self.get_object()
+        if 'audio' in self.request.data:
+            if self.request.data['audio'] == 'null':
+                hint.audio = ''
+            else:
+                if self.request.data['audio'] != 'stay':
+                    # print('if')
+                    hint.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if self.request.data['video'] == 'null':
+                hint.video = ''
+            else:
+                if self.request.data['video'] != 'stay':
+                    hint.video = self.request.data['video']
         if 'text' in self.request.data:
             hint.text = self.request.data['text']
         hint.save()
