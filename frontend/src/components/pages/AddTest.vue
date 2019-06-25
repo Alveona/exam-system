@@ -251,11 +251,12 @@
 			      </v-flex>
 
 			      <v-flex xs12>
-		            <v-label>Финальное видео к тесту</v-label>
+		            <v-label>Финальное видео к тесту (id видео на Youtube)</v-label>
 		              <v-text-field
 		                type="text"
 		                v-model="video"
 		                :rules="[rules.video]"
+			            placeholder="например, _5k9NMCQ088"
 		                clearable
 		                solo
 		              ></v-text-field>
@@ -345,7 +346,7 @@
         		maxTitleLen: 100,
         		minTokenLen: 8,
         		maxTokenLen: 50,
-        		maxVideoLength: 150,
+        		videoLength: 11,
         		validToken: true,
         		audioPerfect: null,
         		audioGood: null,
@@ -375,7 +376,7 @@
                 	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
                 	tokenValid: async (val) => await this.getTokenAnswer() || '',
                 	token: val => (val.length >= this.minTokenLen && val.length <= this.maxTokenLen) || 'Длина ссылки должна быть в диапазоне от '+this.minTokenLen+' до '+this.maxTokenLen + ' символов',
-                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
+                	video: str => (str.length == 0 || str.length == this.videoLength) || 'Длина идентификатора видео на Youtube составляет '+ this.videoLength + ' символов',
                 },
 
 		    }
@@ -460,7 +461,6 @@
                  for (var i = 0; i < this.questionsChecks.length; i++)
                  	formData.append('questions', this.questionsChecks[i])
 
-
 				let object = {};
 				formData.forEach(function(value, key){
 				    object[key] = value;
@@ -469,23 +469,23 @@
                  console.log(json)
                  console.log(formData)
 
-                 Axios.post(`${TestingSystemAPI}/api/courses/`, formData, {
-			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-			          params: {}
-			        })
-	               .then((response) => {
-	               		this.successSet = true
-	                    this.alert = true
-	                    this.message = 'Тест успешно добавлен.'
-	        			this.isSubmitting = false
-	                    setTimeout(this.goBack, 1200)
-	                })
-	               .catch((error) => {
-	               		this.successSet = false
-	                    this.alert = true
-	                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
-	        			this.isSubmitting = false
-	                })
+                Axios.post(`${TestingSystemAPI}/api/courses/`, formData, {
+			        headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			        params: {}
+		        })
+               .then((response) => {
+               		this.successSet = true
+                    this.alert = true
+                    this.message = 'Тест успешно добавлен.'
+        			this.isSubmitting = false
+                    setTimeout(this.goBack, 1200)
+                })
+               .catch((error) => {
+               		this.successSet = false
+                    this.alert = true
+                    this.message = 'Не удалось добавить тест. Проверьте подключение к сети.'
+        			this.isSubmitting = false
+                })
             },
             textToTranslit(text) {
             	var transl = []

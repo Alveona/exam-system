@@ -201,14 +201,14 @@ export default{
 			        console.log('qid: '+this.question.id)
 			        
 				    if (this.question.media.video)
-			        	this.question.media.video += '?autoplay=1'
+			        	this.question.media.video = 'https://youtube.com/embed/' + this.question.media.video + '?autoplay=1'
 				    if (this.question.video_hint)
-				        this.question.video_hint += '?autoplay=1'
+				        this.question.video_hint = 'https://youtube.com/embed/' + this.question.video_hint + '?autoplay=1'
 				    
 				    
-				    if (this.question.audio_hint && this.question.audio_hint.search("null") != -1)
+				    if (this.question.audio_hint && this.question.audio_hint.substring(this.question.audio_hint.length - 4) == "null")
 				    	this.question.audio_hint = null
-				    if (this.question.media.audio && this.question.media.audio.search("null") != -1)
+				    if (this.question.media.audio && this.question.media.audio.substring(this.question.media.audio.length - 4) == "null")
 				    	this.question.media.audio = null
 				    else 
 				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio

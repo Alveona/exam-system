@@ -111,16 +111,17 @@
 					<div class="divider"></div>
 					<v-layout row wrap>
 						<v-flex xs12 sm6>
-							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+							<p class="title">{{modes.indexOf(mode) + 1}}) Режим: {{mode.name}}</p>
 						</v-flex>
 					</v-layout>
 
 					<v-layout row wrap>
 						<v-flex xs12 sm6 px-2>
-			            <v-label>Видео к вопросу</v-label>
+			            <v-label>Видео к вопросу (id видео на Youtube)</v-label>
 			              <v-text-field
 			                type="text"
 			                v-model="videos[modes.indexOf(mode)]"
+			                placeholder="например, _5k9NMCQ088"
 			                :rules="[rules.video]"
 			                clearable
 			                solo
@@ -255,7 +256,7 @@
         		minTitleLength: 6,
         		maxQuestionLength: 2000,
         		minQuestionLength: 12,
-        		maxVideoLength: 150,
+        		videoLength: 11,
     			title: '',
     			text: '',
       			difficulty: 1,
@@ -287,7 +288,7 @@
                 	difficulty: value => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty,
                 	attempts: value => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts,
                 	timer: value => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer,
-                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
+                	video: str => (str.length == 0 || str.length == this.videoLength) || 'Длина идентификатора видео на Youtube составляет '+ this.videoLength + ' символов',
                 },
         		
 				message: '',
@@ -333,78 +334,54 @@
             	if (!this.enabledAudio[mode])
        				this.audios[mode] = null
             },
-            onSubmit() {
-            	/*
-            	let hintQuestionData = new FormData()
-                 	for (var j = 0; j < this.modes.length; j++)
-                 	{
-                 		hintQuestionData.append('audio', this.audios[j])
-                 		hintQuestionData.append('video', this.videos[j])
-                 		var object = {};
-						hintQuestionData.forEach(function(value, key){
+            async postAnswersHint(ans) {
+
+            	for (let i = 0; i < ans.length; i++)
+           		{
+           			for (let j = 0; j < this.modes.length; j++)
+           			{
+           				console.log('start of end'+this.modes.length)
+            			let AHintData = new FormData()
+		                AHintData.set('answer', ans[i])
+		                AHintData.set('mode', this.modes[j].id)
+		                AHintData.set('audio', this.answers[i].audios[j])
+		                AHintData.set('video', this.answers[i].videos[j])
+		                AHintData.set('text', this.answers[i].hints[j])
+
+						let object = {};
+						AHintData.forEach(function(value, key){
 						    object[key] = value;
 						});
-						var json = JSON.stringify(object);
-		                 console.log(json)
-                 	}
-            	for (var i = 0; i < this.answers.length; i++)
-		        {
-		        	let hintAnsData = new FormData()
-                 	for (var j = 0; j < this.modes.length; j++)
-                 	{
-                 		hintAnsData.append('id', this.modes[j].id)
-                 		hintAnsData.append('hint', this.answers[i].hints[j])
-                 		hintAnsData.append('enabledAudio', this.answers[i].enabledAudio[j])
-                 		hintAnsData.append('audio', this.answers[i].audios[j])
-                 		var object = {};
-						hintAnsData.forEach(function(value, key){
-						    object[key] = value;
-						});
-						var json = JSON.stringify(object);
-		                 console.log(json)
-                 	}
-		        }
-		        */
-	        	if (!this.$refs.addQform.validate())
-	        	{
-               		this.successSet = false
-                    this.alert = true
-                    this.message = 'Не все обязательные поля были заполнены.'
-	        		return
-	        	}
-	        	if (this.successSet)
-	        		return
-	        	this.isSubmitting = true
-                let questionData = new FormData()
+						let json = JSON.stringify(object);
+		                console.log(json)
 
-                questionData.set('text', this.text)
-                questionData.set('title', this.title)
-                questionData.set('attempts_number', this.attempts)
-                questionData.set('timer', this.timer)
-                questionData.set('answer_type', this.currentType)
-                questionData.set('answers_number', this.answersQty)
-                questionData.set('difficulty', this.difficulty)
-                questionData.set('image', this.image)
-                let comment = null
-                if (this.currentType == 1)
-					comment = this.answers[0].comment
-                questionData.set('comment', comment)
-
-				let object = {};
-				questionData.forEach(function(value, key){
-				    object[key] = value;
-				});
-				let json = JSON.stringify(object);
-                 console.log(json)
-
-                axios.post(`${TestingSystemAPI}/api/questions/`, questionData, {
-		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-		          params: {}
-		        })
-                .then((response) => {
-               		this.questionId = response.data.id
-
-               		for (let i = 0; i < this.modes.length; i++)
+               			await axios.post(`${TestingSystemAPI}/api/answers_hint/`, AHintData, { 
+				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				          params: {}
+				        })
+				        .then((response) => {
+				        	console.log(ans[i] + ' ' + this.modes[j].id + ' success answers_hint')
+				        	if (i == ans.length - 1 && j == this.modes.length - 1)
+				        	{
+			               		this.successSet = true
+			                    this.alert = true
+			                    this.message = 'Вопрос успешно добавлен.'
+								this.isSubmitting = false
+                    			setTimeout(this.goBack, 1200)
+				        	}
+				        })
+		               .catch(error => {
+		               		this.successSet = false
+		                    this.alert = true
+		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+							this.isSubmitting = false
+		                    return
+		                })
+		           }
+           		}
+            },
+            async postQuestionsMedia() {
+            	for (let i = 0; i < this.modes.length; i++)
                		{
                			console.log('im here')
             			let QMediaData = new FormData()
@@ -413,6 +390,7 @@
 		                QMediaData.set('audio', this.audios[i])
 		                QMediaData.set('video', this.videos[i])
 
+			            console.log('qMediaData:')
 						let object = {};
 						QMediaData.forEach(function(value, key){
 						    object[key] = value;
@@ -420,10 +398,10 @@
 						let json = JSON.stringify(object);
 		                 console.log(json)
 
-						axios.post(`${TestingSystemAPI}/api/questions_media/`, QMediaData, {
+						await axios.post(`${TestingSystemAPI}/api/questions_media/`, QMediaData, {
 					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 					          params: {}
-					        })
+					    })
 				        .then((response) => {
 				        	console.log(this.questionId + ' ' + this.modes[i].id + ' success questions_media')
 				        	if (i != this.modes.length - 1)
@@ -450,69 +428,35 @@
 			                 	else answersData.append('weight', this.answers[j].weight)
 			                 	answersData.append('question', this.questionId)
 
-			         			
-			                 }
+								console.log('answers'+(j+1)+':')
+				                 let object = {};
+								answersData.forEach(function(value, key){
+								    object[key] = value;
+								});
+								let json = JSON.stringify(object);
+				                console.log(json)
+			                }
+			                 
 
 	               			axios.post(`${TestingSystemAPI}/api/answers/`, answersData, {
 					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 					          params: {}
 					        })
 			               .then(response => {
-			               		let ans = response.data.answers
-			               		console.log(ans)
-			               		if (ans.length != this.answers.length)
-			               		{
-			               			console.log('server response length error')
+
+				           		let ans = response.data.answers
+				           		console.log(ans)
+				           		if (ans.length != this.answers.length)
+				           		{
+				           			console.log('server response length error')
 				               		this.successSet = false
 				                    this.alert = true
 				                    this.message = 'Не удалось добавить вопрос. Произошла ошибка.'
 
-	        						this.isSubmitting = false
-			               			return
-			               		}
-
-			               		for (let i = 0; i < ans.length; i++)
-			               		{
-			               			for (let j = 0; j < this.modes.length; j++)
-			               			{
-			               				console.log('start of end'+this.modes.length)
-			                			let AHintData = new FormData()
-						                AHintData.set('answer', ans[i])
-						                AHintData.set('mode', this.modes[j].id)
-						                AHintData.set('audio', this.answers[i].audios[j])
-						                AHintData.set('video', this.answers[i].videos[j])
-						                AHintData.set('text', this.answers[i].hints[j])
-
-										let object = {};
-										AHintData.forEach(function(value, key){
-										    object[key] = value;
-										});
-										let json = JSON.stringify(object);
-						                console.log(json)
-
-				               			axios.post(`${TestingSystemAPI}/api/answers_hint/`, AHintData, { 
-								          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-								          params: {}
-								        })
-								        .then((response) => {
-								        	console.log(ans[i] + ' ' + this.modes[j].id + ' success answers_hint')
-								        	if (i == ans.length - 1 && j == this.modes.length - 1)
-								        	{
-							               		this.successSet = true
-							                    this.alert = true
-							                    this.message = 'Вопрос успешно добавлен.'
-	        									this.isSubmitting = false
-								        	}
-								        })
-						               .catch(error => {
-						               		this.successSet = false
-						                    this.alert = true
-						                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-	        								this.isSubmitting = false
-						                    return
-						                })
-						           }
-			               		}
+									this.isSubmitting = false
+				           			return
+				           		}
+			               		this.postAnswersHint(ans)
 			                })
 			               .catch(error => {
 			               		this.successSet = false
@@ -520,9 +464,6 @@
 			                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
 	        					this.isSubmitting = false
 			                })
-
-
-
 				        	
 				        })
 		                .catch(error => {
@@ -533,8 +474,51 @@
 		                    return
 		                })
 		            }
+            },
+            onSubmit() {
+	        	if (!this.$refs.addQform.validate())
+	        	{
+               		this.successSet = false
+                    this.alert = true
+                    this.message = 'Не все обязательные поля были заполнены.'
+	        		return
+	        	}
+	        	if (this.successSet)
+	        		return
+	        	this.isSubmitting = true
+                let questionData = new FormData()
 
-				
+                questionData.set('text', this.text)
+                questionData.set('title', this.title)
+                questionData.set('attempts_number', this.attempts)
+                questionData.set('timer', this.timer)
+                questionData.set('answer_type', this.currentType)
+                questionData.set('answers_number', this.answersQty)
+                questionData.set('difficulty', this.difficulty)
+                questionData.set('image', this.image)
+                let comment = null
+                if (this.currentType == 1)
+					comment = this.answers[0].comment
+                questionData.set('comment', comment)
+
+			    console.log('question:')
+				let object = {};
+				questionData.forEach(function(value, key){
+				    object[key] = value;
+				});
+				let json = JSON.stringify(object);
+                 console.log(json)
+
+                axios.post(`${TestingSystemAPI}/api/questions/`, questionData, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        })
+                .then((response) => {
+               		this.questionId = response.data.id
+
+               		this.postQuestionsMedia()
+
+               		
                 })
                .catch(error => {
                     this.alert = true

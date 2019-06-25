@@ -94,7 +94,7 @@
 				<v-flex xs12 v-for="mode in modes">
 					<v-layout row wrap>
 						<v-flex xs12 sm6>
-							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+							<p class="title">{{modes.indexOf(mode) + 1}}) Режим: {{mode.name}}</p>
 						</v-flex>
 						<v-flex xs12 v-if="edit">
 						      <v-label>Замена изображения и аудио:</v-label>
@@ -138,14 +138,16 @@
 			            </v-flex>
 
 						<v-flex xs12 sm6 px-2>
-			            	<v-label>Видеоподсказка (ссылка)</v-label>
+			            	<v-label>Видеоподсказка (id видео на Youtube)</v-label>
 			            	<v-tooltip bottom v-model="answer.showVideoTooltip[modes.indexOf(mode)]">
 						        <v-btn slot="activator" @click="clickVideoTooltip(answers.indexOf(answer), modes.indexOf(mode))" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
 						        <span>Опциональное поле. Вы можете добавить видеореакцию на ответ, содержащую намек на то, в чем может быть неправ учащийся. Если добавлена ссылка на видео, загруженное аудио воспроизводиться при прохождении не будет.</span>
 				        	</v-tooltip>
 			              <v-text-field
 			                type="text"
+			                placeholder="например, _5k9NMCQ088"
 			                v-model="answer.videos[modes.indexOf(mode)]"
+			                :rules="[rules.video]"
 			                clearable
 			                solo
 			              ></v-text-field>
@@ -249,7 +251,7 @@
 				<v-flex xs12 v-for="mode in modes">
 					<v-layout row wrap>
 						<v-flex xs12 sm6>
-							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+							<p class="title">{{modes.indexOf(mode) + 1}}) Режим: {{mode.name}}</p>
 						</v-flex>
 						<v-flex xs12 sm6 px-2>
 							<v-label v-if="!edit">Аудиоподсказка: </v-label>
@@ -285,14 +287,16 @@
 						</v-flex>
 
 						<v-flex xs12 sm6 px-2>
-			            	<v-label>Видеоподсказка (ссылка)</v-label>
+			            	<v-label>Видеоподсказка (id видео на Youtube)</v-label>
 			            	<v-tooltip bottom v-model="answer.showVideoTooltip[modes.indexOf(mode)]">
 						        <v-btn slot="activator" @click="clickVideoTooltip(answers.indexOf(answer), modes.indexOf(mode))" icon small><v-icon color="light-blue darken-1">info</v-icon></v-btn>
 						        <span>Опциональное поле. Вы можете добавить видеореакцию на ответ, содержащую намек на то, в чем может быть неправ учащийся. Если добавлена ссылка на видео, загруженное аудио воспроизводиться при прохождении не будет.</span>
 				        	</v-tooltip>
 			              <v-text-field
 			                type="text"
+			                placeholder="например, _5k9NMCQ088"
 			                v-model="answer.videos[modes.indexOf(mode)]"
+			                :rules=[rules.video]
 			                clearable
 			                solo
 			              ></v-text-field>
@@ -384,7 +388,8 @@
                 	duplicatePriority: value => !this.findDuplicates(value) || 'Такое значение уже есть у другого ответа',
                 	answer: value => (!value || (!!value && value.length <= this.maxAnswerLength)) || 'Максимальная длина поля '+this.maxAnswerLength+' символов',
                 	comment: value => (!value || (!!value && value.length <= this.maxCommentLength)) || 'Максимальная длина поля '+this.maxCommentLength+' символов',
-                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов'
+                	hint: value => (!value || (!!value && value.length <= this.maxHintLength)) || 'Максимальная длина поля '+this.maxHintLength+' символов',
+                	video: str => (str.length == 0 || str.length == this.videoLength) || 'Длина идентификатора видео на Youtube составляет '+ this.videoLength + ' символов',
                 },
         		oneAnswerRadios: 0,
         		maxAnswers:15,
@@ -396,7 +401,7 @@
         		maxWeight: 1000,
         		minPriority: 1,
         		maxPriority: 15,
-        		maxVideoLength: 150,
+        		videoLength: 11,
         		maxIncludedAnswers: 8,
         		showAnswerTooltop: false,
         		showCommentTooltip: false,

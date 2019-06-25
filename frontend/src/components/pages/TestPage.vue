@@ -118,7 +118,6 @@
 		          params: { 'token' : this.$route.params.token}
 		        }).then(({data}) => {
 		          this.response = data[0]
-		          console.log('1')
 					Axios.get(TestingSystemAPI+'/api/strict_modes/?token='+this.$route.params.token, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
@@ -126,7 +125,7 @@
 			          this.modes = data
 			          console.log(this.modes)
 			          this.successLoaded = true
-			          if (!this.response.mode)
+			          if (this.modes[0])
 			          	this.openModes = true
 			          this.successReq = true
 
