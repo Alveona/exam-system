@@ -5,7 +5,7 @@
 		<p class="title text-md-center">Вопрос {{question.order_number}}.</p>
 	</v-flex>
 
-	<v-layout row justify-space-around v-if="question.media.video != ''">
+	<v-layout row justify-space-around v-if="question.media.video">
 		<iframe width="720" height="406" :src="question.media.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
@@ -29,7 +29,7 @@
 		</v-flex>
 	</v-layout>
 
-	<v-flex xs12 v-if="!!question.media.audio && question.media.video == ''" class="mb-4" > 
+	<v-flex xs12 v-if="question.media.audio && !question.media.video" class="mb-4" > 
 		<vue-audio :file="question.media.audio" :autoPlay="!!question.audio_hint ? false : true"/>
 	</v-flex>
 
@@ -45,58 +45,79 @@
 
 	<v-flex v-else-if="question.question.answer_type == 2" xs12>
 		<v-radio-group>
-			<v-layout wrap col>
-				<v-flex xs12 sm6 md4 px-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
-			        <v-img 
-			        	:src="answer.answer.image"
-		        		:aspect-ratio="16/9" 
-			            position="center center"
-			        ></v-img>
-			        <p class="testingRadioLabel">
-				    	<v-label>{{answer.answer.text}}</v-label>
-				    </p>
+			<v-layout wrap col pa-1 ma-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
+		        <v-flex xs2 sm1>
 					<v-radio
 					  class="testingRadio"
 			          :value="answer.id"
 			          @change="changeRadio(answer.id)"
 			        ></v-radio>
 				</v-flex>
-				<v-flex xs12 v-else>
+				<v-flex xs10 sm4 pb-2>
+			        <v-img 
+			        	:src="answer.answer.image"
+		        		:aspect-ratio="16/9" 
+			            position="center center"
+			        ></v-img>
+			    </v-flex>
+				<v-flex xs12 sm7 pl-2>
+			        <p class="text-xs-left">
+				    	<v-label>{{answer.answer.text}}</v-label>
+				    </p>
+				</v-flex>
+			</v-layout>
+			<v-layout xs12 v-else>
+				<v-flex sm1>
 					<v-radio
-					  :label="answer.answer.text"
 			          :value="answer.id"
 			          @change="changeRadio(answer.id)"
 			        ></v-radio>
-			    </v-flex>
-			</v-layout>
+				</v-flex>
+				<v-flex sm11 pl-2>
+			        <p class="text-xs-left">
+				    	<v-label>{{answer.answer.text}}</v-label>
+				    </p>
+				</v-flex>
+		    </v-layout>
 	    </v-radio-group>
 	</v-flex>
 
 	<v-flex v-else-if="question.question.answer_type == 3" xs12>
-		<v-layout wrap col>
-			<v-flex xs12 sm6 md4 px-1 v-for="answer in resAnswers" v-if="!!answer.answer.image">
-		        <v-img 
-		        	:src="answer.answer.image"
-	        		:aspect-ratio="16/9" 
-		            position="center center"
-		        ></v-img>
-		        <p class="testingRadioLabel">
-			    	<v-label >{{answer.answer.text}}</v-label>
-			    </p>
-				<v-checkbox 
-			 	  class="testingRadio"
+		<v-layout row wrap pa-1 ma-1 v-for="answer in resAnswers" v-if="!!answer.answer.image">
+	        <v-flex xs2 sm1>
+		        <v-checkbox 
+		          class="checkbox_testing"
 				  :value="answer.id"
 				  v-model="changedChecks"
 				  @change="changeCheck(answer.id)"
 				></v-checkbox>
 			</v-flex>
-			<v-flex xs12 v-else>
+			<v-flex xs10 sm4 pb-2>
+		        <v-img 
+		        	:src="answer.answer.image"
+	        		:aspect-ratio="16/9" 
+		            position="center center"
+		        ></v-img>
+		    </v-flex>
+			<v-flex xs12 sm7 pl-2>
+		        <p class="text-xs-left">
+			    	<v-label>{{answer.answer.text}}</v-label>
+			    </p>
+			</v-flex>
+		</v-layout>
+		<v-layout row pa-1 ma-1 v-else>
+			<v-flex sm1>
 				<v-checkbox 
-				  :label="answer.answer.text"
+		          class="checkbox_testing"
 				  :value="answer.id"
 				  v-model="changedChecks"
 				  @change="changeCheck(answer.id)"
 				></v-checkbox>
+			</v-flex>
+			<v-flex sm11 pl-2>
+		        <p class="text-xs-left">
+			    	<v-label>{{answer.answer.text}}</v-label>
+			    </p>
 			</v-flex>
 		</v-layout>
 	</v-flex>
@@ -134,7 +155,7 @@
 	      </v-alert>
 		</v-flex>
 
-	<v-layout row justify-space-around>
+	<v-layout row wrap>
 
 		<v-flex xs12 sm6 class="px-3">
 			<v-btn round color="success" @click.native="setAnswer()" dark block large>
@@ -348,5 +369,8 @@ export default{
 </script>
 
 <style>
-
+.checkbox_testing{
+	padding-top:0 !important;
+	margin-top:0 !important;
+}
 </style>
