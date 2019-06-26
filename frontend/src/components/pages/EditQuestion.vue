@@ -165,7 +165,7 @@
 	                solo
 	              ></v-text-field>
 	            </v-flex>
-
+<!--
 				<v-flex xs12>
 	    	  	  <v-label>Тип ответов</v-label>
 	    	  	  <v-tooltip bottom v-model="showTypeTooltip">
@@ -182,7 +182,7 @@
 		            required
 		           ></v-select>
 		        </v-flex>
-
+-->
 		        <v-flex xs12>
 					<add-answers 
 						:currentType="question.answer_type"

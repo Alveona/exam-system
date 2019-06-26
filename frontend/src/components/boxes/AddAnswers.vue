@@ -312,7 +312,7 @@
 
 		<v-layout row wrap v-if="currentType == 2 || currentType == 3">
 
-				<v-layout column align-center justify-center>
+				<v-layout column align-center justify-center v-if="!edit">
 					<v-flex xs12 class="mb-3" >
 						<v-tooltip bottom>
 							<v-btn 

@@ -7,7 +7,7 @@
 		<v-layout row justify-space-around v-if="response.video">
 			<iframe width="720" height="406" :src="response.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</v-layout>
-		<v-layout row justify-space-around v-if="response.audio">
+		<v-layout row justify-space-around v-if="audio">
 			<v-flex xs12 class="mb-4"> 
 				<vue-audio :file="audio" :autoPlay="true"/>
 			</v-flex>
