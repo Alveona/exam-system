@@ -511,7 +511,7 @@
         	},
         	async patchAnswers(){
          		let answersData = new FormData()
-                for (let j = 0; j < this.answers.length; j++)
+                for (let i = 0; i < this.answers.length; i++)
                 {
 	                if (this.answers[i].old_image && !this.answers[i].enabledImage)
 	                 	answersData.set('image', "stay")
@@ -534,7 +534,7 @@
                  	else answersData.append('weight', this.answers[i].weight)
                  	answersData.append('question', this.$route.params.id)
 
-					console.log('answers'+(j+1)+':')
+					console.log('answers'+(i+1)+':')
 	                 let object = {};
 					answersData.forEach(function(value, key){
 					    object[key] = value;
@@ -548,7 +548,7 @@
 			        })
 	               .then(response => {
 
-	               		this.patchAnswersHint(j)
+	               		this.patchAnswersHint(i)
 	                })
 	               .catch(error => {
 	               		this.successSet = false
@@ -568,10 +568,10 @@
 	                QMediaData.set('video', this.videos[i])
 
 	                 if (this.old_audios[i] && !this.enabledAudio[i])
-	                 	questionData.set('audio', "stay")
+	                 	QMediaData.set('audio', "stay")
 	                 else if (this.old_audios[i] && !this.audios[i])
-	                 	questionData.set('audio', null)
-	                 else questionData.set('audio', this.audios[i])
+	                 	QMediaData.set('audio', null)
+	                 else QMediaData.set('audio', this.audios[i])
 
 		            console.log('qMediaData:')
 					let object = {};
@@ -661,7 +661,7 @@
 				window.location.reload(true)
 			},
 			goBack(){
-            	router.push('/tests')
+            	router.push('/questions')
 			},				
 			deleteFile(isAudio, i){
 				if (isAudio)
@@ -708,6 +708,7 @@
 				{
 					let imageText = !!this.res_answers[ind].image ? this.imageLoadedText : this.imageNotLoadedText
 					this.answers.push({
+						id: this.res_answers[ind].id,
 	                	image: null,
 	                	old_image: this.res_answers[ind].image,
 	                	text: this.res_answers[ind].text,

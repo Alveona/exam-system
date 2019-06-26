@@ -5,7 +5,7 @@
 		<p class="title text-md-center">Вопрос {{question.order_number}}.</p>
 	</v-flex>
 
-	<v-layout row justify-space-around v-if="question.media.video">
+	<v-layout row justify-space-around v-if="question.media.video != ''">
 		<iframe width="720" height="406" :src="question.media.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
@@ -29,8 +29,8 @@
 		</v-flex>
 	</v-layout>
 
-	<v-flex xs12 v-if="question.media.audio && !question.media.video" class="mb-4" > 
-		<vue-audio :file="question.media.audio" :autoPlay="question.audio_hint ? false : true"/>
+	<v-flex xs12 v-if="!!question.media.audio && question.media.video == ''" class="mb-4" > 
+		<vue-audio :file="question.media.audio" :autoPlay="!!question.audio_hint ? false : true"/>
 	</v-flex>
 
 	<v-flex v-if="question.question.answer_type == 1" xs12>
@@ -110,7 +110,7 @@
 	</v-layout>
 
 	<v-flex xs12 v-if="question.audio_hint && !question.video_hint" class="mb-4"> 
-		<vue-audio :file="question.audio_hint" :autoPlay="question.audio_hint ? true : false"/>
+		<vue-audio :file="question.audio_hint" :autoPlay="!!question.audio_hint ? true : false"/>
 	</v-flex>
 
 		<v-flex xs12 v-if="question.hint"> 
@@ -198,7 +198,8 @@ export default{
 		        		router.push('/tests/'+this.$route.params.token+'/result')
 
 			        this.question = qdata.data[0]
-			        console.log('qid: '+this.question.id)
+			        console.log('this.question')
+			        console.log(this.question)
 			        
 				    if (this.question.media.video)
 			        	this.question.media.video = 'https://youtube.com/embed/' + this.question.media.video + '?autoplay=1'
@@ -210,7 +211,7 @@ export default{
 				    	this.question.audio_hint = null
 				    if (this.question.media.audio && this.question.media.audio.substring(this.question.media.audio.length - 4) == "null")
 				    	this.question.media.audio = null
-				    else 
+				    else if (this.question.media.audio)
 				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio
 				    console.log(this.question.media.audio)
 				    

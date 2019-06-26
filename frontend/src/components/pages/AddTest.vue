@@ -275,7 +275,7 @@
 		      </v-flex>	
 
 				<v-flex xs12>
-					<v-btn round color="success" @click.native="onSubmit()" dark large :disabled="isSubmitting">
+					<v-btn round color="success" @click.native="onSubmit()" dark large :loading="isSubmitting">
 						 Создать тест
 					</v-btn>
 				</v-flex>	        		        

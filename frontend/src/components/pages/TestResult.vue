@@ -7,7 +7,7 @@
 		<v-layout row justify-space-around v-if="response.video">
 			<iframe width="720" height="406" :src="response.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</v-layout>
-		<v-layout row justify-space-around v-if="!response.video">
+		<v-layout row justify-space-around v-if="response.audio">
 			<v-flex xs12 class="mb-4"> 
 				<vue-audio :file="audio" :autoPlay="true"/>
 			</v-flex>
@@ -110,7 +110,7 @@
 	                this.response = data.data[0]
 	                this.q_items = this.response.session_q
 	                if (this.response.video)
-	                	this.response.video += '?autoplay=1'
+	                	this.response.video = 'https://youtube.com/embed/' + this.response.video + '?autoplay=1'
 					this.q_items.push({ 'order_number' : "Всего", 'result' : 0, 'weight_sum' : 0})
 					this.q_items[this.q_items.length - 1].result = this.getSumScore()
 					this.q_items[this.q_items.length - 1].weight_sum = this.getSumMax()
