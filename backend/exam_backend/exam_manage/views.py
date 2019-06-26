@@ -43,61 +43,100 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
             return queryset
         return Answer.objects.all().filter(question__user=user, deleted = False)
 
+    # def create(self, request, *args, **kwargs):
+    #     # here we parse all answers came after the question
+    #     # we use form-data as there are files to upload
+    #     # TODO: look at https://www.django-rest-framework.org/api-guide/parsers/#formparser
+    #     print(self.request.data)
+    #     print(self.request.POST.getlist('image'))
+    #     print(self.request.POST.get('image'))
+    #     _dict = dict(self.request.data)
+    #     print(_dict)
+    #     question_to_parse = []
+    #     text_to_parse = []
+    #     correct_to_parse = []
+    #     weight_to_parse = []
+    #     audio_to_parse = []
+    #     hint_to_parse = []
+    #     priority_to_parse = []
+    #     image_to_parse = []
+    #     for value in _dict['question']:
+    #         question_to_parse.append(value)
+    #     for value in _dict['text']:
+    #         text_to_parse.append(value)
+    #     for value in _dict['correct']:
+    #         correct_to_parse.append(value.capitalize())
+    #     for value in _dict['weight']:
+    #         weight_to_parse.append(value)
+    #     # for value in _dict['audio']:
+    #     #     audio_to_parse.append(value if value != 'null' else None)
+    #     # print(audio_to_parse)
+    #     # for value in _dict['hint']:
+    #     #     hint_to_parse.append(value if value != 'null' else None)
+    #     for value in _dict['image']:
+    #         image_to_parse.append(value if value != 'null' else None)
+    #     for value in _dict['priority']:
+    #         priority_to_parse.append(value)
+    #     print('len: ' + str(len(question_to_parse)))
+    #
+    #     successfully_created_answers = [] # used to easily revert all creates if exception occured
+    #     #try:
+    #     ids_arr = []
+    #     for i in range(0, len(question_to_parse)):
+    #         question = Question.objects.all().get(id=question_to_parse[i])
+    #         answer = Answer(question=question, text=text_to_parse[i],
+    #                         correct=correct_to_parse[i], weight=weight_to_parse[i],
+    #                         priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
+    #         answer.save()
+    #         # hint = Hint(answer = answer, )
+    #         successfully_created_answers.append(answer)
+    #         print('id:' + str(answer.id))
+    #         ids_arr.append(answer.id)
+    #     return Response({"answers" : ids_arr})
+    #     # except:
+    #     #     # yup, we don't set 'deleted' to them, but directly delete from database because
+    #     #     # something went completely wrong so we don't need partically written answers
+    #     #     print('Unable to create object, clearing all them up')
+    #     #     for ans in successfully_created_answers:
+    #     #         ans.delete()
+    #     #     return Response(status=status.HTTP_400_BAD_REQUEST)
+
     def create(self, request, *args, **kwargs):
-        # here we parse all answers came after the question
-        # we use form-data as there are files to upload
-        # TODO: look at https://www.django-rest-framework.org/api-guide/parsers/#formparser
-        _dict = dict(self.request.data)
-        print(_dict)
-        question_to_parse = []
-        text_to_parse = []
-        correct_to_parse = []
-        weight_to_parse = []
-        audio_to_parse = []
-        hint_to_parse = []
-        priority_to_parse = []
-        image_to_parse = []
-        for value in _dict['question']:
-            question_to_parse.append(value)
-        for value in _dict['text']:
-            text_to_parse.append(value)
-        for value in _dict['correct']:
-            correct_to_parse.append(value.capitalize())
-        for value in _dict['weight']:
-            weight_to_parse.append(value)
-        # for value in _dict['audio']:
-        #     audio_to_parse.append(value if value != 'null' else None)
-        # print(audio_to_parse)
-        # for value in _dict['hint']:
-        #     hint_to_parse.append(value if value != 'null' else None)
-        for value in _dict['image']:
-            image_to_parse.append(value if value != 'null' else None)
-        for value in _dict['priority']:
-            priority_to_parse.append(value)
-        print('len: ' + str(len(question_to_parse)))
+        validated_data = self.request.data
+        question = Question.objects.all().get(id=validated_data['question'])
+        answer = Answer(question=question, text=validated_data['text'],
+                        correct=validated_data['correct'].capitalize(), weight=validated_data['weight'],
+                        priority=validated_data['priority'], deleted = False)
+        if validated_data['image'] != 'null':
+             answer.image=validated_data['image']
+        answer.save()
+        return Response({'answer' : answer.id}, status=status.HTTP_201_CREATED)
 
-        successfully_created_answers = [] # used to easily revert all creates if exception occured
-        #try:
-        ids_arr = []
-        for i in range(0, len(question_to_parse)):
-            question = Question.objects.all().get(id=question_to_parse[i])
-            answer = Answer(question=question, text=text_to_parse[i],
-                            correct=correct_to_parse[i], weight=weight_to_parse[i],
-                            priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
-            answer.save()
-            # hint = Hint(answer = answer, )
-            successfully_created_answers.append(answer)
-            print('id:' + str(answer.id))
-            ids_arr.append(answer.id)
-        return Response({"answers" : ids_arr})
-        # except:
-        #     # yup, we don't set 'deleted' to them, but directly delete from database because
-        #     # something went completely wrong so we don't need partically written answers
-        #     print('Unable to create object, clearing all them up')
-        #     for ans in successfully_created_answers:
-        #         ans.delete()
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
-
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        print(validated_data)
+        answer = self.get_object()
+        if 'text' in validated_data:
+            answer.text = validated_data['text']
+        if 'image' in validated_data:
+            # print(validated_data['image'])
+            if validated_data['image'] == 'null':
+                answer.image = ''
+            else:
+                if validated_data['image'] != 'stay':
+                    answer.image = validated_data['image']
+        if 'correct' in validated_data:
+            # if validated_data['correct'] == 'true':
+            #     answer.correct = True
+            # if validated_data['correct'] == 'false':
+            #     answer.correct = tru
+            answer.correct = (validated_data['correct']).capitalize()
+        if 'weight' in validated_data:
+            answer.weight = validated_data['weight']
+        if 'priority' in validated_data:
+            answer.priority = validated_data['priority']
+        answer.save()
+        return Response({'answer' : answer.id}, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -175,19 +214,26 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         validated_data = self.request.data
         question = self.get_object()
-        answers = Answer.objects.all().filter(question = question)
-        answers.delete() # we assume that there will be new answers after question
+        print(validated_data)
+        # answers = Answer.objects.all().filter(question = question)
+        # answers.delete() # we assume that there will be new answers after question
 
         question.title = validated_data['title']
         question.text = validated_data['text']
         question.answer_type = validated_data['answer_type']
         # question = Question(user=self.context['request'].user, title=validated_data['title'],
         #                     text=validated_data['text'], answer_type=validated_data['answer_type'])
-        if 'timer' in validated_data:
-            question.timer = validated_data['timer']
-        if 'attempts_number' in validated_data:
-            if question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']:
-                question.attempts_number = validated_data['attempts_number']
+        # if 'timer' in validated_data:
+        #     question.timer = validated_data['timer']
+        try:
+            if 'attempts_number' in validated_data:
+                if validated_data['attempts_number'] != 'null':
+                    question.attempts_number = validated_data['attempts_number']
+                else:
+                    question.attempts_number = None
+        except:
+            # else:
+            question.attempts_number = None
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']
         if 'difficulty' in validated_data:
@@ -512,7 +558,7 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
                 media.audio = None
             else:
                 media.audio = self.request.data['audio']
-        if self.request.data['video'] in self.request.data:
+        if 'video' in self.request.data:
             if self.request.data['video'] == 'null':
                 media.video = None
             else:
