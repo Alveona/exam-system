@@ -50,7 +50,7 @@
 			            solo
 			            required
 		            ></v-select>
-		            <v-btn v-if="response.subscribed" round :disabled="!successLoaded" color="primary" :to="{ name: 'testing', params: { token: $route.params.token, mode: currentVariant.id} }" dark block large>
+		            <v-btn v-if="response.subscribed" round :disabled="!successLoaded" color="primary" :to="{ name: 'testing', params: { token: $route.params.token, mode: currentVariant.id, again: true} }" dark block large>
 						 Пройти тест
 					</v-btn>
 					<v-btn v-if="!response.subscribed" @click.native="subscribe()" round color="success" dark block large>

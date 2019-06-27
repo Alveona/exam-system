@@ -5,6 +5,10 @@
 		<p class="title text-md-center">Вопрос {{question.order_number}}.</p>
 	</v-flex>
 
+	<v-flex xs12 v-if="$route.params.again">
+		<p class="text-xs-center red--text">Обратите внимание!<br/>Этот вопрос уже был начат вами ранее.<br/>Возможно, часть баллов за этот вопрос уже была потеряна при неверных попытках ответа.</p>
+	</v-flex>
+
 	<v-layout row justify-space-around v-if="question.media.video">
 		<iframe width="720" height="406" :src="question.media.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
@@ -29,7 +33,7 @@
 		</v-flex>
 	</v-layout>
 
-	<v-flex xs12 v-if="question.media.audio && !question.media.video" class="mb-4" > 
+	<v-flex xs12 v-if="!!question.media.audio && !question.media.video" class="mb-4" > 
 		<vue-audio :file="question.media.audio" :autoPlay="!!question.audio_hint ? false : true"/>
 	</v-flex>
 
@@ -130,7 +134,7 @@
 		<iframe width="720" height="406" :src="question.video_hint" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
-	<v-flex xs12 v-if="question.audio_hint && !question.video_hint" class="mb-4"> 
+	<v-flex xs12 v-if="!!question.audio_hint && !question.video_hint" class="mb-4"> 
 		<vue-audio :file="question.audio_hint" :autoPlay="!!question.audio_hint ? true : false"/>
 	</v-flex>
 
@@ -158,7 +162,7 @@
 	<v-layout row wrap>
 
 		<v-flex xs12 sm6 class="px-3">
-			<v-btn round color="success" @click.native="setAnswer()" dark block large>
+			<v-btn round :loading="isSubmitting" color="success" @click.native="setAnswer()" dark block large>
 				 Ответить
 			</v-btn>
 		</v-flex>
@@ -195,13 +199,16 @@ export default{
 			resAnswers: [],
 			reqAnswers: [],
 			fullAnswer: null,
+			isSubmitting: false,
 			alert: false,
+			again: false,
 			changedChecks: []
 		}
 	},
 	methods: {
         getQuestion(q, callback)
         {
+        	this.isSubmitting = true
         	console.log('getQuestion function: ')
         	var token_mode = { 'token' : this.$route.params.token, 'mode' :  this.$route.params.mode}
         	console.log(token_mode)
@@ -221,14 +228,15 @@ export default{
 			        this.question = qdata.data[0]
 			        console.log('this.question')
 			        console.log(this.question)
+			        if (!this.again && this.$route.params.again)
+			        	this.again = true
+			        else if (this.$route.params.again)
+			        	this.$route.params.again = false
 			        
-				    if (this.question.media.video)
-			        	this.question.media.video = 'https://youtube.com/embed/' + this.question.media.video + '?autoplay=1'
-				    if (this.question.video_hint)
-				        this.question.video_hint = 'https://youtube.com/embed/' + this.question.video_hint + '?autoplay=1'
-				    
-				    
-				    if (this.question.audio_hint && this.question.audio_hint.substring(this.question.audio_hint.length - 4) == "null")
+				    if (!this.question.hint && !this.question.video_hint && !this.question.audio_hint)
+				    	this.$route.params.again = false
+			        
+				    if (this.$route.params.again || (this.question.audio_hint && this.question.audio_hint.substring(this.question.audio_hint.length - 4) == "null"))
 				    	this.question.audio_hint = null
 				    if (this.question.media.audio && this.question.media.audio.substring(this.question.media.audio.length - 4) == "null")
 				    	this.question.media.audio = null
@@ -236,11 +244,22 @@ export default{
 				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio
 				    console.log(this.question.media.audio)
 				    
+				    if (this.question.media.video)
+			        	this.question.media.video = 'https://youtube.com/embed/' + this.question.media.video + '?autoplay=1'
+				    if (this.question.video_hint && !this.$route.params.again)
+				        this.question.video_hint = 'https://youtube.com/embed/' + this.question.video_hint + '?autoplay=1'
+				    else if (this.question.video_hint)
+				    	this.question.video_hint = ''
+
+				    if (this.question.hint && this.$route.params.again)
+				    	this.question.hint = ''
+
 
 		        	Axios.get(`${TestingSystemAPI}/api/session-a/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			            params: { 'id' : this.question.id }
 			        }).then((adata) => {
+        				this.isSubmitting = false
 
 			        	this.resAnswers.splice(0)
 			        	this.reqAnswers.splice(0)
@@ -263,10 +282,12 @@ export default{
 			          	else
 			          		callback(true)
 			        }).catch(error => {
+        			this.isSubmitting = false
 
 			          console.log(error)
 			        })
 		        }).catch(error => {
+        		this.isSubmitting = false
 
 		          console.log(error)
 		        })

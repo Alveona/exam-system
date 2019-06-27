@@ -114,15 +114,16 @@
 					this.q_items.push({ 'order_number' : "Всего", 'result' : 0, 'weight_sum' : 0})
 					this.q_items[this.q_items.length - 1].result = this.getSumScore()
 					this.q_items[this.q_items.length - 1].weight_sum = this.getSumMax()
-					if (this.getPercent() >= this.response.perfect_mark){
+					let percent = this.getPercent()
+					if (percent >= this.response.perfect_mark){
 						this.mark = 5
 						this.audio = this.response.perfect_audio
 					}
-					else if (this.getPercent() >= this.response.good_mark){
+					else if (percent >= this.response.good_mark){
 						this.mark = 4
 						this.audio = this.response.good_audio
 					}
-					else if (this.getPercent() >= this.response.satisfactory_mark){
+					else if (percent >= this.response.satisfactory_mark){
 						this.mark = 3
 						this.audio = this.response.satisfactory_audio
 					}
@@ -137,14 +138,14 @@
 		        })
 			},
 			getSumScore(){
-				var result = 0
-				for (var i = 0; i < this.q_items.length - 1; ++i)
+				let result = 0
+				for (let i = 0; i < this.q_items.length - 1; ++i)
 					result += this.q_items[i].result
 				return result
 			},
 			getSumMax(){
-				var result = 0
-				for (var i = 0; i < this.q_items.length - 1; ++i)
+				let result = 0
+				for (let i = 0; i < this.q_items.length - 1; ++i)
 					result += this.q_items[i].weight_sum
 				return result
 			},
