@@ -232,7 +232,8 @@ export default{
 			        	this.again = true
 			        else if (this.$route.params.again)
 			        	this.$route.params.again = false
-			        
+
+
 				    if (!this.question.hint && !this.question.video_hint && !this.question.audio_hint)
 				    	this.$route.params.again = false
 			        
@@ -242,7 +243,6 @@ export default{
 				    	this.question.media.audio = null
 				    else if (this.question.media.audio)
 				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio
-				    console.log(this.question.media.audio)
 				    
 				    if (this.question.media.video)
 			        	this.question.media.video = 'https://youtube.com/embed/' + this.question.media.video + '?autoplay=1'
@@ -254,7 +254,6 @@ export default{
 				    if (this.question.hint && this.$route.params.again)
 				    	this.question.hint = ''
 
-
 		        	Axios.get(`${TestingSystemAPI}/api/session-a/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			            params: { 'id' : this.question.id }
@@ -264,7 +263,6 @@ export default{
 			        	this.resAnswers.splice(0)
 			        	this.reqAnswers.splice(0)
 			            this.resAnswers = adata.data
-			            
 			            console.log(this.resAnswers)
 			            
 						console.log('setting to default')
@@ -317,6 +315,8 @@ export default{
 		          params: {}
 		        }).then(({data}) => {
 					//window.location.reload(true)
+					this.question.media.audio = null
+					this.question.audio_hint = null
 					var arr = []
 					console.log('req_ans: ') 
 					console.log(this.reqAnswers)

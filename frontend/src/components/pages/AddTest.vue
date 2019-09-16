@@ -603,15 +603,6 @@
 			title: function(val) {
 				this.token = this.textToTranslit(val)
 			},
-			satisfactory_mark: function(val) {
-				console.log('s: '+val + ' g: ' + this.good_mark + ' p: ' + this.perfect_mark)
-			},
-			good_mark: function(val) {
-				console.log('s: '+this.satisfactory_mark + ' g: ' + val + ' p: ' + this.perfect_mark)
-			},
-			perfect_mark: function(val) {
-				console.log('s: '+ this.satisfactory_mark + ' g: ' + this.good_mark + ' p: ' + val)
-			},
 			questionsChecks: function(val) {
 				this.questions_number = val.length
 			}

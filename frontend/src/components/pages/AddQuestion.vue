@@ -11,7 +11,18 @@
 						</v-tooltip>
 					</v-layout>
 				</v-flex>
+				
+				<v-flex xs12 v-if="modes.length == 0">
+					<v-alert
+			        :value="1"
+			        :type="error"
+        			transition="scale-transition"
+			      	>
+			        {{noModesMsg}}
 
+				    <v-btn to="/tests" flat>Добавить режим</v-btn>
+			        </v-alert>
+		        </v-flex>	
 				<v-flex xs12>
 					<v-label>Краткое название вопроса</v-label>
 					<v-tooltip bottom v-model="showTitleTooltip">
@@ -107,6 +118,7 @@
 			        </v-layout>
 			      </v-flex>
 
+			      	
 			      <v-flex xs12 v-for="mode in modes">
 					<div class="divider"></div>
 					<v-layout row wrap>
@@ -213,7 +225,7 @@
 			        </v-alert>
 		        </v-flex>	
 
-		        <v-flex xs12>
+		        <v-flex xs12 v-if="modes.length != 0">
 					<v-btn round color="success" @click.native="onSubmit()" dark large :loading="
 	        						isSubmitting">
 						 Добавить вопрос
@@ -305,6 +317,7 @@
 
                 image: null,
                 imageLoadText: 'Изображение не загружено',
+                noModesMsg: 'Вы еще не добавили ни одного режима! Создание вопросов невозможно.',
 		    }
 		  },
 		methods: {
@@ -423,42 +436,42 @@
             },
             async postQuestionsMedia() {
             	for (let i = 0; i < this.modes.length; i++)
-               		{
-               			console.log('im here')
-            			let QMediaData = new FormData()
-		                QMediaData.set('question', this.questionId)
-		                QMediaData.set('mode', this.modes[i].id)
-		                QMediaData.set('audio', this.audios[i])
-		                QMediaData.set('video', this.videos[i])
+           		{
+           			console.log('im here')
+        			let QMediaData = new FormData()
+	                QMediaData.set('question', this.questionId)
+	                QMediaData.set('mode', this.modes[i].id)
+	                QMediaData.set('audio', this.audios[i])
+	                QMediaData.set('video', this.videos[i])
 
-			            console.log('qMediaData:')
-						let object = {};
-						QMediaData.forEach(function(value, key){
-						    object[key] = value;
-						});
-						let json = JSON.stringify(object);
-		                 console.log(json)
+		            console.log('qMediaData:')
+					let object = {};
+					QMediaData.forEach(function(value, key){
+					    object[key] = value;
+					});
+					let json = JSON.stringify(object);
+	                 console.log(json)
 
-						await axios.post(`${TestingSystemAPI}/api/questions_media/`, QMediaData, {
-					          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-					          params: {}
-					    })
-				        .then((response) => {
-				        	console.log(this.questionId + ' ' + this.modes[i].id + ' success questions_media')
-				        	if (i != this.modes.length - 1)
-				        		return
+					await axios.post(`${TestingSystemAPI}/api/questions_media/`, QMediaData, {
+				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				          params: {}
+				    })
+			        .then((response) => {
+			        	console.log(this.questionId + ' ' + this.modes[i].id + ' success questions_media')
+			        	if (i != this.modes.length - 1)
+			        		return
 
-				        	this.postAnswers()
-			                 				        	
-				        })
-		                .catch(error => {
-		               		this.successSet = false
-		                    this.alert = true
-		                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
-	        				this.isSubmitting = false
-		                    return
-		                })
-		            }
+			        	this.postAnswers()
+		                 				        	
+			        })
+	                .catch(error => {
+	               		this.successSet = false
+	                    this.alert = true
+	                    this.message = 'Не удалось добавить вопрос. Проверьте подключение к сети.'
+        				this.isSubmitting = false
+	                    return
+	                })
+	            }
             },
             onSubmit() {
 	        	if (!this.$refs.addQform.validate())
@@ -500,10 +513,7 @@
 		        })
                 .then((response) => {
                		this.questionId = response.data.id
-
                		this.postQuestionsMedia()
-
-               		
                 })
                .catch(error => {
                     this.alert = true
