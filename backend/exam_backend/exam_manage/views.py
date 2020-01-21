@@ -340,6 +340,12 @@ class CourseViewSet(viewsets.ModelViewSet):
             else:
                 course.satisfactory_audio = None
 
+        if 'bad_audio' in self.request.data:
+            if self.request.data['bady_audio'] != 'null':
+                course.bad_audio = self.request.data['bad_audio']
+            else:
+                course.bad_audio = None
+
         if 'video' in self.request.data:
             if self.request.data['video'] != 'null':
                 course.video = self.request.data['video']
