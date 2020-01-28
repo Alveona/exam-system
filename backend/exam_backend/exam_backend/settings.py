@@ -25,15 +25,12 @@ SECRET_KEY = 'o7bf)lh&=qoyb2got@6)c4acc63ek0)vnk2#ey=d)l3zk5l&qr' # TODO CHANGE
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "exserver", "10.0.1.5", "172.20.10.2"]
-INTERNAL_IPS = ["127.0.0.1", "exserver", "10.0.1.5", "172.20.10.2"]
+ALLOWED_HOSTS = ["*"]
+INTERNAL_IPS = ["*"]
 
 #CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 
-#AUTH_USER_MODEL = 'exam.MyUser'
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -48,10 +45,9 @@ INSTALLED_APPS = [
     'exam_manage',
     'exam',
     'exam_auth',
+    'corsheaders'
 
 ]
-if DEBUG is True:
-     INSTALLED_APPS += ('corsheaders', )
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -108,9 +104,10 @@ WSGI_APPLICATION = 'exam_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'exam3_db',
-        'USER': 'root',
-        'PASSWORD': 'x4D9VxLpgE', # TODO CHANGE
+        'NAME': 'exam_database',
+        'HOST': '178.62.209.223',
+        'USER': 'exam_user',
+        'PASSWORD': 'aim_vivacious_spool_unreal', # TODO CHANGE
     }
 }
 

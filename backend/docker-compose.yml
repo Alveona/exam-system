@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  web:
+    build: ./exam_backend
+    volumes:
+      - ./exam_backend:/var/www/app
+    image: docker.alveona.ml/mooc_web
+    expose:
+      - 8000
+  nginx:
+    build: ./nginx
+    image: docker.alveona.ml/mooc_nginx
+    ports:
+        - 8000:8000
+    depends_on:
+        - web
+    
