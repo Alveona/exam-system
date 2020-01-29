@@ -8,6 +8,8 @@ services:
     image: docker.alveona.ml/mooc_web
     expose:
       - 8000
+    # ports:
+      # - 8000:8000
   nginx:
     build: ./nginx
     image: docker.alveona.ml/mooc_nginx

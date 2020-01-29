@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os, datetime
+from .connection import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,16 +21,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'o7bf)lh&=qoyb2got@6)c4acc63ek0)vnk2#ey=d)l3zk5l&qr' # TODO CHANGE
+SECRET_KEY = SECRET
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 INTERNAL_IPS = ["*"]
 
 #CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_ALLOW_ALL = DEBUG
+# CORS_ORIGIN_ALLOW_ALL = DEBUG
 
 
 INSTALLED_APPS = [
@@ -62,12 +63,8 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
-CORS_ORIGIN_WHITELIST = (
-    'localhost:8000',
-    '10.0.1.5',
-    'exserver',
-    '172.20.10.2'
-)
+CORS_ORIGIN_ALLOW_ALL = True
+
 CORS_ALLOW_METHODS = (
         'GET',
         'POST',
@@ -104,10 +101,10 @@ WSGI_APPLICATION = 'exam_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'exam_database',
-        'HOST': '178.62.209.223',
-        'USER': 'exam_user',
-        'PASSWORD': 'aim_vivacious_spool_unreal', # TODO CHANGE
+        'NAME': DB_NAME,
+        'HOST': DB_HOST,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD
     }
 }
 
