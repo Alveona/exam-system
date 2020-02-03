@@ -2,9 +2,10 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import serializers
+from rest_framework import serializers, views
 from exam_auth.models import Profile
-from exam_auth.serializers import ProfileSerializer
+from exam_auth.serializers import ProfileSerializer, AccountSerializer
+from django.contrib.auth.models import User
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -15,8 +16,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if self.request.method == "GET":
-            queryset = Profile.objects.all().filter(user=user)
-            return queryset
+            queryset = Profile.objects.all()
+            return [AccountSerializer(profile).data for profile in queryset]
 
     def create(self, request, *args, **kwargs):
         validated_data = self.request.data
@@ -41,8 +42,60 @@ class ProfileViewSet(viewsets.ModelViewSet):
         profile.save()
         return Response(status = status.HTTP_200_OK)
 
+# class 
+
+# class RegisterViewSet(viewsets.ModelViewSet):
+#     queryset = Profile.objects.all()
+#     serializer_class = ProfileSerializer
+#     http_method_names = ['post']
 
 class RegisterViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-    http_method_names = ['post']
+    serializer_class = AccountSerializer
+    http_method_names = ['post', 'put']
+
+    def create(self, request):
+        username = request.data.get('username')
+        if Profile.objects.all().filter(user__username = username):
+            return Response({"message":"Username has already been taken"}, 400)
+        password = request.data.get('password')
+        activity = request.data.get('activity')
+        name = request.data.get('name')
+        surname = request.data.get('surname')
+        image = request.data.get('image')
+        phone = request.data.get('phone')
+        group = 'Студент'
+        user = User.objects.create_user(username = username, password=password)
+        user.save()
+        profile = Profile(user = user, name = name, surname = surname,
+                         activity = activity, image = image, 
+                         phone = phone, group = group)
+        profile.save()
+        return Response(AccountSerializer(profile).data, 201)
+
+    def update(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if not profile:
+            return Response({"message":"Profile not found"}, 404)
+        
+        profile.activity = request.data.get('activity')
+        profile.name = request.data.get('name')
+        profile.surname = request.data.get('surname')
+        profile.image = request.data.get('image')
+        profile.phone = request.data.get('phone')
+        profile.save()
+        return Response(AccountSerializer(profile).data, 200)
+
+class PersonalProfileView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['get', 'patch', 'delete', 'post']
+
+    def get(self, request):
+        user = self.request.user
+        if self.request.method == "GET":
+            profile = Profile.objects.all().filter(user=user).first()
+        
+            if not profile:
+                return Response({"message":"Profile not found"}, 404)
+            return Response(AccountSerializer(profile).data, 200)
+        

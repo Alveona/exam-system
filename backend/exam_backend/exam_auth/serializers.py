@@ -6,7 +6,7 @@ from exam_auth.models import Profile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email',)
+        fields = ('username',)
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -38,3 +38,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+
+class AccountSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = ('id', 'user', 'name', 'surname',
+                'activity', 'image', 'phone', 'group')

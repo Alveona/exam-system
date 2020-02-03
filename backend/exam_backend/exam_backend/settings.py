@@ -95,7 +95,8 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/api/api.log',
+            # 'filename': '/var/log/api/api.log',
+            'filename': BASE_DIR + 'logs.log',
             'formatter': 'verbose'
         },
     },
@@ -182,7 +183,10 @@ REST_REGISTRATION = {
 
     'REGISTER_EMAIL_VERIFICATION_ENABLED': False,
 
-    'VERIFICATION_FROM_EMAIL': 'no-reply@example.com', # TODO
+    'VERIFICATION_FROM_EMAIL': 'no-reply@example.com', # TODO,
+
+    'USER_EMAIL_FIELD' : None,
+    
 }
 
 
