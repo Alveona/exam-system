@@ -13,9 +13,16 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class QuestionListSerializer(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField()
+
     class Meta:
         model = Question
-        fields = ('id', 'title', 'text', 'answer_type',)
+        fields = ('id', 'title', 'text', 'answer_type', 'author')
+
+    def get_author(self, obj):
+        if obj.user:
+            return {"name":obj.user.Profile_User.name, "surname":obj.user.Profile_User.surname}   
+        return {"name":"", "surname":""}
 
 
 class AnswerInCourseSerializer(serializers.ModelSerializer):

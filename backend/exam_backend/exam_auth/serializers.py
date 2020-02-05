@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.conf import settings
 from exam_auth.models import Profile
+from exam_manage.models import QuestionsSubscriptionRelation
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    subscribed = serializers.SerializerMethodField()
 
     def create(self, validated_data):
         users = User.objects.all().filter(username=self.context['request'].data['username'])
@@ -38,6 +40,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+
+    def get_subscribed(self, obj):
+        subcsription = QuestionsSubscriptionRelation.objects.filter(subscriber = self.context['request'].user, subscription = obj['id'])
+        if subcsription:
+            return True
+        return False
 
 class AccountSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)

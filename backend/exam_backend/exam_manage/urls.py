@@ -2,7 +2,9 @@ from rest_framework import routers
 from .views import QuestionViewSet, AnswerViewSet, CourseViewSet, QuestionListViewSet, \
     CourseCreatedViewSet, CourseAddedViewSet, RelationViewSet, \
     RelationUnsubscribeViewSet, \
-    AnswerFormDataViewSet, StrictModeViewSet, QuestionMediaViewSet, HintViewSet
+    AnswerFormDataViewSet, StrictModeViewSet, QuestionMediaViewSet, HintViewSet, \
+    UserSubcsriptionView
+from django.urls import path
 
 router = routers.DefaultRouter(trailing_slash=True)
 router.register(r'questions', QuestionViewSet, base_name='questions')
@@ -20,3 +22,5 @@ router.register(r'answers_hint', HintViewSet)
 
 
 urlpatterns = router.urls
+urlpatterns += path('subscribe', UserSubcsriptionView.as_view()),
+

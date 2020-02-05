@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+# from exam_auth.models import Profile
 
 class Question(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null = True)
@@ -87,3 +88,7 @@ class UserCourseRelation(models.Model):  # relation-table with extra fields
                              on_delete=models.CASCADE, )  # implicit link to django user
     course = models.ForeignKey(Course, on_delete=models.CASCADE, )  # implicit link to django user
     access = models.IntegerField(blank=True)  # 0 - user, 1 - manager
+
+class QuestionsSubscriptionRelation(models.Model):  
+    subscriber = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscriber')  
+    subscription = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscribtion')  

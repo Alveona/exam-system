@@ -5,3 +5,5 @@ backend/exam_backend/exam_backend/__pycache__
 backend/exam_backend/exam/__pycache__
 backend/exam_backend/static
 backend/venv
+exam_backendlogs.log
+backend/.vscode

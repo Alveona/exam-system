@@ -1,12 +1,14 @@
 from django.shortcuts import render
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import serializers
-from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint, QuestionMedia
+from .models import Question, Answer, Course, UserCourseRelation, StrictMode, Hint, QuestionMedia, QuestionsSubscriptionRelation
 from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer, \
     QuestionListSerializer, CourseCreatedSerializer, RelationSerializer, RelationUnsubscribeSerializer, \
     AnswerFormDataSerializer, StrictModeSerializer, QuestionMediaSerializer, HintSerializer
+from exam_auth.models import Profile
+from django.db.models import Q
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -16,11 +18,34 @@ class QuestionListViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        user_subscriptions = QuestionsSubscriptionRelation.objects.filter(subscriber = user)
         if user.is_superuser:
             queryset = Question.objects.all()
             return queryset
-        return Question.objects.all().filter(user=user)
 
+        return Question.objects.all().filter(Q(user=user) | Q(user__in = [sub.subscription for sub in user_subscriptions]))
+
+class UserSubcsriptionView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['post']
+
+    def post(self, request):
+        user = self.request.user
+        data = self.request.data
+        profile = Profile.objects.all().filter(user=user).first()
+        if not profile or not data.get('subscription'):
+            return Response({"message":"Profile not found"}, 404)
+        subscription = Profile.objects.all().filter(user__id = data['subscription']).first()
+        if not subscription:
+            return Response({"message":"Profile not found"}, 404)
+        existing_subcsription = QuestionsSubscriptionRelation.objects.filter(subscriber = user, subscription = subscription.user)
+        if not existing_subcsription:
+            relation = QuestionsSubscriptionRelation(subscriber = user, subscription = subscription.user)
+            relation.save()
+            return Response({"message":"Subscribed"}, 200)
+        else:
+            existing_subcsription.delete()
+            return Response({"message":"Unsubscribed"}, 200)
 
 
 class AnswerFormDataViewSet(viewsets.ModelViewSet):
