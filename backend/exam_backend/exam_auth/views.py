@@ -99,3 +99,29 @@ class PersonalProfileView(views.APIView):
                 return Response({"message":"Profile not found"}, 404)
             return Response(AccountSerializer(profile).data, 200)
         
+class TeacherPromotionView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['post']
+
+    def post(self, request):
+        user = self.request.user
+        profile = Profile.objects.all().filter(user=user).first()
+        if profile.group < 2:
+            return Response({"message":"Access denied"}, 403)
+
+        profile_to_find = request.data.get('user')
+        profile = Profile.objects.all().filter(id=profile_to_find).first()
+    
+        if not profile:
+            return Response({"message":"Profile not found"}, 404)
+        
+        if profile.group == 0:
+            profile.group = 1
+            profile.save()
+            return Response(AccountSerializer(profile).data, 200)
+
+        if profile.group == 1:
+            profile.group = 0
+            profile.save()
+            return Response(AccountSerializer(profile).data, 200)        
+        

@@ -13,6 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     subscribed = serializers.SerializerMethodField()
+    # group = serializers.SerializerMethodField()
 
     def create(self, validated_data):
         users = User.objects.all().filter(username=self.context['request'].data['username'])
@@ -30,8 +31,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             profile.surname = validated_data['surname']
         if 'phone' in validated_data:
             profile.phone = validated_data['phone']
-        if 'group' in validated_data:
-            profile.group = validated_data['group']
         if 'activity' in validated_data:
             profile.activity = validated_data['activity']
         profile.save()
@@ -47,10 +46,35 @@ class ProfileSerializer(serializers.ModelSerializer):
             return True
         return False
 
+    
+    # def get_group(self, obj):
+    #     print(obj)
+    #     if obj['group'] == 0:
+    #         return "student"
+    #     if obj['group'] == 1:
+    #         return "teacher"
+    #     if obj['group'] == 2:
+    #         return "admin"
+
 class AccountSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    group = serializers.SerializerMethodField()
+    has_user_list_access = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
         fields = ('id', 'user', 'name', 'surname',
-                'activity', 'image', 'phone', 'group')
+                'activity', 'image', 'phone', 'group', 'has_user_list_access')
+
+    def get_group(self, obj):
+        if obj.group == 0:
+            return "student"
+        if obj.group == 1:
+            return "teacher"
+        if obj.group == 2:
+            return "admin"
+
+    def get_has_user_list_access(self, obj):
+        if obj.group > 0:
+            return True
+        return False
