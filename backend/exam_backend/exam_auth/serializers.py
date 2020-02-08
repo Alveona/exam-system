@@ -42,7 +42,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_subscribed(self, obj):
-        subcsription = QuestionsSubscriptionRelation.objects.filter(subscriber = self.context['request'].user, subscription = obj['id'])
+        subcsription = QuestionsSubscriptionRelation.objects.filter(subscriber = self.context['request'].user, subscription__Profile_User = obj['id'])
         if subcsription:
             return True
         return False

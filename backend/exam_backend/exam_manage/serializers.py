@@ -19,15 +19,21 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class QuestionListSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
+    can_manage = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
-        fields = ('id', 'title', 'text', 'answer_type', 'author')
+        fields = ('id', 'title', 'text', 'answer_type', 'author', 'can_manage')
 
     def get_author(self, obj):
         if obj.user:
             return {"name":obj.user.Profile_User.name, "surname":obj.user.Profile_User.surname}   
         return {"name":"", "surname":""}
+
+    def get_can_manage(self, obj):
+        if not self.context.get('request'):
+            return None
+        return obj.user == self.context['request'].user
 
 
 class AnswerInCourseSerializer(serializers.ModelSerializer):
