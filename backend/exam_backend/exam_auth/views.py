@@ -69,7 +69,7 @@ class RegisterViewSet(viewsets.ModelViewSet):
         surname = request.data.get('surname')
         image = request.data.get('image')
         phone = request.data.get('phone')
-        group = 'Студент'
+        group = 0
         user = User.objects.create_user(username = username, password=password)
         user.save()
         profile = Profile(user = user, name = name, surname = surname,

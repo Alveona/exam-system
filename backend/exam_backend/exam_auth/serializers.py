@@ -75,6 +75,6 @@ class AccountSerializer(serializers.ModelSerializer):
             return "admin"
 
     def get_has_user_list_access(self, obj):
-        if obj.group > 0:
+        if obj.group > 1:
             return True
         return False
