@@ -16,6 +16,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if self.request.method == "GET":
+            user = self.request.user
+            profile = Profile.objects.all().filter(user=user).first()
+            if profile.group < 2:
+                return []
+
             queryset = Profile.objects.all()
             return [AccountSerializer(profile).data for profile in queryset]
 
