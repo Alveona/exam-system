@@ -3,14 +3,19 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from .models import Question, Course, Answer, UserCourseRelation, StrictMode, Hint, QuestionMedia
 from exam.models import CourseSession
+from exam_backend.utils import upload_media_file
 
 class QuestionSerializer(serializers.ModelSerializer):
-
+    can_manage = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
         fields = '__all__'
 
+    def get_can_manage(self, obj):
+        if not self.context.get('request'):
+            return None
+        return obj.user == self.context['request'].user
 
 class QuestionListSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField()
@@ -180,17 +185,28 @@ class CourseAddedSerializer(serializers.ModelSerializer):
         fields = ('token', 'name', 'user', 'description', 'image')
 
 class StrictModeSerializer(serializers.ModelSerializer):
+    # image = serializers.SerializerMethodField()
+
     class Meta:
         model = StrictMode
         fields = '__all__'
     def create(self, validated_data):
         mode = StrictMode(user = self.context['request'].user, name = validated_data['name'])
         if 'image' in validated_data:
-            mode.image = validated_data['image']
+            mode.image_url = upload_media_file(validated_data['image'])
         if 'text' in validated_data:
             mode.text = validated_data['text']
         mode.save()
         return mode
+    
+    # def get_image_url(self, obj):
+    #     print(obj.image_url)
+    #     if obj.image_url:
+    #         return obj.image_url
+    #     elif obj.image:
+    #         return obj.image.url
+    #     else:
+    #         return None
 
 class QuestionMediaSerializer(serializers.ModelSerializer):
     class Meta:

@@ -215,6 +215,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+TEMP_DIR = 'temp'
+TEMP_DIR_PATH = os.path.join(MEDIA_ROOT, TEMP_DIR)
+
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=14)
 }

@@ -35,7 +35,7 @@ class UserSubcsriptionView(views.APIView):
         profile = Profile.objects.all().filter(user=user).first()
         if not profile or not data.get('subscription'):
             return Response({"message":"Profile not found"}, 404)
-        subscription = Profile.objects.all().filter(user__id = data['subscription']).first()
+        subscription = Profile.objects.all().filter(id = data['subscription']).first()
         if not subscription:
             return Response({"message":"Profile not found"}, 404)
         existing_subcsription = QuestionsSubscriptionRelation.objects.filter(subscriber = user, subscription = subscription.user)
@@ -165,16 +165,16 @@ class QuestionViewSet(viewsets.ModelViewSet):
             question.comment = validated_data['comment']
 
         question.save()
-        return Response({"id" : question.id})
+        # return QuestionSerializer(question), 201
+        return Response(QuestionSerializer(quxestion).data, status=status.HTTP_204_NO_CONTENT)
 
 
     def get_queryset(self):
         user = self.request.user
         if self.request.method == "GET":
-            queryset = Question.objects.all().filter(id=self.request.query_params.get('id'),
-                                                     user=user)
-            print(queryset)
-            return queryset
+            user_subscriptions = QuestionsSubscriptionRelation.objects.filter(subscriber = user)                                                     
+            return Question.objects.all().filter(Q(id=self.request.query_params.get('id')) & (Q(user=user) | Q(user__in = [sub.subscription for sub in user_subscriptions])))
+            
         if user.is_superuser: # TODO: either do this for all get's or delete it from here, no more methods support this logic
             queryset = Question.objects.all()
             return queryset

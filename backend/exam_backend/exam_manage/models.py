@@ -64,7 +64,8 @@ class StrictMode(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null = True)
     name = models.CharField(max_length = 255)
     text = models.TextField(blank=True)
-    image = models.ImageField(upload_to='strict_modes/')
+    image = models.ImageField(upload_to='strict_modes/', null = True)
+    image_url = models.CharField(max_length=512, null = True)
 
 class QuestionMedia(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)
