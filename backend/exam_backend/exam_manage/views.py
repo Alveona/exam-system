@@ -9,6 +9,7 @@ from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer,
     AnswerFormDataSerializer, StrictModeSerializer, QuestionMediaSerializer, HintSerializer
 from exam_auth.models import Profile
 from django.db.models import Q
+from django.contrib.auth.models import AnonymousUser
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -286,7 +287,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     lookup_field = 'token' # used to allow delete on /api/courses/<token>/
     serializer_class = CourseSerializer
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def create(self, request, *args, **kwargs):
@@ -348,7 +349,18 @@ class CourseViewSet(viewsets.ModelViewSet):
         # return course
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def list(self, request):
+        if type(request.user) == AnonymousUser:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if request.method == "GET":
+            print(self.request)
+            queryset = Course.objects.all().filter(token=request.query_params.get('token'))
+            return Response([CourseSerializer(course).data for course in queryset], status=status.HTTP_200_OK)
+        return Response([], status=status.HTTP_200_OK)
+
     def get_queryset(self):
+        if type(self.request.user) == AnonymousUser:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         if self.request.method == "GET":
             queryset = Course.objects.all().filter(token=self.request.query_params.get('token'))
             return queryset
