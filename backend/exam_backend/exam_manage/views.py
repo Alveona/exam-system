@@ -161,9 +161,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
                 # question.attempts_number = None
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']
-        if 'image' in validated_data:
+        if 'image' in validated_data and 'image' != 'null':
             question.image_url = upload_media_file(validated_data['image'])
-        if 'audio' in validated_data:
+        if 'audio' in validated_data and 'audio' != 'null':
             question.audio_url = upload_media_file(validated_data['audio'])
         if 'difficulty' in validated_data:
             question.difficulty = validated_data['difficulty']
