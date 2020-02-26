@@ -23,25 +23,25 @@ class SessionStatsSerializer(serializers.ModelSerializer):
 
     def get_perfect_audio(self, obj):
         if obj.course.perfect_audio:
-            return self.context.get('request').build_absolute_uri(obj.course.perfect_audio.url)
+            return self.context.get('request').build_absolute_uri(obj.course.perfect_audio_url)
 
     def get_good_mark(self, obj):
         return obj.course.good_mark
 
     def get_good_audio(self, obj):
         if obj.course.good_audio:
-            return self.context.get('request').build_absolute_uri(obj.course.good_audio.url)
+            return self.context.get('request').build_absolute_uri(obj.course.good_audio_url)
 
     def get_satisfactory_mark(self, obj):
         return obj.course.satisfactory_mark
 
     def get_satisfactory_audio(self, obj):
         if obj.course.satisfactory_audio:
-            return self.context.get('request').build_absolute_uri(obj.course.satisfactory_audio.url)
+            return self.context.get('request').build_absolute_uri(obj.course.satisfactory_audio_url)
 
     def get_bad_audio(self, obj):
         if obj.course.bad_audio:
-            return self.context.get('request').build_absolute_uri(obj.course.bad_audio.url)
+            return self.context.get('request').build_absolute_uri(obj.course.bad_audio_url)
 
     def get_video(self, obj):
         if obj.course.video:

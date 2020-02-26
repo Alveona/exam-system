@@ -121,6 +121,8 @@ class CourseSerializer(serializers.ModelSerializer):
         print(obj)
         course = Course.objects.all().filter(token=obj.token).first()
         print(course)
+        if not self.context.get('request'):
+            return False
         subscribed_course = UserCourseRelation.objects.all().filter(access=0, course=course,
                                                                     user=self.context['request'].user)
         print(subscribed_course)
@@ -129,8 +131,11 @@ class CourseSerializer(serializers.ModelSerializer):
         return True
 
     def get_mode(self, obj):
+        if not self.context.get('request'):
+            return None
         session = CourseSession.objects.all().filter(course=obj,
                                                       user=self.context['request'].user, finished=False)
+                                        
         print(session)
         if session:
             return session.first().mode.id
@@ -138,6 +143,8 @@ class CourseSerializer(serializers.ModelSerializer):
             return None
 
     def get_current_attempt(self, obj):
+        if not self.context.get('request'):
+            return 0
         sessions = CourseSession.objects.all().filter(course=obj,
                                                       user=self.context['request'].user, finished=True)
         attempts = [s.attempt_number for s in [session for session in sessions]]
@@ -153,7 +160,6 @@ class CourseSerializer(serializers.ModelSerializer):
         #           , 'questions_number', 'attempts', 'subscribed', 'questions', 'current_attempt',
         #           'perfect_mark', 'good_mark', 'satisfactory_mark', 'mode',)
         fields = '__all__'
-
 
 class RelationSerializer(serializers.ModelSerializer):
 

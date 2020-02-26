@@ -9,10 +9,13 @@ class Question(models.Model):
     text = models.TextField()
     answer_type = models.IntegerField(verbose_name='Тип вопроса')
     image = models.ImageField(upload_to='questions/', null=True, verbose_name='Изображение')
+    image_url = models.CharField(max_length=512, null = True)
+    # image = models.CharField(max_length=1024, null=True, verbose_name='Изображение')
     difficulty = models.IntegerField(verbose_name='Сложность')
     comment = models.CharField(max_length=255, blank=True)
     answers_number = models.IntegerField(null=True)
     audio = models.FileField(upload_to='questions_audio/', null=True)
+    audio_url = models.CharField(max_length=512, null = True)
     attempts_number = models.IntegerField(null = True)
     timer = models.IntegerField(null=True)  # in seconds
     deleted = models.BooleanField(default=False)
@@ -34,15 +37,18 @@ class Course(models.Model):
                                   through='UserCourseRelation', related_name='user')  # unusual relation table
     perfect_mark = models.IntegerField(null=True)  # percentage
     perfect_audio = models.FileField(upload_to='courses_audio/', null = True)
+    perfect_audio_url = models.CharField(max_length=512, null = True)
     good_mark = models.IntegerField(null=True)
     good_audio = models.FileField(upload_to='courses_audio/', null = True)
+    good_audio_url = models.CharField(max_length=512, null = True)
     satisfactory_mark = models.IntegerField(null=True)
     satisfactory_audio = models.FileField(upload_to='courses_audio/', null = True)
+    satisfactory_audio_url = models.CharField(max_length=512, null = True)
     bad_audio = models.FileField(upload_to='courses_audio/', null = True)
+    bad_audio_url = models.CharField(max_length=512, null = True)
     video = models.CharField(max_length = 255, null = True)
     version = models.IntegerField(default=0)
     deleted = models.BooleanField(default=False)
-
 
     def __str__(self):
         return '%s' % (self.name)
@@ -66,6 +72,7 @@ class StrictMode(models.Model):
     text = models.TextField(blank=True)
     image = models.ImageField(upload_to='strict_modes/', null = True)
     image_url = models.CharField(max_length=512, null = True)
+    # image = models.CharField(max_length=512, null = True)
 
 class QuestionMedia(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True)

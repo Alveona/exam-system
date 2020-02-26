@@ -10,6 +10,7 @@ from .serializers import QuestionSerializer, AnswerSerializer, CourseSerializer,
 from exam_auth.models import Profile
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
+from exam_backend.utils import upload_media_file
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -160,6 +161,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
                 # question.attempts_number = None
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']
+        if 'image' in validated_data:
+            question.image_url = upload_media_file(validated_data['image'])
+        if 'audio' in validated_data:
+            question.audio_url = upload_media_file(validated_data['audio'])
         if 'difficulty' in validated_data:
             question.difficulty = validated_data['difficulty']
         if 'comment' in validated_data:
@@ -167,7 +172,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         question.save()
         # return QuestionSerializer(question), 201
-        return Response(QuestionSerializer(quxestion).data, status=status.HTTP_204_NO_CONTENT)
+        return Response(QuestionSerializer(question).data, status=status.HTTP_204_NO_CONTENT)
 
 
     def get_queryset(self):
@@ -227,7 +232,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
                 question.image = ''
             else:
                 if validated_data['image'] != 'stay':
-                    question.image = validated_data['image']
+                    # question.image = validated_data['image']
+                    question.image_url = upload_media_file(validated_data['image'])
         if 'audio' in validated_data:
             # print(validated_data['audio'])
             if validated_data['audio'] == 'null':
@@ -235,6 +241,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
             else:
                 if validated_data['audio'] != 'stay':
                     question.audio = validated_data['audio']
+                    question.audio_url = upload_media_file(validated_data['audio'])
         question.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -293,8 +300,9 @@ class CourseViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         validated_data = self.request.data
         print(validated_data)
-        questions_to_parse = validated_data['questions']
-        print(questions_to_parse)
+        # questions_to_parse = validated_data['questions']
+        questions_to_parse = request.data.pop('questions')
+        # return
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
                         token=validated_data['token'],
@@ -305,19 +313,28 @@ class CourseViewSet(viewsets.ModelViewSet):
         course.satisfactory_mark = self.request.data['satisfactory_mark']
         if 'perfect_audio' in self.request.data:
             if self.request.data['perfect_audio'] != 'null':
-                course.perfect_audio = self.request.data['perfect_audio']
+                # course.perfect_audio = self.request.data['perfect_audio']
+                course.perfect_audio_url = upload_media_file(validated_data['perfect_audio'])
             else:
                 course.perfect_audio = None
         if 'good_audio' in self.request.data:
             if self.request.data['good_audio'] != 'null':
-                course.good_audio = self.request.data['good_audio']
+                # course.good_audio = self.request.data['good_audio']
+                course.good_audio_url = upload_media_file(validated_data['good_audio'])
             else:
                 course.good_audio = None
         if 'satisfactory_audio' in self.request.data:
             if self.request.data['satisfactory_audio'] != 'null':
-                course.satisfactory_audio = self.request.data['satisfactory_audio']
+                # course.satisfactory_audio = self.request.data['satisfactory_audio']
+                course.satisfactory_audio_url = upload_media_file(validated_data['satisfactory_audio'])
             else:
                 course.satisfactory_audio = None
+        if 'bad_audio' in self.request.data:
+            if self.request.data['bad_audio'] != 'null':
+                # course.bad_audio = self.request.data['bad_audio']
+                course.bad_audio_url = upload_media_file(validated_data['bad_audio'])
+            else:
+                course.bad_audio = None
 
         if 'video' in self.request.data:
             if self.request.data['video'] != 'null':
@@ -347,7 +364,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         user_relation.save()
         course.save()
         # return course
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(CourseSerializer(course).data, status=status.HTTP_201_CREATED)
 
     def list(self, request):
         if type(request.user) == AnonymousUser:
