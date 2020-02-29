@@ -13,6 +13,7 @@ from django.contrib.auth.models import AnonymousUser
 from exam_backend.utils import upload_media_file
 import requests
 from datetime import datetime
+import time
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -58,7 +59,7 @@ class CourseDemoAllowView(views.APIView):
     def post(self, request):
         user = self.request.user
         data = self.request.data
-        course = Course.objects.all().filter(Q(token = data['course']) | Q(id = data['course'])).first()
+        course = Course.objects.all().filter(token = data['course']).first()
         if not course:
             return Response({"message":"Course not found"}, 404)
         if not course.demo_allowed:
@@ -371,7 +372,11 @@ class CourseViewSet(viewsets.ModelViewSet):
             if not course or not course.demo_allowed:
                 return Response(status=status.HTTP_403_FORBIDDEN)
             else:
-                
+                timestamp = str(int(time.time()))
+                login = "demo_" + timestamp
+                print(login)
+                password = "pass_" + timestamp
+                print(password)
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         if request.method == "GET":
             print(self.request)
