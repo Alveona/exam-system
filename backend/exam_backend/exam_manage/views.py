@@ -565,7 +565,7 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
     queryset = QuestionMedia.objects.all()
     serializer_class = QuestionMediaSerializer
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_queryset(self):
         user = self.request.user
@@ -590,6 +590,22 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
                 media.audio = self.request.data['audio']
         if 'video' in self.request.data:
             if 'video' == 'null':
+                media.video = None
+            else:
+                media.video = self.request.data['video']
+        media.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        media = self.get_object()
+        if 'audio' in self.request.data:
+            if 'audio' == 'null' or not validated_data['audio']:
+                media.audio = None
+            else:
+                media.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if 'video' == 'null' or not validated_data['video']:
                 media.video = None
             else:
                 media.video = self.request.data['video']
