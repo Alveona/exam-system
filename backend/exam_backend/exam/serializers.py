@@ -255,7 +255,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
         print(mode)
         media = QuestionMedia.objects.all().filter(mode = mode, question = question).first()
         if not media:
-            return None
+            return []
         serializer = QuestionMediaSerializer(instance = media)
         return serializer.data
 
