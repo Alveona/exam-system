@@ -594,7 +594,8 @@ class HintViewSet(viewsets.ModelViewSet):
     queryset = Hint.objects.all()
     serializer_class = HintSerializer
     permission_classes = (IsAuthenticated,)
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'delete', 'patch']
+    lookup_field = 'id'
 
     def get_queryset(self):
         user = self.request.user
