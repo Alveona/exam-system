@@ -172,7 +172,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         question.save()
         # return QuestionSerializer(question), 201
-        return Response(QuestionSerializer(question).data, status=status.HTTP_204_NO_CONTENT)
+        return Response(QuestionSerializer(question).data, status=status.HTTP_201_CREATED)
 
 
     def get_queryset(self):
