@@ -130,6 +130,12 @@ class CourseSerializer(serializers.ModelSerializer):
             return False
         return True
 
+    def get_demo_allowed(self, obj):
+        # course = Course.objects.all().filter(token=obj.token).first()
+        if not obj.get_demo_allowed:
+            return False
+        return True
+
     def get_mode(self, obj):
         if not self.context.get('request'):
             return None
