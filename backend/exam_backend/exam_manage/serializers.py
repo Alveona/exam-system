@@ -193,8 +193,13 @@ class CourseCreatedSerializer(serializers.ModelSerializer):
     # user = RelationSerializer(read_only=True)
     class Meta:
         model = Course
-        fields = ('token', 'name', 'author', 'user', 'description', 'image')
+        fields = ('token', 'name', 'author', 'user', 'description', 'image', 'demo_allowed')
 
+    def get_demo_allowed(self, obj):
+        # course = Course.objects.all().filter(token=obj.token).first()
+        if not obj.get_demo_allowed:
+            return False
+        return True
 
 class CourseAddedSerializer(serializers.ModelSerializer):
     # user = RelationSerializer(read_only=True)
