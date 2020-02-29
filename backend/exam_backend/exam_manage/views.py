@@ -91,59 +91,37 @@ class AnswerFormDataViewSet(viewsets.ModelViewSet):
         return Answer.objects.all().filter(question__user=user, deleted = False)
 
     def create(self, request, *args, **kwargs):
-        # here we parse all answers came after the question
-        # we use form-data as there are files to upload
-        # TODO: look at https://www.django-rest-framework.org/api-guide/parsers/#formparser
-        _dict = dict(self.request.data)
-        print(_dict)
-        question_to_parse = []
-        text_to_parse = []
-        correct_to_parse = []
-        weight_to_parse = []
-        audio_to_parse = []
-        hint_to_parse = []
-        priority_to_parse = []
-        image_to_parse = []
-        for value in _dict['question']:
-            question_to_parse.append(value)
-        for value in _dict['text']:
-            text_to_parse.append(value)
-        for value in _dict['correct']:
-            correct_to_parse.append(value.capitalize())
-        for value in _dict['weight']:
-            weight_to_parse.append(value)
-        # for value in _dict['audio']:
-        #     audio_to_parse.append(value if value != 'null' else None)
-        # print(audio_to_parse)
-        # for value in _dict['hint']:
-        #     hint_to_parse.append(value if value != 'null' else None)
-        for value in _dict['image']:
-            image_to_parse.append(value if value != 'null' else None)
-        for value in _dict['priority']:
-            priority_to_parse.append(value)
-        print('len: ' + str(len(question_to_parse)))
+        validated_data = self.request.data
+        question = Question.objects.all().get(id=validated_data['question'])
+        answer = Answer(question=question, text=validated_data['text'],
+                        correct=validated_data['correct'].capitalize(), weight=validated_data['weight'],
+                        priority=validated_data['priority'], deleted = False)
+        if validated_data['image'] != 'null':
+             answer.image=validated_data['image']
+        answer.save()
+        return Response({'answer' : answer.id}, status=status.HTTP_201_CREATED)
 
-        successfully_created_answers = [] # used to easily revert all creates if exception occured
-        #try:
-        ids_arr = []
-        for i in range(0, len(question_to_parse)):
-            question = Question.objects.all().get(id=question_to_parse[i])
-            answer = Answer(question=question, text=text_to_parse[i],
-                            correct=correct_to_parse[i], weight=weight_to_parse[i],
-                            priority=priority_to_parse[i], image=image_to_parse[i], deleted = False)
-            answer.save()
-            # hint = Hint(answer = answer, )
-            successfully_created_answers.append(answer)
-            print('id:' + str(answer.id))
-            ids_arr.append(answer.id)
-        return Response({"answers" : ids_arr})
-        # except:
-        #     # yup, we don't set 'deleted' to them, but directly delete from database because
-        #     # something went completely wrong so we don't need partically written answers
-        #     print('Unable to create object, clearing all them up')
-        #     for ans in successfully_created_answers:
-        #         ans.delete()
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        print(validated_data)
+        answer = self.get_object()
+        if 'text' in validated_data:
+            answer.text = validated_data['text']
+        if 'image' in validated_data:
+            # print(validated_data['image'])
+            if validated_data['image'] == 'null':
+                answer.image = ''
+            else:
+                if validated_data['image'] != 'stay':
+                    answer.image = validated_data['image']
+        if 'correct' in validated_data:
+            answer.correct = (validated_data['correct']).capitalize()
+        if 'weight' in validated_data:
+            answer.weight = validated_data['weight']
+        if 'priority' in validated_data:
+            answer.priority = validated_data['priority']
+        answer.save()
+        return Response({'answer' : answer.id}, status=status.HTTP_201_CREATED)
 
 
     def destroy(self, request, *args, **kwargs):
@@ -584,12 +562,12 @@ class QuestionMediaViewSet(viewsets.ModelViewSet):
         mode = StrictMode.objects.all().get(id = validated_data['mode'])
         media = QuestionMedia(question = question, mode = mode)
         if 'audio' in self.request.data:
-            if 'audio' == 'null':
+            if self.request.data['audio'] == 'null':
                 media.audio = None
             else:
                 media.audio = self.request.data['audio']
         if 'video' in self.request.data:
-            if 'video' == 'null':
+            if self.request.data['video'] == 'null':
                 media.video = None
             else:
                 media.video = self.request.data['video']
@@ -635,15 +613,39 @@ class HintViewSet(viewsets.ModelViewSet):
         mode = StrictMode.objects.all().get(id = validated_data['mode'])
         hint = Hint(answer = answer, mode = mode)
         if 'audio' in self.request.data:
-            if 'audio' == 'null':
+            if self.request.data['audio'] == 'null':
                 hint.audio = None
             else:
                 hint.audio = self.request.data['audio']
         if 'video' in self.request.data:
-            if 'video' == 'null':
+            if self.request.data['video'] == 'null':
                 hint.video = None
             else:
                 hint.video = self.request.data['video']
+        if 'text' in self.request.data:
+            hint.text = self.request.data['text']
+        hint.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        validated_data = self.request.data
+        answer = Answer.objects.all().get(id = validated_data['answer'])
+        mode = StrictMode.objects.all().get(id = validated_data['mode'])
+        # hint = Hint(answer = answer, mode = mode)
+        hint = self.get_object()
+        if 'audio' in self.request.data:
+            if self.request.data['audio'] == 'null':
+                hint.audio = ''
+            else:
+                if self.request.data['audio'] != 'stay':
+                    # print('if')
+                    hint.audio = self.request.data['audio']
+        if 'video' in self.request.data:
+            if self.request.data['video'] == 'null':
+                hint.video = ''
+            else:
+                if self.request.data['video'] != 'stay':
+                    hint.video = self.request.data['video']
         if 'text' in self.request.data:
             hint.text = self.request.data['text']
         hint.save()
