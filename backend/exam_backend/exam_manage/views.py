@@ -204,8 +204,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         validated_data = self.request.data
         question = self.get_object()
-        answers = Answer.objects.all().filter(question = question)
-        answers.delete() # we assume that there will be new answers after question
+        # answers = Answer.objects.all().filter(question = question)
+        # answers.delete() # we assume that there will be new answers after question
 
         question.title = validated_data['title']
         question.text = validated_data['text']
