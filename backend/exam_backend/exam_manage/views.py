@@ -377,7 +377,20 @@ class CourseViewSet(viewsets.ModelViewSet):
                 print(login)
                 password = "pass_" + timestamp
                 print(password)
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
+                register_resp = requests.post('http://127.0.0.1:8000/api/register/', 
+                                data={"username": login,
+                                      "password" : password})
+                print(register_resp.json())
+                demo_user_id = register_resp.json()['id']
+                demo_user_profile = Profile.objects.filter(id = demo_user_id).first()
+                demo_user_profile.group = -1 # demo group
+                demo_user_profile.save()
+                register_resp = requests.post('http://127.0.0.1:8000/token-auth/', 
+                                data={"username": login,
+                                      "password" : password})
+                print(register_resp.json())
+                demo_user_token = register_resp.json()['token']
+                return Response(register_resp.json(), status=status.HTTP_401_UNAUTHORIZED)
         if request.method == "GET":
             print(self.request)
             queryset = Course.objects.all().filter(token=request.query_params.get('token'))

@@ -21,7 +21,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
             if profile.group < 2:
                 return []
 
-            queryset = Profile.objects.all()
+            queryset = Profile.objects.filter(group__gte = 0)
             return [AccountSerializer(profile).data for profile in queryset]
 
     def create(self, request, *args, **kwargs):
