@@ -297,7 +297,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         validated_data = self.request.data
         print(validated_data)
         # questions_to_parse = validated_data['questions']
-        questions_to_parse = request.data.pop('questions')
+        # questions_to_parse = request.data.pop('questions')
+        questions_to_parse = request.POST.getlist('questions')
+        # https://stackoverflow.com/questions/12101658/how-to-get-an-array-in-django-posted-via-ajax
         # return
         course = Course(name=validated_data['name'], description=validated_data['description'],
                         questions_number=validated_data['questions_number'],
