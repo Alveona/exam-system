@@ -11,6 +11,7 @@ from exam_auth.models import Profile
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
 from exam_backend.utils import upload_media_file
+import requests
 
 class QuestionListViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
@@ -48,6 +49,25 @@ class UserSubcsriptionView(views.APIView):
         else:
             existing_subcsription.delete()
             return Response({"message":"Unsubscribed"}, 200)
+
+class CourseDemoAllowView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ['post']
+
+    def post(self, request):
+        user = self.request.user
+        data = self.request.data
+        course = Course.objects.all().filter(id = data['course']).first()
+        if not course:
+            return Response({"message":"Course not found"}, 404)
+        if not course.demo_allowed:
+            course.demo_allowed = True
+            course.save()
+            return Response({"message":"Enabled"}, 200)
+        else:
+            course.demo_allowed = False
+            course.save()
+            return Response({"message":"Disabled"}, 200)
 
 
 class AnswerFormDataViewSet(viewsets.ModelViewSet):
@@ -214,10 +234,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         question.answer_type = validated_data['answer_type']
         # question = Question(user=self.context['request'].user, title=validated_data['title'],
         #                     text=validated_data['text'], answer_type=validated_data['answer_type'])
-        if 'timer' in validated_data:
-            question.timer = validated_data['timer']
         if 'attempts_number' in validated_data:
-            if question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']:
+            if question.attempts_number != null and (question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']):
                 question.attempts_number = validated_data['attempts_number']
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']
@@ -368,7 +386,12 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def list(self, request):
         if type(request.user) == AnonymousUser:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            course = Course.objects.all().filter(token=request.query_params.get('token')).first()
+            if not course or not course.demo_allowed:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            else:
+                
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
         if request.method == "GET":
             print(self.request)
             queryset = Course.objects.all().filter(token=request.query_params.get('token'))

@@ -3,7 +3,7 @@ from .views import QuestionViewSet, AnswerViewSet, CourseViewSet, QuestionListVi
     CourseCreatedViewSet, CourseAddedViewSet, RelationViewSet, \
     RelationUnsubscribeViewSet, \
     AnswerFormDataViewSet, StrictModeViewSet, QuestionMediaViewSet, HintViewSet, \
-    UserSubcsriptionView
+    UserSubcsriptionView, CourseDemoAllowView
 from django.urls import path
 
 router = routers.DefaultRouter(trailing_slash=True)
@@ -23,4 +23,5 @@ router.register(r'answers_hint', HintViewSet)
 
 urlpatterns = router.urls
 urlpatterns += path('subscribe', UserSubcsriptionView.as_view()),
+urlpatterns += path('course_demo_allow', CourseDemoAllowView.as_view()),
 

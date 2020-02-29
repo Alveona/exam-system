@@ -46,6 +46,7 @@ class Course(models.Model):
     satisfactory_audio_url = models.CharField(max_length=512, null = True)
     bad_audio = models.FileField(upload_to='courses_audio/', null = True)
     bad_audio_url = models.CharField(max_length=512, null = True)
+    demo_allowed = models.BooleanField(default=False)
     video = models.CharField(max_length = 255, null = True)
     version = models.IntegerField(default=0)
     deleted = models.BooleanField(default=False)
