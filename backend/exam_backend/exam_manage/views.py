@@ -235,7 +235,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         # question = Question(user=self.context['request'].user, title=validated_data['title'],
         #                     text=validated_data['text'], answer_type=validated_data['answer_type'])
         if 'attempts_number' in validated_data:
-            if question.attempts_number != null and (question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']):
+            if question.attempts_number != 'null' and (question.attempts_number is None or question.attempts_number <= validated_data['attempts_number']):
                 question.attempts_number = validated_data['attempts_number']
         if 'answers_number' in validated_data:
             question.answers_number = validated_data['answers_number']

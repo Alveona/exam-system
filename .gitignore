@@ -8,3 +8,4 @@ backend/venv
 exam_backendlogs.log
 backend/.vscode
 backend/exam_backend/temp
+connection.py
