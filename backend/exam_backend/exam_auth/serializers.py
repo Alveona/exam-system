@@ -67,6 +67,8 @@ class AccountSerializer(serializers.ModelSerializer):
                 'activity', 'image', 'phone', 'group', 'has_user_list_access')
 
     def get_group(self, obj):
+        if obj.group == -1:
+            return "demo"
         if obj.group == 0:
             return "student"
         if obj.group == 1:
