@@ -36,16 +36,6 @@
 	        </v-flex>
 
 	        <v-flex xs12 sm6 class="px-2">
-				<v-label>Направление\группа</v-label>
-	            <v-text-field
-	              required
-          		  :rules="[rules.Group]"
-          		  v-model="userdata.group"
-          		  solo
-	            ></v-text-field>
-	        </v-flex>
-
-	        <v-flex xs12 sm6 class="px-2">
 				<v-label>Телефон</v-label>
 	            <v-text-field
 	              required
@@ -54,7 +44,7 @@
           		  solo
 	            ></v-text-field>
 	        </v-flex>
-
+	        <!--
         	<v-flex xs12 sm5 class="ml-3">
 	        	<v-label>Аватар профиля</v-label>
 	            <file-input 
@@ -65,7 +55,7 @@
 	            :label="imageLoadText"
 	            ></file-input>
 		    </v-flex>
-
+			-->
 		    <v-flex xs12>
 				<v-btn round color="success" @click.native="onSubmit()" dark large>
 					 Сохранить изменения
@@ -120,7 +110,6 @@
 					FirstName: val => (val.length >= this.minNameLen && val.length <= this.maxNameLen) || 'Длина названия должна быть в диапазоне от '+this.minNameLen+' до '+this.maxNameLen + ' символов',
 					SurName: val => (val.length >= this.minSurnameLen && val.length <= this.maxSurnameLen) || 'Длина названия должна быть в диапазоне от '+this.minSurnameLen+' до '+this.maxSurnameLen + ' символов',
 					Activity: val => (val.length >= this.minActivityLen && val.length <= this.maxActivityLen) || 'Длина названия должна быть в диапазоне от '+this.minActivityLen+' до '+this.maxActivityLen + ' символов',
-					Group: val => (val.length >= this.minGroupLen && val.length <= this.maxGroupLen) || 'Длина названия должна быть в диапазоне от '+this.minGroupLen+' до '+this.maxGroupLen + ' символов',
 					required: value => !!value || 'Это необходимое поле',
 				}
 			}
@@ -128,7 +117,7 @@
 		methods:
 		{
 			getUserData(){
-				Axios.get(`${TestingSystemAPI}/api/profile/`, {
+				Axios.get(`${TestingSystemAPI}/my`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -149,18 +138,18 @@
 	        	}
 	        	if (this.successLoad)
 	        		return
-                 let formData = new FormData()
+                let formData = new FormData()
 
-                 formData.set('name', this.userdata.name)
-                 formData.set('surname', this.userdata.surname)
-                 formData.set('activity', this.userdata.activity)
-                 formData.set('phone', this.userdata.phone)
-                 formData.set('group', this.userdata.group)
-                 formData.set('image', this.image)
+                formData.set('name', this.userdata.name)
+                formData.set('surname', this.userdata.surname)
+                formData.set('activity', this.userdata.activity)
+                formData.set('phone', this.userdata.phone)
+                formData.set('group', this.userdata.group)
+                formData.set('image', this.image)
 
-                 console.log(formData)
+                console.log(formData)
 
-                Axios.patch(`${TestingSystemAPI}/api/profile/`, formData, {
+                Axios.put(`${TestingSystemAPI}/profile/${userdata.id}/`, formData, {
 		            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		            params: {}
 		        })

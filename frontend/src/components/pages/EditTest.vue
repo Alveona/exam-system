@@ -231,7 +231,8 @@
                 	q_number_min: val => val > 0 || 'Значение должно быть больше 0',
                 	q_number_max: val => val <= this.questionsChecks.length || 'Должно быть не более, чем число вопросов, выбранных выше',
                 	description: val => (val.length >= this.minDescrLen && val.length <= this.maxDescrLen) || 'Длина текста должна быть в диапазоне от '+this.minDescrLen+' до '+this.maxDescrLen + ' символов',
-                	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов'
+                	title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
+                	video: str => (str.length == 0 || str.length == this.videoLength) || 'Длина идентификатора видео на Youtube составляет '+ this.videoLength + ' символов',
                 },
 
 			    showTestTooltip: false,
@@ -255,12 +256,13 @@
         		minDescrLen: 50,
         		maxDescrLen: 2000,
         		minTitleLen: 8,
-        		maxTitleLen: 100
+        		maxTitleLen: 100,
+        		videoLength: 11
 		    }
 		},
 		methods: {
 			getQuestionsList() {
-				Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
+				Axios.get(`${TestingSystemAPI}/questionslist/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -277,7 +279,7 @@
 		        })
 			},
 			getTestData(){
-				Axios.get(`${TestingSystemAPI}/api/courses/`, {
+				Axios.get(`${TestingSystemAPI}/courses/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {'token' : this.$route.params.token}
 		        }).then(({data}) => {
@@ -339,7 +341,7 @@
 
 				
 
-                 Axios.patch(`${TestingSystemAPI}/api/courses/`+this.$route.params.token, formData, {
+                 Axios.patch(`${TestingSystemAPI}/courses/`+this.$route.params.token, formData, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        })

@@ -50,47 +50,19 @@
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
-
-      <v-menu
-        v-model="menu"
-        :close-on-content-click="false"
-        offset-x
-      >
-        <v-btn
-          slot="activator"
+      <v-btn
           large
           icon
+          @click.native="signout()"
         >
           <v-icon size="32px">
-            more_vert
+            power_settings_new
           </v-icon>
         </v-btn>
-  
-        <v-card>
-
-          <v-list>
-            <v-list-tile @click="toProfile()">
-              <v-icon class="mr-3">
-                account_circle
-              </v-icon>
-              <v-list-tile-title>Настройки профиля</v-list-tile-title>
-            </v-list-tile>
-  
-            <v-list-tile @click="signout()">
-              <v-icon class="mr-3">
-                power_settings_new
-              </v-icon>
-              <v-list-tile-title>Выйти</v-list-tile-title>
-            </v-list-tile>
-          </v-list>
-  
-        </v-card>
-      </v-menu>
-
-
+      
     </v-toolbar>
 
-    <v-content>
+    <v-content class="innerContent">
       <router-view></router-view>
     </v-content>
     
@@ -98,19 +70,22 @@
 </template>
 
 <script>
+  import Axios from 'axios'
   import router from '@/router'
   import Authentication from '@/components/pages/Authentication'
+  import connection from '@/router/connection'
+
+  const TestingSystemAPI = connection.server
   export default {
   	data () {
       return {
 	      dialog: false,
 	      drawer: null,
 	      items: [
-	      	{ icon: 'done', text: 'Добавленные тесты', link: '/' },
-	        { icon: 'help_outline', text: 'Управление вопросами', link: '/questions' },
-	        { icon: 'toc', text: 'Управление тестами', link: '/tests' }
-	        //{ icon: 'trending_up', text: 'Статистика', link: '/stats' },
-	        //{ icon: 'import_contacts', text: 'Руководство пользователя', link: '/guide' }
+          //{ icon: 'import_contacts', text: 'Руководство пользователя', link: '/' },
+	      	{ icon: 'done', text: 'Добавленные тесты', link: '/addedtests' },
+	        //{ icon: 'trending_up', text: 'Статистика', link: '/stats' }
+          { icon: 'account_circle', text: 'Настройка профиля', link: '/profile'}
 	      ]
 	    }
   	},
@@ -120,14 +95,42 @@
   		},
   		changePage(link){
   			router.push(link)
+        
   		},
       toProfile(){
         router.push('/profile')
+      },
+      async getMy(){
+        await Axios.get(`${TestingSystemAPI}/my`, {
+              headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+              params: {}
+            }).then(({data}) => {
+              if (data.group != 'student')
+              {
+                this.items.push({ icon: 'supervisor_account', text: 'Настройка преподавателей', link: '/modes' })
+                this.items.push({ icon: 'help_outline', text: 'Управление вопросами', link: '/questions' })
+                this.items.push({ icon: 'toc', text: 'Управление тестами', link: '/test_pages' })
+              }
+              if (data.has_user_list_access)
+                this.items.push({ icon: 'account_circle', text: 'Доступ к пользователям', link: '/profiles' })
+            }).catch(error => {
+              this.error = true
+              console.log(error)
+            })
       }
-  	}
+  	},
+    mounted(){
+      this.getMy()
+    }
   }
 </script>
 
 <style>
-	
+	.innerContent{
+    margin:0 0 0 -260px;
+  }
+  .l-home-page{
+    margin: 0 0 0 260px;
+    width:100%;
+  }
 </style>

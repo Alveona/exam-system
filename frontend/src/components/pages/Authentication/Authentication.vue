@@ -34,33 +34,8 @@
                       required>
         </v-text-field>
 
-        <v-btn block flat color="light-blue lighten-1" @click.native="signUpVisible = true">Создать аккаунт</v-btn>
         <v-btn block color="light-blue lighten-1" @click.native="submitAuthentication()">Войти</v-btn>
-      </v-form>
-    </div>
-
-    <div class="l-signup" v-if="signUpVisible">
-      <v-form v-model="validSignUp">
-        <v-text-field label="Логин"
-                      v-model="newUser.username"
-                      prepend-icon="account_box"
-                      :rules="rules"
-                      required
-                      color="light-blue lighten-1">
-        </v-text-field>
-
-        <v-text-field label="Пароль"
-                      v-model="newUser.password"
-                      prepend-icon="lock"
-                      :rules="rules"
-                      :append-icon="signUpPasswordVisible ? 'visibility' : 'visibility_off'"
-                      :append-icon-cb="() => (signUpPasswordVisible = !signUpPasswordVisible)"
-                      :type="signUpPasswordVisible ? 'text' : 'password'"
-                      color="light-blue lighten-1"
-                      required>
-        </v-text-field>
-
-        <v-btn block color="light-blue lighten-1" @click.native="submitSignUp()">Зарегистрироваться</v-btn>
+        <v-btn block flat color="light-blue lighten-1" @click.native="goToRegister()">Создать аккаунт</v-btn>
       </v-form>
     </div>
 
@@ -75,22 +50,16 @@
 
 <script>
   import Authentication from '@/components/pages/Authentication'
+  import router from '@/router'
   export default {
     data () {
       return {
         snackbar: false,
         validLogin: false,
-        validSignUp: false,
-        signUpVisible: false,
         loginPasswordVisible: false,
-        signUpPasswordVisible: false,
         timeout: 6000,
         rules: [ (value) => !!value || 'Это обязательное поле' ],
         credentials: {
-          username: '',
-          password: ''
-        },
-        newUser: {
           username: '',
           password: ''
         },
@@ -101,10 +70,9 @@
       submitAuthentication () {
         Authentication.authenticate(this, this.credentials, '/')
       },
-
-      submitSignUp () {
-        Authentication.signup(this, this.newUser, '/')
-      }
+      goToRegister() {
+        router.push('/register')
+      },
     }
   }
 </script>
@@ -115,10 +83,11 @@
   .l-auth {
     background-color: $background-color;
     padding: 15px;
-    margin: 45px auto;
+    margin: 125px auto;
     min-width: 272px;
     max-width: 320px;
     animation: bounceIn 1s forwards ease;
+    box-shadow: 0 8px 8px 2px #999999;
 
     label,input, .icon {
       color: #29b6f6!important;
@@ -126,10 +95,6 @@
 
   }
 
-  .l-signup {
-    @extend .l-auth;
-    animation: slideInFromLeft 1s forwards ease;
-  }
   .v-text-field__slot>label{
     color: #29b6f6 !important;
   }

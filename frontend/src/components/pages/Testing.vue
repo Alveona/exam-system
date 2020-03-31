@@ -5,13 +5,17 @@
 		<p class="title text-md-center">Вопрос {{question.order_number}}.</p>
 	</v-flex>
 
+	<v-flex xs12 v-if="$route.params.again">
+		<p class="text-xs-center red--text">Обратите внимание!<br/>Этот вопрос уже был начат вами ранее.<br/>Возможно, часть баллов за этот вопрос уже была потеряна при неверных попытках ответа.</p>
+	</v-flex>
+
 	<v-layout row justify-space-around v-if="question.media.video">
 		<iframe width="720" height="406" :src="question.media.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
 	
 
-	<v-flex v-if="!question.question.image" xs12 class="my-3">
+	<v-flex v-if="!question.question.image_url" xs12 class="my-3">
 		<p class="font-weight-regular subheading">{{question.question.text}}</p>
 	</v-flex>
 
@@ -20,7 +24,7 @@
         	<v-img 
         	class="mb-3"
         	:aspect-ratio="16/9" 
-            :src="question.question.image"
+            :src="question.question.image_url"
             position="center center"
             ></v-img>
         </v-flex>
@@ -29,8 +33,8 @@
 		</v-flex>
 	</v-layout>
 
-	<v-flex xs12 v-if="question.media.audio && !question.media.video" class="mb-4" > 
-		<vue-audio :file="question.media.audio" :autoPlay="question.audio_hint ? false : true"/>
+	<v-flex xs12 v-if="!!question.media.audio && !question.media.video" class="mb-4" > 
+		<vue-audio :file="question.media.audio" :autoPlay="!!question.audio_hint ? false : true"/>
 	</v-flex>
 
 	<v-flex v-if="question.question.answer_type == 1" xs12>
@@ -45,58 +49,79 @@
 
 	<v-flex v-else-if="question.question.answer_type == 2" xs12>
 		<v-radio-group>
-			<v-layout wrap col>
-				<v-flex xs12 sm6 md4 px-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
-			        <v-img 
-			        	:src="answer.answer.image"
-		        		:aspect-ratio="16/9" 
-			            position="center center"
-			        ></v-img>
-			        <p class="testingRadioLabel">
-				    	<v-label>{{answer.answer.text}}</v-label>
-				    </p>
+			<v-layout wrap col pa-1 ma-1 v-if="!!answer.answer.image" v-for="answer in resAnswers">
+		        <v-flex xs2 sm1>
 					<v-radio
 					  class="testingRadio"
 			          :value="answer.id"
 			          @change="changeRadio(answer.id)"
 			        ></v-radio>
 				</v-flex>
-				<v-flex xs12 v-else>
+				<v-flex xs10 sm4 pb-2>
+			        <v-img 
+			        	:src="answer.answer.image"
+		        		:aspect-ratio="16/9" 
+			            position="center center"
+			        ></v-img>
+			    </v-flex>
+				<v-flex xs12 sm7 pl-2>
+			        <p class="text-xs-left">
+				    	<v-label>{{answer.answer.text}}</v-label>
+				    </p>
+				</v-flex>
+			</v-layout>
+			<v-layout xs12 v-else>
+				<v-flex sm1>
 					<v-radio
-					  :label="answer.answer.text"
 			          :value="answer.id"
 			          @change="changeRadio(answer.id)"
 			        ></v-radio>
-			    </v-flex>
-			</v-layout>
+				</v-flex>
+				<v-flex sm11 pl-2>
+			        <p class="text-xs-left">
+				    	<v-label>{{answer.answer.text}}</v-label>
+				    </p>
+				</v-flex>
+		    </v-layout>
 	    </v-radio-group>
 	</v-flex>
 
 	<v-flex v-else-if="question.question.answer_type == 3" xs12>
-		<v-layout wrap col>
-			<v-flex xs12 sm6 md4 px-1 v-for="answer in resAnswers" v-if="!!answer.answer.image">
-		        <v-img 
-		        	:src="answer.answer.image"
-	        		:aspect-ratio="16/9" 
-		            position="center center"
-		        ></v-img>
-		        <p class="testingRadioLabel">
-			    	<v-label >{{answer.answer.text}}</v-label>
-			    </p>
-				<v-checkbox 
-			 	  class="testingRadio"
+		<v-layout row wrap pa-1 ma-1 v-for="answer in resAnswers" v-if="!!answer.answer.image">
+	        <v-flex xs2 sm1>
+		        <v-checkbox 
+		          class="checkbox_testing"
 				  :value="answer.id"
 				  v-model="changedChecks"
 				  @change="changeCheck(answer.id)"
 				></v-checkbox>
 			</v-flex>
-			<v-flex xs12 v-else>
+			<v-flex xs10 sm4 pb-2>
+		        <v-img 
+		        	:src="answer.answer.image"
+	        		:aspect-ratio="16/9" 
+		            position="center center"
+		        ></v-img>
+		    </v-flex>
+			<v-flex xs12 sm7 pl-2>
+		        <p class="text-xs-left">
+			    	<v-label>{{answer.answer.text}}</v-label>
+			    </p>
+			</v-flex>
+		</v-layout>
+		<v-layout row pa-1 ma-1 v-else>
+			<v-flex sm1>
 				<v-checkbox 
-				  :label="answer.answer.text"
+		          class="checkbox_testing"
 				  :value="answer.id"
 				  v-model="changedChecks"
 				  @change="changeCheck(answer.id)"
 				></v-checkbox>
+			</v-flex>
+			<v-flex sm11 pl-2>
+		        <p class="text-xs-left">
+			    	<v-label>{{answer.answer.text}}</v-label>
+			    </p>
 			</v-flex>
 		</v-layout>
 	</v-flex>
@@ -109,8 +134,8 @@
 		<iframe width="720" height="406" :src="question.video_hint" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 	</v-layout>
 
-	<v-flex xs12 v-if="question.audio_hint && !question.video_hint" class="mb-4"> 
-		<vue-audio :file="question.audio_hint" :autoPlay="question.audio_hint ? true : false"/>
+	<v-flex xs12 v-if="!!question.audio_hint && !question.video_hint" class="mb-4"> 
+		<vue-audio :file="question.audio_hint" :autoPlay="!!question.audio_hint ? true : false"/>
 	</v-flex>
 
 		<v-flex xs12 v-if="question.hint"> 
@@ -134,10 +159,10 @@
 	      </v-alert>
 		</v-flex>
 
-	<v-layout row justify-space-around>
+	<v-layout row wrap>
 
 		<v-flex xs12 sm6 class="px-3">
-			<v-btn round color="success" @click.native="setAnswer()" dark block large>
+			<v-btn round :loading="isSubmitting" color="success" @click.native="setAnswer()" dark block large>
 				 Ответить
 			</v-btn>
 		</v-flex>
@@ -174,22 +199,25 @@ export default{
 			resAnswers: [],
 			reqAnswers: [],
 			fullAnswer: null,
+			isSubmitting: false,
 			alert: false,
+			again: false,
 			changedChecks: []
 		}
 	},
 	methods: {
         getQuestion(q, callback)
         {
+        	this.isSubmitting = true
         	console.log('getQuestion function: ')
         	var token_mode = { 'token' : this.$route.params.token, 'mode' :  this.$route.params.mode}
         	console.log(token_mode)
-        	Axios.post(`${TestingSystemAPI}/api/session/`, token_mode, {
+        	Axios.post(`${TestingSystemAPI}/session/`, token_mode, {
 	            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 	            params: {}
 	        }).then((data) => {
 	        	console.log('getQuestion function 2: ')
-				Axios.get(`${TestingSystemAPI}/api/session-q/`, {
+				Axios.get(`${TestingSystemAPI}/session-q/`, {
 		            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		            params: { 'token' : this.$route.params.token }
 		        }).then((qdata) => {
@@ -198,32 +226,44 @@ export default{
 		        		router.push('/tests/'+this.$route.params.token+'/result')
 
 			        this.question = qdata.data[0]
-			        console.log('qid: '+this.question.id)
-			        
-				    if (this.question.media.video)
-			        	this.question.media.video += '?autoplay=1'
-				    if (this.question.video_hint)
-				        this.question.video_hint += '?autoplay=1'
-				    
-				    
-				    if (this.question.audio_hint && this.question.audio_hint.search("null") != -1)
-				    	this.question.audio_hint = null
-				    if (this.question.media.audio && this.question.media.audio.search("null") != -1)
-				    	this.question.media.audio = null
-				    else 
-				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio
-				    console.log(this.question.media.audio)
-				    
 
-		        	Axios.get(`${TestingSystemAPI}/api/session-a/`, {
+			        console.log('this.question')
+			        console.log(this.question)
+			        if (!this.again && this.$route.params.again)
+			        	this.again = true
+			        else if (this.$route.params.again)
+			        	this.$route.params.again = false
+
+
+				    if (!this.question.hint && !this.question.video_hint && !this.question.audio_hint)
+				    	this.$route.params.again = false
+			        
+				    if (this.$route.params.again || (this.question.audio_hint && this.question.audio_hint.substring(this.question.audio_hint.length - 4) == "null"))
+				    	this.question.audio_hint = null
+				    if (this.question.media.audio && this.question.media.audio.substring(this.question.media.audio.length - 4) == "null")
+				    	this.question.media.audio = null
+				    else if (this.question.media.audio)
+				    	this.question.media.audio = TestingSystemAPI + this.question.media.audio
+				    
+				    if (this.question.media.video)
+			        	this.question.media.video = 'https://youtube.com/embed/' + this.question.media.video + '?autoplay=1'
+				    if (this.question.video_hint && !this.$route.params.again)
+				        this.question.video_hint = 'https://youtube.com/embed/' + this.question.video_hint + '?autoplay=1'
+				    else if (this.question.video_hint)
+				    	this.question.video_hint = ''
+
+				    if (this.question.hint && this.$route.params.again)
+				    	this.question.hint = ''
+
+		        	Axios.get(`${TestingSystemAPI}/session-a/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			            params: { 'id' : this.question.id }
 			        }).then((adata) => {
+        				this.isSubmitting = false
 
 			        	this.resAnswers.splice(0)
 			        	this.reqAnswers.splice(0)
 			            this.resAnswers = adata.data
-			            
 			            console.log(this.resAnswers)
 			            
 						console.log('setting to default')
@@ -241,10 +281,12 @@ export default{
 			          	else
 			          		callback(true)
 			        }).catch(error => {
+        			this.isSubmitting = false
 
 			          console.log(error)
 			        })
 		        }).catch(error => {
+        		this.isSubmitting = false
 
 		          console.log(error)
 		        })
@@ -269,11 +311,13 @@ export default{
         setAnswer(){
         	var request = { 'id': this.question.id, 'status': 1, 'answers': this.reqAnswers}
         	console.log(request)
-			Axios.post(`${TestingSystemAPI}/api/session-a/`, request, {
+			Axios.post(`${TestingSystemAPI}/session-a/`, request, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
 					//window.location.reload(true)
+					this.question.media.audio = null
+					this.question.audio_hint = null
 					var arr = []
 					console.log('req_ans: ') 
 					console.log(this.reqAnswers)
@@ -311,7 +355,7 @@ export default{
         },
         skipAnswer(){
 			var request = {'id': this.question.id, 'status': 2}
-			Axios.post(`${TestingSystemAPI}/api/session-a/`, request, {
+			Axios.post(`${TestingSystemAPI}/session-a/`, request, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -322,7 +366,7 @@ export default{
         },
         stopTest(){
 			var request = {'id': this.question.id, 'status': 3}
-			Axios.post(`${TestingSystemAPI}/api/session-a/`, request, {
+			Axios.post(`${TestingSystemAPI}/session-a/`, request, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -347,5 +391,8 @@ export default{
 </script>
 
 <style>
-
+.checkbox_testing{
+	padding-top:0 !important;
+	margin-top:0 !important;
+}
 </style>

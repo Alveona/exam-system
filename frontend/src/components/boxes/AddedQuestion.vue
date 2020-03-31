@@ -6,10 +6,10 @@
 		        <v-card class="questionItem">  
 		          <v-card-title primary-title :to="{ name: 'editquestion', params: { id: question.id }}">
 		          	<v-flex xs1 v-if="withchecks">
-		          		<v-checkbox v-model="questionsChecks" :value="question.id" @change="$emit('update:questionsChecks', questionsChecks)" hide-details class="shrink mr-2"></v-checkbox>
+		          		<v-checkbox v-model="questionsChecks" :value="question.id" @change="$emit('update:questionsChecks', questionsChecks)" hide-details class="shrink mr-2 mt-0"></v-checkbox>
 		            </v-flex>
 		          <v-flex v-if="withchecks ? 'xs11' : 'xs12'">
-		              <span class="headline">{{question.title}}
+		              <span class="headline">{{question.title}} 
 		              	<v-tooltip bottom>
 		              	<v-btn icon slot="activator" small>
 		              		<v-icon color="light-blue darken-1">info</v-icon>
@@ -20,12 +20,12 @@
 		          </v-flex>
 				  <v-spacer></v-spacer>
 
-				  <!--<v-tooltip bottom v-if="!withchecks">
+				  <v-tooltip bottom v-if="!withchecks && question.can_manage">
 	              	<v-btn slot="activator" v-if="!withchecks" :to="{ name: 'editquestion', params: { id: question.id }}" icon><v-icon>edit</v-icon></v-btn>
 	              	<span>Редактировать вопрос</span>
-		          </v-tooltip>-->
+		          </v-tooltip>
 
-				  <v-tooltip bottom v-if="!withchecks">
+				  <v-tooltip bottom v-if="!withchecks && question.can_manage">
 	              	<v-btn slot="activator" @click.native="deleteQuestion(collection.indexOf(question), question.id)" icon><v-icon>delete</v-icon></v-btn>
 	              	<span>Удалить вопрос</span>
 		          </v-tooltip>
@@ -54,8 +54,11 @@
 
 		          <v-slide-y-transition>
 		            <v-card-text v-show="question.show">
-		            	<p class="wrappedText">
-			              {{question.text}}
+		              <p class="wrappedText">
+			            Создатель вопроса: {{question.author.surname}} {{question.author.name}}
+			          </p>
+		              <p class="wrappedText">
+			            {{question.text}}
 			          </p>
 		            </v-card-text>
 		          </v-slide-y-transition>
@@ -95,7 +98,7 @@
 		},
 		methods: {
 			deleteQuestion(index, id) {
-				Axios.delete(TestingSystemAPI+'/api/questions/'+id+'/', {
+				Axios.delete(TestingSystemAPI+'/questions/'+id+'/', {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {

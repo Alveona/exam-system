@@ -24,7 +24,7 @@ export default {
   },
 
   signup (context, credentials, redirect) {
-    Axios.post(`${TestingSystemAPI}/api/register/`, credentials)
+    Axios.post(`${TestingSystemAPI}/register/`, credentials)
         .then(() => {
           context.validSignUp = true
 

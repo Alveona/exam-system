@@ -45,6 +45,55 @@
 		            <v-btn slot="activator" v-if="!added" @click.native="deleteTest(token)" icon><v-icon>delete</v-icon></v-btn>
 		            <span>Удалить тест</span>
 		          </v-tooltip>
+		          <v-tooltip bottom>
+		            <v-btn slot="activator" v-if="!added" @click.native="dialog = true" icon><v-icon>share</v-icon></v-btn>
+		            <v-dialog
+			          v-model="dialog"
+			          max-width="500px"
+			        >
+			          <v-card>
+			            <v-card-title>
+			            	<p class="title">
+				              {{title}}
+				          </p>
+			            </v-card-title>
+			            <v-card-text>
+			            	<v-layout row wrap>
+			            	<v-flex xs11>
+			              <v-text-field
+			                  v-model="test_token"
+				              label="Ссылка на тест"
+				              readonly
+				            ></v-text-field>
+				        </v-flex>
+			            	<v-flex xs1 pt-2>
+			            <v-tooltip bottom>
+				            <v-btn slot="activator" v-if="!added" @click.native="copy()" icon><v-icon>link</v-icon></v-btn>
+				            <span>Скопировать ссылку</span>
+				          </v-tooltip>
+				      </v-flex>
+				  </v-layout>
+			            </v-card-text>
+			            <v-card-actions>
+			              <v-switch
+			                v-model="demo_allowed"
+			                @click.native="change_demo_access()"
+					        label="Разрешить демо-режим"
+					      ></v-switch>
+			              <v-spacer>
+			              </v-spacer>
+			              <v-btn
+			                color="primary"
+			                text
+			                @click="dialog = false"
+			              >
+			                Ок
+			              </v-btn>
+			            </v-card-actions>
+			          </v-card>
+			        </v-dialog>
+		            <span>Поделиться тестом</span>
+		          </v-tooltip>
 		        </v-card-actions>
 		      </v-flex>
 
@@ -94,19 +143,25 @@
 	const TestingSystemAPI = connection.server
 
 	export default {
-		props: ['title', 'token', 'author', 'image', 'description', 'added', 'element', 'collection'],
+		props: ['title', 'dialog', 'token', 'author', 'image', 'description', 'added', 'demo_allowed', 'element', 'collection'],
 		data() {
 			return {
 				show: false,
 				successDelete: false,
 				alert: false,
 				snackbar: false,
-				message: ''
+				message: '',
+				frontAddress: connection.front
+			}
+		},
+		computed: {
+			test_token: function(){
+				return this.frontAddress + '/tests/' + this.token
 			}
 		},
 		methods: {
-			deleteTest(token) {
-				Axios.delete(TestingSystemAPI+'/api/courses/'+token+'/', {
+			async deleteTest(token) {
+				await Axios.delete(TestingSystemAPI+'/courses/'+token+'/', {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -120,8 +175,34 @@
 		          this.message = 'Не удалось удалить тест. Проверьте подключение к сети.'
 		        })
 		    },
+		    async change_demo_access() {
+				await Axios.post(TestingSystemAPI+'/course_demo_allow', {'course' : this.token}, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        }).then(({data}) => {
+		        }).catch(error => {
+		          this.alert = true
+		          this.successDelete = false
+		          this.message = 'Не удалось изменить доступ к демо-режиму. Проверьте подключение к сети.'
+		        })
+		    },
+		    copy(){
+			  let tmp   = document.createElement('INPUT'), 
+			      focus = document.activeElement
+
+			  tmp.value = this.test_token
+
+			  document.body.appendChild(tmp)
+			  tmp.select()
+			  document.execCommand('copy')
+			  document.body.removeChild(tmp)
+			  focus.focus()
+			},
 			reloadPage() {
 				window.location.reload(true)
+			},
+			openDialog() {
+
 			}
 		}
 	}

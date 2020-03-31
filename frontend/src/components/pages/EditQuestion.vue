@@ -111,16 +111,17 @@
 				  <div class="divider"></div>
 				  <v-layout row wrap>
 						<v-flex xs12 sm6>
-							<p class="title">{{modes.indexOf(mode) + 1}}. Режим: {{mode.name}}</p>
+							<p class="title">{{modes.indexOf(mode) + 1}}) Режим: {{mode.name}}</p>
 						</v-flex>
 					</v-layout>
 
 					<v-layout row wrap>
 						<v-flex xs12 sm6 px-2>
-			            <v-label>Видео к вопросу</v-label>
+			            <v-label>Видео к вопросу (id видео на Youtube)</v-label>
 			              <v-text-field
 			                type="text"
 			                v-model="videos[modes.indexOf(mode)]"
+			                placeholder="например, _5k9NMCQ088"
 			                :rules="[rules.video]"
 			                clearable
 			                solo
@@ -135,6 +136,7 @@
 				            class="fileBtn"
 		                    accept="audio/*"
 		                    ref="fileInput"
+                        	@update:deleteFile="deleteFile(1, modes.indexOf(mode))"
 	                        @input="getUploadedQAudio($event, modes.indexOf(mode))"
 				            :dis="!enabledAudio[modes.indexOf(mode)]"
 				            :checked="enabledAudio[modes.indexOf(mode)]"
@@ -163,7 +165,7 @@
 	                solo
 	              ></v-text-field>
 	            </v-flex>
-
+<!--
 				<v-flex xs12>
 	    	  	  <v-label>Тип ответов</v-label>
 	    	  	  <v-tooltip bottom v-model="showTypeTooltip">
@@ -180,7 +182,7 @@
 		            required
 		           ></v-select>
 		        </v-flex>
-
+-->
 		        <v-flex xs12>
 					<add-answers 
 						:currentType="question.answer_type"
@@ -188,6 +190,7 @@
 						:answers="answers"
 						:answersQty="answersQty"
 						:edit="edit"
+						:modes="modes"
   						@update:countAnswers="countAnswers = $event"
   						@update:answersQty="answersQty = $event"
   						@push="pushAnswer()"
@@ -213,7 +216,7 @@
 		      </v-flex>	
 
 		      <v-flex xs12>
-					<v-btn round color="success" @click.native="onSubmit()" dark large>
+					<v-btn :loading="isSubmitting" round color="success" @click.native="onSubmit()" dark large>
 						 Сохранить вопрос
 					</v-btn>
 				</v-flex>
@@ -253,6 +256,7 @@
         		minDifficulty: 1,
         		maxAttempts: 100,
         		minAttempts: 1,
+        		videoLength:11,
         		minTimer: 10,
         		maxTimer: 3600,
         		maxTitleLength: 100,
@@ -260,6 +264,10 @@
         		maxQuestionLength: 2000,
         		minQuestionLength: 12,
         		maxVideoLength: 150,
+        		audioNotLoadedText: 'Аудиозапись не загружена',
+        		audioLoadedText: 'Уже имеется загруженная аудиозапись',
+        		imageNotLoadedText: 'Изображение не загружено',
+        		imageLoadedText: 'Уже имеется загруженное изображение',
 
       			selectedType: [],
       			answerTypes: [
@@ -275,7 +283,7 @@
                 	difficulty: value => (value >= this.minDifficulty && value <= this.maxDifficulty) || 'Введите значение от '+this.minDifficulty+' до '+this.maxDifficulty,
                 	attempts: value => (!this.enabledAttempts || value >= this.minAttempts && value <= this.maxAttempts) || 'Введите значение в диапазоне от '+this.minAttempts+' до '+this.maxAttempts,
                 	timer: value => (!this.enabledTimer || value >= this.minTimer && value <= this.maxTimer) || 'Введите значение в диапазоне от '+this.minTimer+' до '+this.maxTimer,
-                	video: str => (str.length <= this.maxVideoLength) || 'Допустимая длина не более '+this.maxVideoLength + ' символов',
+                	video: str => (str.length == 0 || str.length == this.videoLength) || 'Длина идентификатора видео на Youtube составляет '+ this.videoLength + ' символов',
                 },
         		
 				message: '',
@@ -291,20 +299,57 @@
 				old_audios:[],
 				audioLoadText:[],
 				qMediaData:[],
-				hints: [],
+				hints:[],
 				modes:[],
 
-				questionId: null,
+				isSubmitting: false,
 				answers: [],
+				res_answers: [],
 				question: null,
 				image: null,
-
-                imageLoadText: 'Изображение не загружено',
+				imageLoadText:''
 		    }
 		  },
 		methods: {
+			async getResAnswers() {
+				for (let i = 0; i < this.res_answers.length; i++)
+				{		
+					//this.res_answers[i].showMediaTooltip = false
+       				await axios.get(`${TestingSystemAPI}/answers_hint/`, {
+			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			            params: { 'id' : this.res_answers[i].id }
+			        }).then((response) => {
+			        	
+		        		let temp_arr = []
+		        		for(let j = 0; j < this.qMediaData.length; j++)
+		        			for (let k = 0; k < response.data.length; k++)
+		        				if (response.data[k].mode == this.qMediaData[j].mode)
+		        				{
+		        					temp_arr.push(response.data[k])
+		        					break
+		        				}
+			        	this.hints.push(temp_arr)
+			        	
+			        	console.log('this.hints')
+			        	console.log(this.hints)
+
+			        	if (i == this.res_answers.length - 1)
+			        	{
+							console.log('this.res_answers:')
+							console.log(this.res_answers)
+							for (let j = 0; j < this.res_answers.length; j++)
+								this.pushAnswer(j)
+
+			        	}
+
+		        	}).catch(error => {
+	                    this.alert = true
+	                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
+	                })
+				}
+			},
 			getQuestion() {
-				axios.get(`${TestingSystemAPI}/api/questions/`, {
+				axios.get(`${TestingSystemAPI}/questions/`, {
 		            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		            params: { 'id' : this.$route.params.id }
 		        }).then((qdata) => {
@@ -314,63 +359,40 @@
 					this.enabledImage = false
        				this.answersQty = this.question.answers_number
 					if (this.question.image)
-						this.imageLoadText = 'Уже имеется загруженное изображение'
+						this.imageLoadText = this.imageLoadedText
+					else this.imageLoadText = this.imageNotLoadedText
 					this.question.old_image = this.question.image
 					this.question.image = null
 					this.attempts = this.question.attempts_number
 					this.timer = this.question.timer
 
-					axios.get(`${TestingSystemAPI}/api/questions_media/`, {
+					axios.get(`${TestingSystemAPI}/questions_media/`, {
 			            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			            params: { 'id' : this.$route.params.id }
 			        }).then((response) => {
 			        	this.qMediaData = response.data
-			        	console.log('qMediaData')
+			        	console.log('this.qMediaData')
 			        	console.log(this.qMediaData)
-
 			        	for (let k = 0; k < this.qMediaData.length; k++)
 			        	{
-			        		this.enabledAudio.push(false)
-			        		this.audios.push(null)
-			        		this.videos.push('')
-			        		if (this.qMediaData[k].audio && this.qMediaData[k].audio.search("null") != -1)
+			        		this.enabledAudio[k] = false
+			        		this.audios[k] = null
+			        		this.videos[k] = !!this.qMediaData[k].video ? this.qMediaData[k].video : ''
+			        		if (this.qMediaData[k].audio && this.qMediaData[k].audio.substring(this.qMediaData[k].audio.length - 4) == "null")
 				    			this.qMediaData[k].audio = null
-			        		if (!!this.qMediaData[k].audio)
-			        			this.audioLoadText.push('Уже имеется загруженная аудиозапись')
-			        		else this.audioLoadText.push('Аудиозапись не загружена')
-			        		this.old_audios.push(this.qMediaData[k].audio)
+			        		if (this.qMediaData[k].audio)
+			        			this.audioLoadText[k] = this.audioLoadedText
+			        		else this.audioLoadText[k] = this.audioNotLoadedText
+			        		this.old_audios[k] = this.qMediaData[k].audio
 			        	}
 
-			        	axios.get(`${TestingSystemAPI}/api/answers/`, {
+			        	axios.get(`${TestingSystemAPI}/answers/`, {
 				            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 				            params: { 'id' : this.$route.params.id }
 				        }).then((adata) => {
-							this.answers = adata.data
-							for (var i = 0; i < this.answers.length; i++)
-							{
-
-								this.answers[i].enabledImage = false
-								if (this.answers[i].image)
-									this.answers[i].imageLoadText = 'Уже имеется загруженное изображение'
-								else this.answers[i].imageLoadText = 'Изображение еще не загружено'
-								this.answers[i].showMediaTooltip = false
-								this.answers[i].old_image = this.answers[i].image
-								this.answers[i].image = null
-
-	               				axios.get(`${TestingSystemAPI}/api/answers_hint/`, {
-						            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-						            params: { 'id' : this.answers[i].id }
-						        }).then((response) => {
-						        	console.log('answers_hint'+(i+1))
-						        	console.log(this.response.data)
-						        	this.hints.push(response.data)
-					        	}).catch(error => {
-				                    this.alert = true
-				                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
-				                })
-
-							}
-
+							this.res_answers = adata.data
+							this.getResAnswers()
+							
 				        }).catch(error => {
 		                    this.alert = true
 		                    this.message = 'Не удалось получить данные об ответах. Проверьте подключение к сети.'
@@ -408,28 +430,164 @@
     			this.answers.push(null)
     			this.answers.pop()
             },
-            changeAudio(i){
-				if (!this.answers[i].enabledAudio){
-					this.answers[i].audio = null
-        			if (this.answers[i].old_audio)
-						this.answers[i].audioLoadText = "Уже имеется загруженная аудиозапись"
-					else this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
+            changeAudio(obj){
+				if (!this.answers[obj.index].enabledAudio[obj.mode]){
+					this.answers[obj.index].audios[obj.mode] = null
+        			if (this.answers[obj.index].old_audios[obj.mode])
+						this.answers[obj.index].audioLoadText[obj.mode] = this.audioLoadedText
+					else this.answers[obj.index].audioLoadText[obj.mode] = this.audioNotLoadedText
 				}
-				else this.answers[i].audioLoadText = "Аудиозапись еще не загружена"
-				this.answers.push(null)
-				this.answers.pop()
+				else this.answers[obj.index].audioLoadText[obj.mode] = this.audioNotLoadedText
             },
             changeImage(i){
 				if (!this.answers[i].enabledImage){
 					this.answers[i].image = null
         			if (this.answers[i].old_image)
-						this.answers[i].imageLoadText = "Уже имеется загруженное изображение"
-					else this.answers[i].imageLoadText = "Изображение еще не загружено"
+						this.answers[i].imageLoadText = this.imageLoadedText
+					else this.answers[i].imageLoadText = this.imageNotLoadedText
 				}
-				else this.answers[i].imageLoadText = "Изображение еще не загружено"
-				this.answers.push(null)
-				this.answers.pop()
+				else this.answers[i].imageLoadText = this.imageNotLoadedText
             },
+        	async patchAnswersHint(i){
+				for (let j = 0; j < this.qMediaData.length; j++)
+       			{
+       				console.log('start of end'+this.qMediaData.length)
+        			let AHintData = new FormData()
+	                AHintData.set('answer', this.answers[i].id)
+	                AHintData.set('mode', this.qMediaData[j].mode)
+	                AHintData.set('video', this.answers[i].videos[j])
+	                AHintData.set('text', this.answers[i].hints[j])
+
+	                if (this.answers[i].old_audios[j] && !this.answers[i].enabledAudio[j])
+	                 	AHintData.set('audio', "stay")
+	                else if (this.answers[i].old_audios[j] && !this.answers[i].audios[j])
+	                 	AHintData.set('audio', null)
+	                else AHintData.set('audio', this.answers[i].audios[j])
+
+	                console.log('answers_hint ' + this.answers[i].id + ' ' + this.qMediaData[j].mode)
+					let object = {};
+					AHintData.forEach(function(value, key){
+					    object[key] = value;
+					});
+					let json = JSON.stringify(object);
+	                console.log(json)
+
+           			await axios.patch(TestingSystemAPI+'/answers_hint/'+this.hints[i][j].id+'/', AHintData, { 
+			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			          params: {}
+			        })
+			        .then((response) => {
+			        	console.log(this.answers[i].id + ' ' + this.qMediaData[j].mode + ' success answers_hint')
+			        	if (i == this.answers.length - 1 && j == this.qMediaData.length - 1)
+			        	{
+		               		this.successSet = true
+		                    this.alert = true
+		                    this.message = 'Вопрос успешно изменен.'
+							this.isSubmitting = false
+                			setTimeout(this.goBack, 1200)
+			        	}
+			        })
+	               .catch(error => {
+	               		this.successSet = false
+	                    this.alert = true
+	                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
+						this.isSubmitting = false
+	                    return
+	                })
+	           }
+        	},
+        	async patchAnswers(){
+         		let answersData = new FormData()
+                for (let i = 0; i < this.answers.length; i++)
+                {
+	                if (this.answers[i].old_image && !this.answers[i].enabledImage)
+	                 	answersData.set('image', "stay")
+	                else if (this.answers[i].old_image && !this.answers[i].image)
+	                 	answersData.set('image', null)
+	                else answersData.set('image', this.answers[i].image)
+
+                 	if (this.currentType != 2 )
+                 		answersData.append('priority', this.answers[i].priority)
+                 	else 
+                 	{
+                 		if (this.answers[i].correct)
+                 			answersData.append('priority', this.answers.length)
+                 		else answersData.append('priority', i + 1)
+                 	}
+                 	answersData.append('text', this.answers[i].text)
+                 	answersData.append('correct', this.answers[i].correct)
+                 	if (this.currentType == 2 && !this.answers[i].correct)
+                 		answersData.append('weight', 0)
+                 	else answersData.append('weight', this.answers[i].weight)
+                 	answersData.append('question', this.$route.params.id)
+
+					console.log('answers'+(i+1)+':')
+	                 let object = {};
+					answersData.forEach(function(value, key){
+					    object[key] = value;
+					});
+					let json = JSON.stringify(object);
+	                console.log(json)
+
+           			await axios.patch(TestingSystemAPI+'/answers/'+this.answers[i].id+'/', answersData, {
+			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+			          params: {}
+			        })
+	               .then(response => {
+
+	               		this.patchAnswersHint(i)
+	                })
+	               .catch(error => {
+	               		this.successSet = false
+	                    this.alert = true
+	                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
+    					this.isSubmitting = false
+	                })
+                }
+        	},
+        	async patchQuestionsMedia(){
+				for (let i = 0; i < this.qMediaData.length; i++)
+           		{
+           			console.log('im here')
+        			let QMediaData = new FormData()
+	                QMediaData.set('question', this.qMediaData[i].question)
+	                QMediaData.set('mode', this.qMediaData[i].mode)
+	                QMediaData.set('video', this.videos[i])
+
+	                 if (this.old_audios[i] && !this.enabledAudio[i])
+	                 	QMediaData.set('audio', "stay")
+	                 else if (this.old_audios[i] && !this.audios[i])
+	                 	QMediaData.set('audio', null)
+	                 else QMediaData.set('audio', this.audios[i])
+
+		            console.log('qMediaData:')
+					let object = {};
+					QMediaData.forEach(function(value, key){
+					    object[key] = value;
+					});
+					let json = JSON.stringify(object);
+	                 console.log(json)
+
+					await axios.patch(TestingSystemAPI+'/questions_media/'+this.qMediaData[i].id+'/', QMediaData,{
+				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+				          params: {}
+				    })
+			        .then((response) => {
+			        	console.log(this.$route.params.id + ' ' + this.qMediaData[i].mode + ' success questions_media')
+			        	if (i != this.qMediaData.length - 1)
+			        		return
+			        	this.patchAnswers()
+			        	
+			        })
+	                .catch(error => {
+	               		this.successSet = false
+	                    this.alert = true
+	                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
+        				this.isSubmitting = false
+	                    return
+	                })
+	            }
+        	},
             onSubmit() {
 	        	if (!this.$refs.editQform.validate())
 	        	{
@@ -441,133 +599,112 @@
 	        	if (this.successSet)
 	        		return
 
-                 let formData = new FormData()
+	        	 this.isSubmitting = true
+                 let questionData = new FormData()
 
-                 formData.set('text', this.question.text)
-                 formData.set('title', this.question.title)
-                 formData.set('attempts_number', this.attempts)
-                 formData.set('timer', this.timer)
-                 formData.set('answer_type', this.question.answer_type)
-                 formData.set('answers_number', this.answersQty)
-                 formData.set('difficulty', this.question.difficulty)
+                questionData.set('text', this.question.text)
+                questionData.set('title', this.question.title)
+                questionData.set('attempts_number', this.attempts)
+                questionData.set('timer', this.timer)
+                questionData.set('answer_type', this.question.answer_type)
+                questionData.set('answers_number', this.answersQty)
+                questionData.set('difficulty', this.question.difficulty)
+                let comment = null
+                if (this.question.answer_type == 1)
+					comment = this.answers[0].comment
+                questionData.set('comment', comment)
 
                  if (this.question.old_image && !this.enabledImage)
-                 	formData.set('image', "stay")
+                 	questionData.set('image', "stay")
                  else if (this.question.old_image && !this.question.image)
-                 	formData.set('image', null)
-                 else formData.set('image', this.question.image)
+                 	questionData.set('image', null)
+                 else questionData.set('image', this.question.image)
 
-                 if (this.question.old_audio && !this.enabledAudio)
-                 	formData.set('audio', "stay")
-                 else if (this.question.old_audio && !this.question.audio)
-                 	formData.set('audio', null)
-                 else formData.set('audio', this.question.audio)
-
-                 var comment = null
-                 if (this.currentType == 1)
-					comment = this.answers[0].comment
-                 formData.set('comment', comment)
-				/*
-				var object = {};
-				formData.forEach(function(value, key){
+				console.log('question:')
+				let object = {};
+				questionData.forEach(function(value, key){
 				    object[key] = value;
 				});
-				var json = JSON.stringify(object);
+				let json = JSON.stringify(object);
                  console.log(json)
-				*/
-                 axios.patch(TestingSystemAPI+'/api/questions/'+this.$route.params.id+'/', formData, {
-			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-			          params: {}
-			        })
-	               .then((response) => {
-	               		this.questionId = response.data.id
-	               		for (var i = 0; i < this.answers.length; ++i)
-	               			this.answers[i].question = this.questionId
 
-                 		let answersData = new FormData()
 
-		                for (var i = 0; i < this.answers.length; i++)
-		                {
-			                if (this.answers[i].old_image && !this.answers[i].enabledImage)
-			                 	answersData.set('image', "stay")
-			                else if (this.answers[i].old_image && !this.answers[i].image)
-			                 	answersData.set('image', null)
-			                else answersData.set('image', this.answers[i].image)
 
-			                if (this.answers[i].old_audio && !this.answers[i].enabledAudio)
-			                 	answersData.set('audio', "stay")
-			                else if (this.answers[i].audio && !this.answers[i].audio)
-			                 	answersData.set('audio', null)
-			                else answersData.set('audio', this.answers[i].audio)
-
-		                 	if (this.currentType != 2 )
-		                 		answersData.append('priority', this.answers[i].priority)
-		                 	else 
-		                 	{
-		                 		if (this.answers[i].correct)
-		                 			answersData.append('priority', this.answers.length)
-		                 		else answersData.append('priority', i + 1)
-		                 	}
-		                 	answersData.append('text', this.answers[i].text)
-		                 	answersData.append('correct', this.answers[i].correct)
-		                 	if (this.currentType == 2 && !this.answers[i].correct)
-		                 		answersData.append('weight', 0)
-		                 	else answersData.append('weight', this.answers[i].weight)
-		                 	answersData.append('hint', this.answers[i].hint)
-		                 	answersData.append('question', this.questionId)
-		                 	/*
-		                 	var object = {};
-							answersData.forEach(function(value, key){
-							    object[key] = value;
-							});
-							var json = JSON.stringify(object);
-			                 console.log(json)
-			                 */
-		                 }
-
-               			axios.patch(TestingSystemAPI+'/api/answers/'+this.$route.params.id+'/', answersData, {
-				          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-				          params: { }
-				        })
-		               .then(response => {
-		               		this.successSet = true
-		                    this.alert = true
-		                    this.message = 'Вопрос успешно изменен.'
-	                    	setTimeout(this.goBack, 1200)
-		                })
-		               .catch(error => {
-		                    this.alert = true
-		                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
-		                })
-	                })
-	               .catch(error => {
-	                    this.alert = true
-	                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
-	                })
+                axios.patch(TestingSystemAPI+'/questions/'+this.$route.params.id+'/', questionData, {
+		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
+		          params: {}
+		        })
+               .then((response) => {
+               		this.patchQuestionsMedia()
+                })
+               .catch(error => {
+	               	this.successSet = false
+                    this.alert = true
+                    this.message = 'Не удалось изменить вопрос. Проверьте подключение к сети.'
+        			this.isSubmitting = false
+                })
             },
 			reloadPage() {
 				window.location.reload(true)
 			},
 			goBack(){
-            	router.push('/tests')
+            	router.push('/questions')
 			},				
-			deleteFile(isAudio){
+			deleteFile(isAudio, i){
 				if (isAudio)
-					this.question.audio = null
+					this.audios[i] = null
 				else this.question.image = null
 			},
 			pushAnswer(ind=null) {
-				if (!ind)
+				if (ind == null)
 				{
 					var isTrue = this.currentType == 1 ? true : false
 					this.answers.push({
 	                	image: null,
+	                	old_image: null,
 	                	text: null,
 	                	priority: this.answers.length+1,
 	                	correct: isTrue,
 	                	weight: 256,
 	                	comment: null,
-	                	question: 0,
+	                	question: this.$route.params.id,
+						enabledImage: false,
+						imageLoadText: this.imageNotLoadedText,
+						enabledAudio:[],
+						audioLoadText:[],
+						showHintTooltip:[],
+						showVideoTooltip:[],
+						audios:[],
+						hints:[],
+						videos:[],
+						old_audios:[]
+					})
+
+					for (let i = 0; i < this.qMediaData.length; i++){
+						this.answers[this.answers.length - 1].audios.push(null)
+						this.answers[this.answers.length - 1].old_audios.push(null)
+						this.answers[this.answers.length - 1].enabledAudio.push(false)
+						this.answers[this.answers.length - 1].showHintTooltip.push(false)
+						this.answers[this.answers.length - 1].showVideoTooltip.push(false)
+						this.answers[this.answers.length - 1].videos.push('')
+						this.answers[this.answers.length - 1].audioLoadText.push(this.audioNotLoadedText)
+						this.answers[this.answers.length - 1].hints.push('')
+					}
+				}
+				else
+				{
+					let imageText = !!this.res_answers[ind].image ? this.imageLoadedText : this.imageNotLoadedText
+					this.answers.push({
+						id: this.res_answers[ind].id,
+	                	image: null,
+	                	old_image: this.res_answers[ind].image,
+	                	text: this.res_answers[ind].text,
+	                	priority: this.res_answers[ind].priority,
+	                	correct: this.res_answers[ind].correct,
+	                	weight: this.res_answers[ind].weight,
+	                	comment: this.res_answers[ind].comment,
+	                	question: this.$route.params.id,
+						imageLoadText: imageText,
 						enabledImage: false,
 						enabledAudio:[],
 						audioLoadText:[],
@@ -579,53 +716,26 @@
 						old_audios:[]
 					})
 
-					for (var i = 0; i < this.qMediaData.length; i++){
+					for (let i = 0; i < this.modes.length; i++){
+						console.log('im here!')
+						let old_audio = (this.hints[ind][i].audio && this.hints[ind][i].audio.substring(this.hints[ind][i].audio.length - 4) != "null") ? this.hints[ind][i].audio : null
 						this.answers[this.answers.length - 1].audios.push(null)
-						this.answers[this.answers.length - 1].old_audios.push(null)
-						this.answers[this.answers.length - 1].enabledAudio.push(false)
-						this.answers[this.answers.length - 1].showHintTooltip.push(false)
-						this.answers[this.answers.length - 1].showVideoTooltip.push(false)
-						this.answers[this.answers.length - 1].videos.push('')
-						this.answers[this.answers.length - 1].audioLoadText.push('Аудио не загружено')
-						this.answers[this.answers.length - 1].hints.push('')
-					}
-				}
-				else
-				{
-					this.answers.push({
-	                	image: this.answers[ind].image,
-	                	text: this.answers[ind].text,
-	                	priority: this.answers[ind].priority,
-	                	correct: this.answers[ind].correct,
-	                	weight: this.answers[ind].weight,
-	                	comment: this.answers[ind].comment,
-	                	question: this.$route.params.id,
-						enabledImage: true,
-						enabledAudio:[],
-						audioLoadText:[],
-						showHintTooltip:[],
-						showVideoTooltip:[],
-						audios:[],
-						hints:[],
-						videos:[],
-						old_audios:[]
-					})
-
-					for (var i = 0; i < this.qMediaData.length; i++){
-						this.answers[this.answers.length - 1].audios.push(null)
-						this.answers[this.answers.length - 1].old_audios.push(this.hints[ind][i].audio)
+						this.answers[this.answers.length - 1].old_audios.push(old_audio)
 						this.answers[this.answers.length - 1].enabledAudio.push(false)
 						this.answers[this.answers.length - 1].showHintTooltip.push(false)
 						this.answers[this.answers.length - 1].showVideoTooltip.push(false)
 						this.answers[this.answers.length - 1].videos.push(this.hints[ind][i].video)
-						this.answers[this.answers.length - 1].audioLoadText.push(!!this.hints[ind][i].audio ? 'Уже имеется загруженная аудиозапись' : 'Аудиозапись не загружена')
+						this.answers[this.answers.length - 1].audioLoadText.push(!!old_audio ? this.audioLoadedText : this.audioNotLoadedText)
 						this.answers[this.answers.length - 1].hints.push(this.hints[ind][i].text)
+						
 					}
+					console.log('answers: ')
+					console.log(this.answers)
 				}
 
 			},
 			getModeData(){				
-				axios.get(`${TestingSystemAPI}/api/strict_modes/`, {
+				axios.get(`${TestingSystemAPI}/strict_modes/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -650,29 +760,6 @@
        			while (this.answers.length < this.countAnswers)
        					this.pushAnswer()
        		},
-       		enabledImage: function(val) {
-       			if (!val)
-       			{
-       				this.question.image = null
-       				if (this.question.old_image)
-       					this.imageLoadText = 'Уже имеется загруженное изображение'
-       				else this.imageLoadText = 'Изображение не загружено' 
-       			}
-       			else 
-       				this.imageLoadText = 'Изображение не загружено' 
-
-       		},
-       		enabledAudio: function(val) {
-       			if (!val)
-       			{
-       				this.question.audio = null
-       				if (this.question.old_audio)
-       					this.audioLoadText = 'Уже имеется загруженная аудиозапись'
-       				else this.audioLoadText = 'Аудиозапись не загружена'
-       			}
-       			else 
-       				this.audioLoadText = 'Аудиозапись не загружена'
-       		},
        		attempts: function(val) {
    				if (this.enabledAttempts)
        				this.attempts = val
@@ -692,8 +779,7 @@
        mounted() {
    		this.getModeData()
    		this.getQuestion()
-   		for (var i = 0; i < this.answers.length; i++)
-   			this.pushAnswer(i)
+   		
        }
 	}
 </script>

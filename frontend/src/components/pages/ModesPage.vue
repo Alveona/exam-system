@@ -1,9 +1,23 @@
 <template>
-	<div>
-		<v-form ref="addMform">
+	<v-layout row wrap>
+		<v-flex xs12>
+			<p class="display-1">Настройка преподавателей
+			</p>
+		</v-flex>
+
+		<div class="divider"></div>
+		<h4 class="title pt-2">Создание преподавателя</h4>
+		<v-tooltip bottom v-model="showModesTooltip">
+	        <v-btn slot="activator" @click="showModesTooltip = !showModesTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
+	        <span>Выбирая преподавателя, пользователь может выбрать вариант восприятия информации от преподавателя. Например, можно привязть к разным режимам разных преподавателей, или одного, но в разных стилях подачи (добрый, ехидный и т.д.) К каждому из режимов можно добавлять свои подсказки к ответам, аудио- и видеозаписи, а также изображение лица преподавателя, которое будет появляться при воспроизведении подсказок. </span>
+		</v-tooltip>
+		<div class="divider mt-3"></div>
+		
+		<v-flex xs12>
+			<v-form ref="addMform">
 			<v-layout row wrap>
-				<v-flex xs12 sm4>
-					<v-label>Название режима</v-label>
+				<v-flex xs12 sm6>
+					<v-label>Укажите преподавателя</v-label>
 					<v-tooltip bottom v-model="showTitleTooltip">
 				        <v-btn slot="activator" @click="showTitleTooltip = !showTitleTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
 				        <span>Например, 'Покладистый добрый преподаватель'</span>
@@ -16,7 +30,7 @@
 		            ></v-text-field>
 		        </v-flex>
 
-		        <v-flex xs12 sm4 class="ml-3">
+		        <v-flex xs12 sm3 class="ml-3">
 		        	<v-label>Изображение</v-label>
 					<v-tooltip bottom v-model="showImageTooltip">
 				        <v-btn slot="activator" @click="showImageTooltip = !showImageTooltip" icon small> <v-icon color="light-blue darken-1">info</v-icon></v-btn>
@@ -31,12 +45,12 @@
 		            ></file-input>
 			    </v-flex>
 
-		        <v-flex xs12 sm3 class="pt-4">
+		        <v-flex xs12 sm2 class="pt-4">
 		        	<v-btn :disabled="isSubmitting" @click="addMode()" round color="success"  dark>
 			        	<v-icon size="24px" class="mr-2">
 							add
 						</v-icon>
-					Добавить режим</v-btn>
+					Добавить</v-btn>
 		        </v-flex>
 
 				<v-flex xs12>
@@ -53,11 +67,15 @@
 			</v-layout>
 		</v-form>
 
+		<div class="divider"></div>
+		<h4 class="title pt-2">Добавленные преподаватели</h4>
+		<div class="divider mt-4 "></div>
+
 		<v-layout row wrap v-if="successLoad">
 			<v-flex xs12>
 
-				<div class="content-wrapper">
 					<v-layout row wrap>
+					  <v-label v-if="no_modes">Нет добавленных преподавателей.</v-label>
 		              <v-flex
 		                v-for="mode in modes"
 		                :key="mode.title"
@@ -68,7 +86,7 @@
 		              >
 		                <v-card max-width="350" min-width="350">
 		                  <v-img
-		                    :src="mode.image"
+		                    :src="mode.image_url"
 		                    height="200px"
 		                  >
 		                  </v-img>
@@ -78,25 +96,27 @@
 		                    <v-spacer></v-spacer>
 		                    <v-tooltip bottom>
 				              	<v-btn slot="activator" @click.native="deleteMode(mode.id)" icon><v-icon>delete</v-icon></v-btn>
-				              	<span>Удалить режим</span>
+				              	<span>Удалить преподавателя</span>
 					        </v-tooltip>
 		                  </v-card-actions>
 		                </v-card>
 		              </v-flex>
 		            </v-layout>
-				</div>
 				
 			</v-flex>
 		</v-layout>
-	</div>
+
+		</v-flex>
+	</v-layout>
 </template>
 
 <script>
-    import Axios from 'axios'
+  	import Axios from 'axios'
 	import router from '@/router'
     import FileInput from '@/components/other/FileLoader'
+  	import CreatedTest from '@/components/boxes/CreatedTest'
 	import Authentication from '@/components/pages/Authentication'
-	import connection from '@/router/connection'	
+	import connection from '@/router/connection'
 
 	const TestingSystemAPI = connection.server
 
@@ -108,11 +128,14 @@
 				image: null,
 				showImageTooltip: false,
 				showTitleTooltip: false,
-				alert: false,
-				isSubmitting: false,
-				successLoad: false,
-				title: '',
 				alert_message: '',
+				no_modes: false,
+				alert: false,
+				successLoad: false,
+				isSubmitting: false,
+				title: '',
+				showModesTooltip:false,
+				emptyPic: require('@/assets/images/no_image.png'),
 				imageLoadText: 'Изображение не загружено',
 				rules: {
 					title: val => (val.length >= this.minTitleLen && val.length <= this.maxTitleLen) || 'Длина названия должна быть в диапазоне от '+this.minTitleLen+' до '+this.maxTitleLen + ' символов',
@@ -131,11 +154,13 @@
 				window.location.reload(true)
 			},
 			getModes(){
-				Axios.get(`${TestingSystemAPI}/api/strict_modes/`, {
+				Axios.get(`${TestingSystemAPI}/strict_modes/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
 		          this.modes = data
+		          if (this.modes.length == 0)
+		          	this.no_modes = true
 		          this.successLoad = true
 		        }).catch(error => {
 		          this.alert = true
@@ -143,29 +168,13 @@
 		        })
 			},
 			addMode(){
-				/*
-				if (!this.$refs.addMform.validate())
-	        	{
-               		this.successLoad = false
-                    this.alert = true
-                    this.alert_message = 'Не все обязательные поля были заполнены.'
-	        		return
-	        	}
-	        	*/
-	        	/*
-	        	if (this.successLoad)
-	        	{
-	        		alert('!')
-	        		return
-	        	}
-	        	*/
-
+				
 	        	this.isSubmitting = true
                 let formData = new FormData()
                 formData.set('name', this.title)
                 formData.set('image', this.image)
 
-                Axios.post(`${TestingSystemAPI}/api/strict_modes/`, formData, {
+                Axios.post(`${TestingSystemAPI}/strict_modes/`, formData, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        })
@@ -181,7 +190,7 @@
                 })
 			},
 			deleteMode(id){
-				Axios.delete(TestingSystemAPI+'/api/strict_modes/'+id+'/', {
+				Axios.delete(TestingSystemAPI+'/strict_modes/'+id+'/', {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        })
@@ -201,9 +210,16 @@
 				setTimeout(this.hideAlert, 4000)
 			}
 		},
-		mounted(){
+		mounted() {
 			this.getModes()
 		},
+	    computed: {
+	    	success_message: function() {
+	          if (!this.tests.length)
+	          	return 'В вашем профиле нет созданных тестов.'
+	          else return 'Добавлено ' + this.tests.length + ' тестов:'
+	    	}
+	    },
 		watch: {
 			alert: function(val) {
 				if (val)
@@ -214,13 +230,10 @@
 </script>
 
 <style>
-	.content-wrapper{
-		overflow-y: auto;
-		border-radius: 4px;
-		border: 1px solid #919191;
-		height: 350px;
-		margin-bottom: 10px;
-		background: #EBEBEB;
-		padding: 15px;
+	.divider{
+		height:1px;
+		width:100%;
+		background: #bbb;
+		margin-bottom:15px;
 	}
 </style>

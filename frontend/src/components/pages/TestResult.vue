@@ -7,7 +7,7 @@
 		<v-layout row justify-space-around v-if="response.video">
 			<iframe width="720" height="406" :src="response.video" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</v-layout>
-		<v-layout row justify-space-around v-if="!response.video">
+		<v-layout row justify-space-around v-if="audio">
 			<v-flex xs12 class="mb-4"> 
 				<vue-audio :file="audio" :autoPlay="true"/>
 			</v-flex>
@@ -102,7 +102,7 @@
 		},
 		methods: {
 			getResult() {
-				Axios.get(`${TestingSystemAPI}/api/stats-session/`, {
+				Axios.get(`${TestingSystemAPI}/stats-session/`, {
 		            headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		            params: { 'token' : this.$route.params.token }
 		        }).then((data) => {
@@ -110,19 +110,20 @@
 	                this.response = data.data[0]
 	                this.q_items = this.response.session_q
 	                if (this.response.video)
-	                	this.response.video += '?autoplay=1'
+	                	this.response.video = 'https://youtube.com/embed/' + this.response.video + '?autoplay=1'
 					this.q_items.push({ 'order_number' : "Всего", 'result' : 0, 'weight_sum' : 0})
 					this.q_items[this.q_items.length - 1].result = this.getSumScore()
 					this.q_items[this.q_items.length - 1].weight_sum = this.getSumMax()
-					if (this.getPercent() >= this.response.perfect_mark){
+					let percent = this.getPercent()
+					if (percent >= this.response.perfect_mark){
 						this.mark = 5
 						this.audio = this.response.perfect_audio
 					}
-					else if (this.getPercent() >= this.response.good_mark){
+					else if (percent >= this.response.good_mark){
 						this.mark = 4
 						this.audio = this.response.good_audio
 					}
-					else if (this.getPercent() >= this.response.satisfactory_mark){
+					else if (percent >= this.response.satisfactory_mark){
 						this.mark = 3
 						this.audio = this.response.satisfactory_audio
 					}
@@ -137,14 +138,14 @@
 		        })
 			},
 			getSumScore(){
-				var result = 0
-				for (var i = 0; i < this.q_items.length - 1; ++i)
+				let result = 0
+				for (let i = 0; i < this.q_items.length - 1; ++i)
 					result += this.q_items[i].result
 				return result
 			},
 			getSumMax(){
-				var result = 0
-				for (var i = 0; i < this.q_items.length - 1; ++i)
+				let result = 0
+				for (let i = 0; i < this.q_items.length - 1; ++i)
 					result += this.q_items[i].weight_sum
 				return result
 			},

@@ -59,7 +59,7 @@
 		},
 		methods: {
 			getAddedQuestions() {
-				Axios.get(`${TestingSystemAPI}/api/questionslist/`, {
+				Axios.get(`${TestingSystemAPI}/questionslist/`, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {

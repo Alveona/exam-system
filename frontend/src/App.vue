@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-container>
+    <v-container class="mainContainer">
       <router-view></router-view>
     </v-container>
   </v-app>
@@ -35,6 +35,9 @@
 
     .application {
       background: none;
+    }
+    .mainContainer{
+      max-width:95%;
     }
   }
 </style>

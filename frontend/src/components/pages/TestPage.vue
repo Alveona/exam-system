@@ -1,15 +1,6 @@
 <template>
 	<v-layout row wrap>
-		<v-layout row wrap>
-			<v-flex xs12 sm3 md2 class="px-2">
-				<v-btn color="primary" to="/" dark flat large>
-					<v-icon class="mr-1">
-						keyboard_backspace
-					</v-icon>
-					 Вернуться
-				</v-btn>
-			</v-flex>
-		</v-layout>
+		
 		<v-flex xs12>
 			<p class="title text-md-center"> {{response.name}}</p>
 		</v-flex>
@@ -50,7 +41,7 @@
 			            solo
 			            required
 		            ></v-select>
-		            <v-btn v-if="response.subscribed" round :disabled="!successLoaded" color="primary" :to="{ name: 'testing', params: { token: $route.params.token, mode: currentVariant.id} }" dark block large>
+		            <v-btn v-if="response.subscribed" round :disabled="!successLoaded" color="primary" :to="{ name: 'testing', params: { token: $route.params.token, mode: currentVariant.id, again: true} }" dark block large>
 						 Пройти тест
 					</v-btn>
 					<v-btn v-if="!response.subscribed" @click.native="subscribe()" round color="success" dark block large>
@@ -111,29 +102,31 @@
 			}
 		},
 		methods: {
-            getTestData()
+            async getTestData()
             {
-            	Axios.get(`${TestingSystemAPI}/api/courses/`, {
-		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
-		          params: { 'token' : this.$route.params.token}
-		        }).then(({data}) => {
+            	let headers = {}
+            	if (this.$cookie.get('token') != null)
+            	{
+            		headers['headers'] = { 'Authorization': Authentication.getAuthenticationHeader(this) }
+            	}
+            	headers['params'] = {'token' : this.$route.params.token}
+            	console.log('headers '+  headers)
+            	await Axios.get(`${TestingSystemAPI}/courses/`, headers).then(({data}) => {
 		          this.response = data[0]
-		          console.log('1')
-					Axios.get(TestingSystemAPI+'/api/strict_modes/?token='+this.$route.params.token, {
+		          if (!!this.response.image)
+					Axios.get(TestingSystemAPI+'/strict_modes/?token='+this.$route.params.token, {
 			          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 			          params: {}
 			        }).then(({data}) => {
 			          this.modes = data
-			          console.log(this.modes)
 			          this.successLoaded = true
-			          if (!this.response.mode)
+			          if (this.modes[0])
 			          	this.openModes = true
 			          this.successReq = true
 
 			          for (let i = 0; i < this.modes.length; i++)
-			          	this.modeVariants.push({ id : this.modes[i].id,name : this.modes[i].name})
+			          	this.modeVariants.push({ id : this.modes[i].id, name : this.modes[i].name})
 			          this.currentVariant = this.modeVariants[0]
-			          console.log(this.currentVariant)
 
 			        }).catch(error => {
 			          this.alert = true
@@ -141,6 +134,21 @@
 			        })
 
 		        }).catch(error => {
+
+		          if (error.response.status == 403)
+		          {
+		           	router.push('/login')
+		          }
+		          else if (error.response.status == 401)
+		          {
+
+		          	  this.$cookie.set('token', error.response.data.token, '1D')
+		          	  Authentication.user.authenticated = true
+			          //context.$cookie.set('user_id', data.user._id, '1D')
+			          router.push({name: 'testpage', params: {'token' : this.$route.params.token}})
+			          
+		          	
+		          }
 		          this.alert = true
 		          this.alert_message = 'Не удалось получить данные теста.'
 		          this.successReq = false
@@ -148,7 +156,7 @@
             },
             subscribe() {
             	var token = { 'token' : this.$route.params.token }
-            	Axios.post(`${TestingSystemAPI}/api/course-subsc/`, token, {
+            	Axios.post(`${TestingSystemAPI}/course-subsc/`, token, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -168,7 +176,7 @@
             },
             unsubscribe() {
             	var token = { 'token' : this.$route.params.token }
-            	Axios.post(`${TestingSystemAPI}/api/course-subsc/`, token, {
+            	Axios.post(`${TestingSystemAPI}/course-subsc/`, token, {
 		          headers: { 'Authorization': Authentication.getAuthenticationHeader(this) },
 		          params: {}
 		        }).then(({data}) => {
@@ -197,6 +205,7 @@
 			}
 		},
 		mounted(){
+			console.log('1')
 			this.getTestData()
 		},
 		watch: {
