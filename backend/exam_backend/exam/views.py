@@ -56,8 +56,11 @@ class SessionQuestionViewSet(viewsets.ModelViewSet):
         question = SessionQuestion.objects.all().filter(session=session, finished=False)
         if not question:
             # print("No unfinished sessions")
-            current_question = max([session.order_number for session in
+            try:
+                current_question = max([session.order_number for session in
                                     SessionQuestion.objects.all().filter(session=session, finished=True)])
+            except:
+                current_question = 1
             print(session.course.questions_number)
             if current_question >= session.course.questions_number:
                 session.finished = True
