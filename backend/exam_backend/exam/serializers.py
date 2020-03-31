@@ -271,7 +271,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
         mode = StrictMode.objects.all().get(id=mode_id)
         request = self.context.get("request")
 
-        return str(mode.image)
+        return str(mode.image_url)
 
     class Meta:
         model = SessionQuestion
