@@ -1,30 +1,31 @@
-# frontend
+## Инструкции по редактированию и запуску фронтенда
 
-> A Vue.js project
+### Запуск локально
 
-## Build Setup
+    npm install
+    npm run dev
+    
+Открыть localhost:3000
+    
+### Подготовка к деплою
 
-``` bash
-# install dependencies
-npm install
+    npm run build
+    
+На выходе получается папка dist  
 
-# serve with hot reload at localhost:8080
-npm run dev
+Необходимо настроить Nginx/Apache для раздачи фронтенде  
+Пример:
 
-# build for production with minification
-npm run build
+    server {
+            server_name example.com; # ваш домен
 
-# build for production and view the bundle analyzer report
-npm run build --report
+            location / {
+                    root /www/exam-system/frontend/dist;
+                    index index.html index.htm;
+                    try_files $uri $uri/ /index.html;
+                    proxy_set_header  Host              $http_host;
+                    proxy_set_header  X-Forwarded-For   $proxy_add_x_forwarded_for;
+            }
+          listen 80;
 
-# run unit tests
-npm run unit
-
-# run e2e tests
-npm run e2e
-
-# run all tests
-npm test
-```
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+    }
