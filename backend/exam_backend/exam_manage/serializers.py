@@ -126,12 +126,12 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_subscribed(self, obj):
 
         course = Course.objects.all().filter(token=obj.token).first()
-        print(self.context)
-        print("aoijdwioajdwioaj")
-#        if not self.context.get("request"):
-#            return False
+        try:
+            user = self.context.get('request').user
+        except:
+            return False
         subscribed_course = UserCourseRelation.objects.all().filter(
-            access=0, course=course, user=self.context["request"].user
+            access=0, course=course, user=user
         )
 
         if not subscribed_course:
