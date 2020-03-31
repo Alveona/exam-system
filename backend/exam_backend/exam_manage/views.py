@@ -425,6 +425,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         return Response(CourseSerializer(course).data, status=status.HTTP_201_CREATED)
 
     def list(self, request):
+        serializer = self.get_serializer(data=request.data)
         if type(request.user) == AnonymousUser:
             course = (
                 Course.objects.all()
@@ -463,7 +464,7 @@ class CourseViewSet(viewsets.ModelViewSet):
                 token=request.query_params.get("token")
             )
             return Response(
-                [CourseSerializer(course).data for course in queryset],
+                [CourseSerializer(course, context={'request': self.request}).data for course in queryset],
                 status=status.HTTP_200_OK,
             )
         return Response([], status=status.HTTP_200_OK)
@@ -593,7 +594,7 @@ class RelationUnsubscribeViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         course = Course.objects.all().get(token=self.request.data["token"])
-        relation = UserCourseRelation(user=self.request.user, course=course, access=0)
+        relation = UserCourseRelation.objects.filter(user=self.request.user, course=course, access=0)
         relation.delete()
         return Response({"status": "Successfully deleted"})
 

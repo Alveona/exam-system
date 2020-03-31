@@ -223,9 +223,11 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
             hint = Hint.objects.all().filter(answer=answer, mode=mode)
             if hint:
                 request = self.context.get("request")
-                audio_url = hint.first().audio.url
-
-                return request.build_absolute_uri(audio_url)
+                audio_url = hint.first().audio.url if hint.first().audio else None
+                if audio_url:
+                    return request.build_absolute_uri(audio_url)
+                else:
+                    return audio_url
             else:
                 return None
         else:

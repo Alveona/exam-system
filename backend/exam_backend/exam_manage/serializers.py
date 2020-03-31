@@ -126,9 +126,10 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_subscribed(self, obj):
 
         course = Course.objects.all().filter(token=obj.token).first()
-
-        if not self.context.get("request"):
-            return False
+        print(self.context)
+        print("aoijdwioajdwioaj")
+#        if not self.context.get("request"):
+#            return False
         subscribed_course = UserCourseRelation.objects.all().filter(
             access=0, course=course, user=self.context["request"].user
         )
@@ -181,12 +182,16 @@ class RelationSerializer(serializers.ModelSerializer):
             .filter(token=self.context["request"].data["token"])
             .first()
         )
-
-        relation = UserCourseRelation(
-            user=self.context["request"].user, course=course, access=0
-        )
-        relation.save()
-        return relation  # TODO CHECK WHAT HAPPENS IF DELETE RETURN STATEMENT (WILL THERE NO RESPONSE IN POST?)
+        relation = UserCourseRelation.objects.filter(user=self.context["request"].user, course= course, access=0)
+ 
+        if not relation: 
+            relation = UserCourseRelation(
+                    user=self.context["request"].user, course=course, access=0
+            )
+            relation.save()
+        else:
+            relation.delete()
+        return relation  
 
     class Meta:
         model = UserCourseRelation
